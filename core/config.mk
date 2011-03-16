@@ -95,7 +95,8 @@ BUILD_HOST_STATIC_TEST_LIBRARY := $(BUILD_SYSTEM)/host_static_test_lib.mk
 BUILD_NOTICE_FILE := $(BUILD_SYSTEM)/notice_files.mk
 BUILD_HOST_DALVIK_JAVA_LIBRARY := $(BUILD_SYSTEM)/host_dalvik_java_library.mk
 BUILD_HOST_DALVIK_STATIC_JAVA_LIBRARY := $(BUILD_SYSTEM)/host_dalvik_static_java_library.mk
-
+BUILD_EXTERNAL_KERNEL_MODULE := $(BUILD_SYSTEM)/build_lkm.mk
+BUILD_COMPAT_MODULE := $(BUILD_SYSTEM)/build_compat_module.mk
 
 -include cts/build/config.mk
 
