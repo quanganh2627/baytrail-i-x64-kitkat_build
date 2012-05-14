@@ -64,7 +64,7 @@ function check_product()
     # hide successful answers, but allow the errors to show
 }
 
-VARIANT_CHOICES=(user userdebug eng)
+VARIANT_CHOICES=(user userdebug eng userdebug_gms)
 
 # check to see if the supplied variant is valid
 function check_variant()
@@ -505,6 +505,14 @@ function lunch()
     then
         echo
         return 1
+    fi
+
+    if [ "$variant" = "userdebug_gms" ]
+    then
+        variant=userdebug
+        export USE_GMS_ALL=true
+    else
+        export USE_GMS_ALL=false
     fi
 
     export TARGET_PRODUCT=$product
