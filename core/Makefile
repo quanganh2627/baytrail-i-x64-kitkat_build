@@ -477,6 +477,7 @@ ifdef BOARD_KERNEL_PAGESIZE
   INTERNAL_BOOTIMAGE_ARGS += --pagesize $(BOARD_KERNEL_PAGESIZE)
 endif
 
+ifneq ($(TARGET_MAKE_NO_DEFAULT_BOOTIMAGE),true)
 INSTALLED_BOOTIMAGE_TARGET := $(PRODUCT_OUT)/boot.img
 
 ifeq ($(TARGET_BOOTIMAGE_USE_EXT2),true)
@@ -521,6 +522,18 @@ bootimage-nodeps: $(MKBOOTIMG)
 	$(hide) $(call assert-max-image-size,$(INSTALLED_BOOTIMAGE_TARGET),$(BOARD_BOOTIMAGE_PARTITION_SIZE))
 
 endif # TARGET_BOOTIMAGE_USE_EXT2
+
+else # TARGET_MAKE_NO_DEFAULT_BOOTIMAGE
+
+$(INSTALLED_BOOTIMAGE_TARGET): $(MAKE_NO_DEFAULT_BOOTIMAGE_ITEMS)
+	$(hide) $(MAKE_NO_DEFAULT_BOOTIMAGE)
+
+.PHONY: bootimage-nodeps
+bootimage-nodeps:
+	@echo "make $@: ignoring dependencies"
+	$(hide) $(MAKE_NO_DEFAULT_BOOTIMAGE)
+
+endif # TARGET_MAKE_NO_DEFAULT_BOOTIMAGE
 
 else	# TARGET_NO_KERNEL
 # HACK: The top-level targets depend on the bootimage.  Not all targets
