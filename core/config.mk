@@ -408,6 +408,9 @@ TARGET_GLOBAL_CPPFLAGS += $(TARGET_RELEASE_CPPFLAGS)
 # define llvm tools and global flags
 include $(BUILD_SYSTEM)/llvm_config.mk
 
+# define icc tools and global flags
+include $(BUILD_SYSTEM)/icc_config.mk
+
 # ###############################################################
 # Collect a list of the SDK versions that we could compile against
 # For use with the LOCAL_SDK_VERSION variable for include $(BUILD_PACKAGE)
