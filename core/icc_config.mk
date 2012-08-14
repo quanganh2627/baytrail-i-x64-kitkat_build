@@ -128,6 +128,7 @@ define do-icc-flags
   endif
   ifeq ($(strip $(LOCAL_MODULE)),libwebcore)
     LOCAL_CFLAGS += -g0
+    LOCAL_LDFLAGS += -mIPOPT_link_verbose=T -from_rtn 0 -to_rtn -1
   endif
 endef
 
