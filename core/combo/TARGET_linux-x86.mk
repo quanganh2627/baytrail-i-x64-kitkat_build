@@ -16,7 +16,6 @@
 
 # Configuration for Linux on x86 as a target.
 # Included by combo/select.mk
-DEFAULT_COMPILER:=gcc
 
 # Provide a default variant.
 ifeq ($(strip $(TARGET_ARCH_VARIANT)),)

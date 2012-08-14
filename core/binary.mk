@@ -68,7 +68,7 @@ endif
 
 # Correct icc libraries
 ifeq ($(LOCAL_IS_HOST_MODULE),)
-ifneq ($(strip $(call intel-target-need-intel-libraries)),)
+ifneq ($(call intel-target-need-intel-libraries),)
 $(call icc-libs)
 endif
 endif
@@ -140,7 +140,7 @@ endif
 # Configure flags for ICC
 ###################################################
 ifeq ($(LOCAL_IS_HOST_MODULE),)
-ifneq ($(strip $(call intel-target-use-icc,$(LOCAL_MODULE))),)
+ifneq ($(call intel-target-use-icc,$(LOCAL_MODULE)),)
 $(call icc-flags)
 endif
 endif
