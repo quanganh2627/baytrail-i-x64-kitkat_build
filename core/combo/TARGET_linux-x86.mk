@@ -79,6 +79,10 @@ else
 endif
 KERNEL_HEADERS := $(KERNEL_HEADERS_COMMON) $(KERNEL_HEADERS_ARCH)
 
+ifneq ($(TARGET_BUILD_VARIANT),user)
+TARGET_GLOBAL_CFLAGS += -fno-omit-frame-pointer
+endif
+
 TARGET_GLOBAL_CFLAGS += \
 			-O2 \
 			-Ulinux \
