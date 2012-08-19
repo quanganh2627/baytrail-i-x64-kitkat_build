@@ -94,6 +94,10 @@ KERNEL_HEADERS := $(KERNEL_HEADERS_COMMON) $(KERNEL_HEADERS_ARCH)
 
 android_config_h := $(call select-android-config-h,target_linux-x86)
 
+ifneq ($(TARGET_BUILD_VARIANT),user)
+TARGET_GLOBAL_CFLAGS += -fno-omit-frame-pointer
+endif
+
 TARGET_GLOBAL_CFLAGS += \
 			-O2 \
 			-Ulinux \
