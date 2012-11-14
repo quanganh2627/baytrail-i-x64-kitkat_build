@@ -600,6 +600,7 @@ endef
 # Recovery image
 
 # If neither TARGET_NO_KERNEL nor TARGET_NO_RECOVERY are true
+ifneq ($(TARGET_MAKE_NO_DEFAULT_RECOVERY),true)
 ifeq (,$(filter true, $(TARGET_NO_KERNEL) $(TARGET_NO_RECOVERY)))
 
 INSTALLED_RECOVERYIMAGE_TARGET := $(PRODUCT_OUT)/recovery.img
@@ -720,6 +721,7 @@ endif
 
 .PHONY: recoveryimage
 recoveryimage: $(INSTALLED_RECOVERYIMAGE_TARGET) $(RECOVERY_RESOURCE_ZIP)
+endif # TARGET_MAKE_NO_DEFAULT_RECOVERY
 
 ifneq ($(BOARD_NAND_PAGE_SIZE),)
 mkyaffs2_extra_flags := -c $(BOARD_NAND_PAGE_SIZE)
@@ -1103,6 +1105,8 @@ otatools: $(OTATOOLS)
 # This zip can be used to create an OTA package or filesystem image
 # as a post-build step.
 #
+ifneq ($(TARGET_MAKE_NO_DEFAULT_OTA_PACKAGE),true)
+
 name := $(TARGET_PRODUCT)
 ifeq ($(TARGET_BUILD_TYPE),debug)
   name := $(name)_debug
@@ -1314,6 +1318,7 @@ endif    # recovery_fstab is defined
 endif    # TARGET_NO_KERNEL != true
 endif    # TARGET_DEVICE != generic*
 endif    # TARGET_PRODUCT != sdk
+endif # TARGET_MAKE_NO_DEFAULT_OTA_PACKAGE
 
 ifdef is_tests_build
 # -----------------------------------------------------------------
