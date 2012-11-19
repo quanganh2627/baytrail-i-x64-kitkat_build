@@ -1064,7 +1064,9 @@ endef
 ###########################################################
 
 define _concat-if-arg2-not-empty
-$(if $(2),$(hide) $(1) $(2))
+$(if $(3), \
+    $(if $(2), $(hide) $(call $(1),$(2))), \
+    $(if $(2), $(hide) $(1) $(2)))
 endef
 
 # Split long argument list into smaller groups and call the command repeatedly
@@ -1073,14 +1075,19 @@ endef
 #
 # $(1): the command without arguments
 # $(2): the arguments
+# $(3): not empty if $(1) is a makefile function
 define split-long-arguments
-$(hide) $(1) $(wordlist 1,500,$(2))
-$(call _concat-if-arg2-not-empty,$(1),$(wordlist 501,1000,$(2)))
-$(call _concat-if-arg2-not-empty,$(1),$(wordlist 1001,1500,$(2)))
-$(call _concat-if-arg2-not-empty,$(1),$(wordlist 1501,2000,$(2)))
-$(call _concat-if-arg2-not-empty,$(1),$(wordlist 2001,2500,$(2)))
-$(call _concat-if-arg2-not-empty,$(1),$(wordlist 2501,3000,$(2)))
-$(call _concat-if-arg2-not-empty,$(1),$(wordlist 3001,99999,$(2)))
+$(if $(3), \
+    $(hide) $(call $(1),$(wordlist 1,250,$(2))), \
+    $(hide) $(1) $(wordlist 1,250,$(2)))
+$(call _concat-if-arg2-not-empty,$(1),$(wordlist 251,500,$(2)),$(3))
+$(call _concat-if-arg2-not-empty,$(1),$(wordlist 501,750,$(2)),$(3))
+$(call _concat-if-arg2-not-empty,$(1),$(wordlist 751,1000,$(2)),$(3))
+$(call _concat-if-arg2-not-empty,$(1),$(wordlist 1001,1500,$(2)),$(3))
+$(call _concat-if-arg2-not-empty,$(1),$(wordlist 1501,2000,$(2)),$(3))
+$(call _concat-if-arg2-not-empty,$(1),$(wordlist 2001,2500,$(2)),$(3))
+$(call _concat-if-arg2-not-empty,$(1),$(wordlist 2501,3000,$(2)),$(3))
+$(call _concat-if-arg2-not-empty,$(1),$(wordlist 3001,99999,$(2)),$(3))
 endef
 
 # $(1): the full path of the source static library.
