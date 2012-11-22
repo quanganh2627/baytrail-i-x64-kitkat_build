@@ -22,7 +22,7 @@ ARCH_X86_HAVE_SSE3  := true
 # developer machines.
 #
 
-ARCH_X86_HAVE_SSSE3 := false
+ARCH_X86_HAVE_SSSE3 := true
 ARCH_X86_HAVE_MOVBE := false
 ARCH_X86_HAVE_POPCNT := false
 
