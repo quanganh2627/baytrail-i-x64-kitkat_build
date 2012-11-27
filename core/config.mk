@@ -145,6 +145,7 @@ board_config_mk := \
 		$(SRC_TARGET_DIR)/board/$(TARGET_DEVICE)/BoardConfig.mk \
 		device/*/$(TARGET_DEVICE)/BoardConfig.mk \
 		vendor/*/$(TARGET_DEVICE)/BoardConfig.mk \
+		vendor/*/*/board/$(TARGET_DEVICE)/BoardConfig.mk \
 	))
 ifeq ($(board_config_mk),)
   $(error No config file found for TARGET_DEVICE $(TARGET_DEVICE))
