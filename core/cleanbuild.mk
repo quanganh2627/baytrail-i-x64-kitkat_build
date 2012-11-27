@@ -179,6 +179,7 @@ installclean_files := \
 	$(HOST_OUT)/obj/NOTICE_FILES \
 	$(HOST_OUT)/sdk \
 	$(PRODUCT_OUT)/*.img \
+	$(PRODUCT_OUT)/*.iso \
 	$(PRODUCT_OUT)/*.txt \
 	$(PRODUCT_OUT)/*.xlb \
 	$(PRODUCT_OUT)/*.zip \
@@ -192,6 +193,7 @@ installclean_files := \
 	$(PRODUCT_OUT)/system \
 	$(PRODUCT_OUT)/dex_bootjars \
 	$(PRODUCT_OUT)/obj/JAVA_LIBRARIES \
+	$(PRODUCT_OUT)/iago \
 	$(PRODUCT_OUT)/obj/FAKE \
 	$(PRODUCT_OUT)/obj/EXECUTABLES/adbd_intermediates \
 	$(PRODUCT_OUT)/obj/EXECUTABLES/init_intermediates \
