@@ -394,6 +394,7 @@ ifneq ($(extra_jar_args),)
 	$(add-java-resources-to-package)
 endif
 	$(sign-package)
+	$(hide) $(ACP) $@ $(patsubst %.apk,%.apk.dex,$@)
 ifdef LOCAL_DEX_PREOPT
 ifneq (nostripping,$(LOCAL_DEX_PREOPT))
 	$(call dexpreopt-remove-classes.dex,$@)
