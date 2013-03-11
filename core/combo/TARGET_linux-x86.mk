@@ -16,6 +16,7 @@
 
 # Configuration for Linux on x86 as a target.
 # Included by combo/select.mk
+DEFAULT_COMPILER:=gcc
 
 # Provide a default variant.
 ifeq ($(strip $(TARGET_ARCH_VARIANT)),)
@@ -48,7 +49,7 @@ TARGET_LD := $(TARGET_TOOLS_PREFIX)ld$(HOST_EXECUTABLE_SUFFIX)
 TARGET_STRIP := $(TARGET_TOOLS_PREFIX)strip$(HOST_EXECUTABLE_SUFFIX)
 
 ifeq ($(TARGET_BUILD_VARIANT),user)
-TARGET_STRIP_COMMAND = $(TARGET_STRIP) --strip-debug $< -o $@
+TARGET_STRIP_COMMAND = $(TARGET_STRIP) --strip-all $< -o $@
 else
 TARGET_STRIP_COMMAND = $(TARGET_STRIP) --strip-debug $< -o $@ && \
 	$(TARGET_OBJCOPY) --add-gnu-debuglink=$< $@
@@ -78,6 +79,10 @@ else
     KERNEL_HEADERS_ARCH   := $(libc_root)/kernel/arch-$(TARGET_ARCH)
 endif
 KERNEL_HEADERS := $(KERNEL_HEADERS_COMMON) $(KERNEL_HEADERS_ARCH)
+
+ifneq ($(TARGET_BUILD_VARIANT),user)
+TARGET_GLOBAL_CFLAGS += -fno-omit-frame-pointer
+endif
 
 TARGET_GLOBAL_CFLAGS += \
 			-O2 \
@@ -167,12 +172,13 @@ TARGET_STRIP_MODULE:=true
 TARGET_DEFAULT_SYSTEM_SHARED_LIBRARIES := libc libstdc++ libm
 
 TARGET_CUSTOM_LD_COMMAND := true
+
 define transform-o-to-shared-lib-inner
 $(hide) $(PRIVATE_CXX) \
 	$(PRIVATE_TARGET_GLOBAL_LDFLAGS) \
 	 -nostdlib -Wl,-soname,$(notdir $@) \
 	 -shared -Bsymbolic \
-	$(TARGET_GLOBAL_CFLAGS) \
+	$(PRIVATE_TARGET_GLOBAL_CFLAGS) \
 	$(PRIVATE_TARGET_GLOBAL_LD_DIRS) \
 	$(if $(filter true,$(PRIVATE_NO_CRT)),,$(PRIVATE_TARGET_CRTBEGIN_SO_O)) \
 	$(PRIVATE_ALL_OBJECTS) \
@@ -197,6 +203,7 @@ $(hide) $(PRIVATE_CXX) \
 	-Wl,-z,nocopyreloc \
 	-fPIE -pie \
 	-o $@ \
+	$(PRIVATE_TARGET_GLOBAL_CFLAGS) \
 	$(PRIVATE_TARGET_GLOBAL_LD_DIRS) \
 	-Wl,-rpath-link=$(TARGET_OUT_INTERMEDIATE_LIBRARIES) \
 	$(call normalize-target-libraries,$(PRIVATE_ALL_SHARED_LIBRARIES)) \
@@ -218,6 +225,7 @@ $(hide) $(PRIVATE_CXX) \
 	$(PRIVATE_TARGET_GLOBAL_LDFLAGS) \
 	-nostdlib -Bstatic \
 	-o $@ \
+	$(PRIVATE_TARGET_GLOBAL_CFLAGS) \
 	$(PRIVATE_TARGET_GLOBAL_LD_DIRS) \
 	$(if $(filter true,$(PRIVATE_NO_CRT)),,$(PRIVATE_TARGET_CRTBEGIN_STATIC_O)) \
 	$(PRIVATE_LDFLAGS) \
