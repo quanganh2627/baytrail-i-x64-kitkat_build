@@ -193,6 +193,7 @@ installclean_files := \
 	$(PRODUCT_OUT)/dex_bootjars \
 	$(PRODUCT_OUT)/obj/JAVA_LIBRARIES \
 	$(PRODUCT_OUT)/iago \
+	$(PRODUCT_OUT)/efi \
 	$(PRODUCT_OUT)/obj/FAKE
 
 # The files/dirs to delete during a dataclean, which removes any files
