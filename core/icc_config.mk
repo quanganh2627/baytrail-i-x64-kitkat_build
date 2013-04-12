@@ -1,3 +1,4 @@
+DEFAULT_COMPILER:=gcc
 # Forces the following modules to be compiled with Intel* compiler independent of DEFAULT_COMPILER
 ICC_MODULES     :=
 # Forces the following modules to be compiled with GNU* compiler independent of DEFAULT_COMPILER
