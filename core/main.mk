@@ -305,6 +305,8 @@ ifneq (,$(user_variant))
   else
     # Disable debugging in plain user builds.
     enable_target_debugging :=
+    # Enable secure USB debugging in plain user builds.
+    ADDITIONAL_DEFAULT_PROPERTIES += ro.adb.secure=1
   endif
 
   # Turn on Dalvik preoptimization for user builds, but only if not
