@@ -317,6 +317,7 @@ ifneq (,$(user_variant))
       endif
     endif
   endif
+  WITH_DEXPREOPT := false
 
   # Disallow mock locations by default for user builds
   ADDITIONAL_DEFAULT_PROPERTIES += ro.allow.mock.location=0
