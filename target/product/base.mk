@@ -26,6 +26,7 @@ PRODUCT_PACKAGES += \
     bmgr \
     bugreport \
     content \
+    dbus-daemon \
     dhcpcd \
     dhcpcd-run-hooks \
     dnsmasq \
@@ -42,6 +43,7 @@ PRODUCT_PACKAGES += \
     libbundlewrapper \
     libcamera_client \
     libcameraservice \
+    libdbus \
     libdl \
     libeffectproxy \
     libeffects \
