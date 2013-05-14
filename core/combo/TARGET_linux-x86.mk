@@ -93,7 +93,6 @@ TARGET_GLOBAL_CFLAGS += \
 			-ffunction-sections \
 			-finline-functions \
 			-finline-limit=300 \
-			-D_FORTIFY_SOURCE=1 \
 			-fno-inline-functions-called-once \
 			-fno-short-enums \
 			-fstrict-aliasing \
