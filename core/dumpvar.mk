@@ -24,9 +24,9 @@ else ifeq ($(TARGET_ARCH),x86)
     endif
 
 # Add the x86_64 toolchain bin dir if it actually exists
-    ifneq ($(wildcard $(PWD)/prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.7/bin),)
+    ifneq ($(wildcard $(PWD)/prebuilts/PRIVATE/gcc/linux-x86/x86/x86_64-linux-android-4.7/bin),)
         # this should be copied to HOST_OUT_EXECUTABLES instead
-        ABP:=$(ABP):$(PWD)/prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.7/bin
+        ABP:=$(ABP):$(PWD)/prebuilts/PRIVATE/gcc/linux-x86/x86/x86_64-linux-android-4.7/bin
     endif
 endif
 
