@@ -21,7 +21,6 @@ PRODUCT_POLICY := android.policy_phone
 
 PRODUCT_PACKAGES := \
     DeskClock \
-    Bluetooth \
     Calculator \
     Calendar \
     Camera2 \
@@ -44,10 +43,15 @@ PRODUCT_PACKAGES := \
     SystemUI \
     TeleService \
     CalendarProvider \
-    bluetooth-health \
     hostapd \
     wpa_supplicant.conf \
     WallpaperCropper
+
+ifneq ($(BOARD_HAVE_BLUETOOTH),false)
+PRODUCT_PACKAGES += \
+    Bluetooth \
+    bluetooth-health
+endif
 
 PRODUCT_PACKAGES += \
     audio \
