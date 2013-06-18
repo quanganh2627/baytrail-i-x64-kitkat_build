@@ -781,7 +781,11 @@ import_includes_deps := $(strip \
     $(foreach l, $(installed_shared_library_module_names), \
       $(call intermediates-dir-for,SHARED_LIBRARIES,$(l),$(LOCAL_IS_HOST_MODULE),,$(LOCAL_2ND_ARCH_VAR_PREFIX))/export_includes) \
     $(foreach l, $(my_static_libraries) $(my_whole_static_libraries), \
-      $(call intermediates-dir-for,STATIC_LIBRARIES,$(l),$(LOCAL_IS_HOST_MODULE),,$(LOCAL_2ND_ARCH_VAR_PREFIX))/export_includes))
+      $(call intermediates-dir-for,STATIC_LIBRARIES,$(l),$(LOCAL_IS_HOST_MODULE),,$(LOCAL_2ND_ARCH_VAR_PREFIX))/export_includes) \
+    $(foreach l, $(LOCAL_IMPORT_C_INCLUDE_DIRS_FROM_STATIC_LIBRARIES), \
+      $(call intermediates-dir-for,STATIC_LIBRARIES,$(l),$(LOCAL_IS_HOST_MODULE),,$(LOCAL_2ND_ARCH_VAR_PREFIX))/export_includes) \
+    $(foreach l, $(LOCAL_IMPORT_C_INCLUDE_DIRS_FROM_SHARED_LIBRARIES), \
+      $(call intermediates-dir-for,SHARED_LIBRARIES,$(l),$(LOCAL_IS_HOST_MODULE),,$(LOCAL_2ND_ARCH_VAR_PREFIX))/export_includes))
 $(import_includes) : $(import_includes_deps)
 	@echo Import includes file: $@
 	$(hide) mkdir -p $(dir $@) && rm -f $@
