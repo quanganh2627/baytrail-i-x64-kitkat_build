@@ -21,7 +21,6 @@ PRODUCT_POLICY := android.policy_phone
 
 PRODUCT_PACKAGES := \
     DeskClock \
-    Bluetooth \
     Calculator \
     Calendar \
     CertInstaller \
@@ -41,9 +40,14 @@ PRODUCT_PACKAGES := \
     Settings \
     SystemUI \
     CalendarProvider \
-    bluetooth-health \
     hostapd \
     wpa_supplicant.conf
+
+ifneq ($(BOARD_HAVE_BLUETOOTH),false)
+PRODUCT_PACKAGES += \
+    Bluetooth \
+    bluetooth-health
+endif
 
 PRODUCT_PACKAGES += \
     audio \
