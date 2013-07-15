@@ -77,6 +77,15 @@ define icc-flags-subst
   $(eval $(call do-icc-flags-subst,$(1),$(2),$(3)))
 endef
 
+ifeq ($(TARGET_ARCH_VARIANT), x86-atom)
+ARCH_VARIANT := atom
+ICC_XARCH := -xSSSE3_ATOM
+endif
+ifeq ($(TARGET_ARCH_VARIANT), x86-slm)
+ARCH_VARIANT := slm
+ICC_XARCH := -xATOM_SSE4.2
+endif
+
 TARGET_GLOBAL_ICC_CFLAGS := $(TARGET_GLOBAL_CFLAGS)
 TARGET_GLOBAL_ICC_CFLAGS += -no-prec-div
 TARGET_GLOBAL_ICC_CFLAGS += -fno-builtin-memset -fno-builtin-strcmp -fno-builtin-strlen -fno-builtin-strchr
@@ -88,7 +97,7 @@ TARGET_GLOBAL_ICC_CFLAGS += -D__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4
 
 $(call icc-flags-subst,TARGET_GLOBAL_ICC_CFLAGS,-mstackrealign,-falign-stack=assume-4-byte)
 $(call icc-flags-subst,TARGET_GLOBAL_ICC_CFLAGS,-O2,-O3)
-$(call icc-flags-subst,TARGET_GLOBAL_ICC_CFLAGS,-march=atom,-xSSSE3_ATOM)
+$(call icc-flags-subst,TARGET_GLOBAL_ICC_CFLAGS,-march=$(ARCH_VARIANT),$(ICC_XARCH))
 $(call icc-flags-subst,TARGET_GLOBAL_ICC_CFLAGS,-msse3,)
 $(call icc-flags-subst,TARGET_GLOBAL_ICC_CFLAGS,-mfpmath=sse,)
 # icc generates pic by default.
@@ -108,9 +117,9 @@ TARGET_GLOBAL_ICC_CPPFLAGS += -Qoption,c,--use_atexit
 
 #Called from core/binary.mk
 define do-icc-flags
-  $(call icc-flags-subst,LOCAL_CFLAGS,-march=atom,-xSSSE3_ATOM)
-  $(call icc-flags-subst,LOCAL_CFLAGS,-mtune=atom,-xSSSE3_ATOM)
-  $(call icc-flags-subst,LOCAL_CFLAGS,-msse3,-xSSSE3_ATOM)
+  $(call icc-flags-subst,LOCAL_CFLAGS,-march=$(ARCH_VARIANT),$(ICC_XARCH))
+  $(call icc-flags-subst,LOCAL_CFLAGS,-mtune=$(ARCH_VARIANT),$(ICC_XARCH))
+  $(call icc-flags-subst,LOCAL_CFLAGS,-msse3,$(ICC_XARCH))
   ifneq ($(strip $(call intel-target-freestanding-enable,$(LOCAL_MODULE))),)
     LOCAL_CFLAGS   += -ffreestanding
   endif
