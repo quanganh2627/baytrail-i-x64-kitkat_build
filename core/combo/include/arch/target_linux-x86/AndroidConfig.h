@@ -268,7 +268,7 @@
 /*
  * Do we have __memcmp16()?
  */
-/* #define HAVE__MEMCMP16  1 */
+#define HAVE__MEMCMP16  1
 
 /*
  * type for the third argument to mincore().
