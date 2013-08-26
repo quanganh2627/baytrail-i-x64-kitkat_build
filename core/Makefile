@@ -1020,6 +1020,12 @@ ifeq ($(TARGET_USE_DISKINSTALLER),true)
 include bootable/diskinstaller/config.mk
 endif
 
+
+#change for gummiboot
+ifeq ($(TARGET_USE_IAGO),true)
+include bootable/iago/image.mk
+endif
+
 # -----------------------------------------------------------------
 # host tools needed to build dist and OTA packages
 
