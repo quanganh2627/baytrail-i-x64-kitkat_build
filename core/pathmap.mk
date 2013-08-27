@@ -51,6 +51,7 @@ pathmap_INCL := \
     system-core:system/core/include \
     audio-effects:system/media/audio_effects/include \
     audio-utils:system/media/audio_utils/include \
+    audio-route:system/media/audio_route/include \
     wilhelm:frameworks/wilhelm/include \
     wilhelm-ut:frameworks/wilhelm/src/ut \
     speex:external/speex/include
@@ -58,12 +59,33 @@ pathmap_INCL := \
 #
 # Returns the path to the requested module's include directory,
 # relative to the root of the source tree.  Does not handle external
-# modules.
+# modules by default. external modules can be supported by using
+# add-path-map macro in device/intel/common/BroadConfig.mk.
 #
 # $(1): a list of modules (or other named entities) to find the includes for
 #
 define include-path-for
 $(foreach n,$(1),$(patsubst $(n):%,%,$(filter $(n):%,$(pathmap_INCL))))
+endef
+
+#
+# Macro to add include directories of modules in pathmap_INCL
+# relative to root of source tree. Usage:
+# $(call add-path-map, project1:path1)
+# OR
+# $(call add-path-map, \
+#        project1:path1 \
+#        project2:path1)
+#
+define add-path-map
+$(eval pathmap_INCL += \
+    $(foreach path, $(1), \
+        $(if $(filter $(firstword $(subst :, ,$(path))):%, $(pathmap_INCL)), \
+            $(error Duplicate AOSP path map $(path)), \
+            $(path) \
+         ) \
+     ) \
+ )
 endef
 
 #
@@ -96,8 +118,6 @@ FRAMEWORKS_BASE_SUBDIRS := \
 	    telephony \
 	    wifi \
 	    keystore \
-	    icu4j \
-	    voip \
 	 )
 
 #
@@ -113,8 +133,12 @@ FRAMEWORKS_BASE_JAVA_SRC_DIRS := \
 # A list of all source roots under frameworks/support.
 #
 FRAMEWORKS_SUPPORT_SUBDIRS := \
-	v4 \
-	v13 \
+        v4 \
+        v7/gridlayout \
+        v7/appcompat \
+        v7/mediarouter \
+        v8/renderscript \
+        v13
 
 #
 # A version of FRAMEWORKS_SUPPORT_SUBDIRS that is expanded to full paths from
@@ -122,3 +146,10 @@ FRAMEWORKS_SUPPORT_SUBDIRS := \
 #
 FRAMEWORKS_SUPPORT_JAVA_SRC_DIRS := \
 	$(addprefix frameworks/support/,$(FRAMEWORKS_SUPPORT_SUBDIRS))
+
+#
+# A list of support library modules.
+#
+FRAMEWORKS_SUPPORT_JAVA_LIBRARIES := \
+    $(foreach dir,$(FRAMEWORKS_SUPPORT_SUBDIRS),android-support-$(subst /,-,$(dir)))
+
