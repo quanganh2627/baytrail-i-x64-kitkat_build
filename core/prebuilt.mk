@@ -16,18 +16,6 @@ ifneq ($(LOCAL_PREBUILT_JAVA_LIBRARIES),)
 $(error dont use LOCAL_PREBUILT_JAVA_LIBRARIES anymore LOCAL_PATH=$(LOCAL_PATH))
 endif
 
-ifneq ($(filter APPS,$(LOCAL_MODULE_CLASS)),)
-ifeq (true,$(WITH_DEXPREOPT))
-ifeq (true,$(WITH_DEXPREOPT_PREBUILT))
-ifeq (,$(TARGET_BUILD_APPS))
-ifndef LOCAL_DEX_PREOPT
-LOCAL_DEX_PREOPT := true
-endif
-endif
-endif
-endif
-endif
-
 ifdef LOCAL_IS_HOST_MODULE
   my_prefix:=HOST_
 else
@@ -125,30 +113,16 @@ else
 endif
 
 ifneq ($(filter APPS,$(LOCAL_MODULE_CLASS)),)
-ifeq ($(LOCAL_DEX_PREOPT),true)
-# Make sure the boot jars get dexpreopt-ed first
-$(built_module): $(DEXPREOPT_BOOT_ODEXS) | $(DEXPREOPT) $(DEXOPT) $(AAPT)
-endif
 ifeq ($(LOCAL_CERTIFICATE),PRESIGNED)
-$(built_module) : $(LOCAL_PATH)/$(LOCAL_SRC_FILES) | $(ACP) $(ZIPALIGN)
-	$(transform-prebuilt-to-target)
+# Ensure that presigned .apks have been aligned.
+$(built_module) : $(LOCAL_PATH)/$(LOCAL_SRC_FILES) | $(ZIPALIGN)
+	$(transform-prebuilt-to-target-with-zipalign)
 else
-# Sign non-presigned .apks.
+# Sign and align non-presigned .apks.
 $(built_module) : $(LOCAL_PATH)/$(LOCAL_SRC_FILES) | $(ACP) $(ZIPALIGN) $(SIGNAPK_JAR)
 	$(transform-prebuilt-to-target)
 	$(sign-package)
-endif
-ifeq ($(LOCAL_DEX_PREOPT),true)
-	$(hide) rm -f $(patsubst %.apk,%.odex,$@)
-	$(call dexpreopt-one-file,$@,$(patsubst %.apk,%.odex,$@))
-	$(call dexpreopt-remove-classes.dex,$@)
-endif
-# Align non-presigned and presigned .apks
 	$(align-package)
-
-ifeq ($(LOCAL_DEX_PREOPT),true)
-built_odex := $(basename $(built_module)).odex
-$(built_odex): $(built_module)
 endif
 else
 ifneq ($(LOCAL_PREBUILT_STRIP_COMMENTS),)

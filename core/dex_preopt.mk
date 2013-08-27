@@ -4,11 +4,7 @@
 ####################################
 
 # TODO: replace it with device's BOOTCLASSPATH
-ifeq ($(strip $(USE_INTEL_ASF)),true)
-DEXPREOPT_BOOT_JARS := core:core-junit:bouncycastle:ext:framework:telephony-common:mms-common:android.policy:services:apache-xml:com.intel.multidisplay:com.intel.asf
-else
-DEXPREOPT_BOOT_JARS := core:core-junit:bouncycastle:ext:framework:telephony-common:mms-common:android.policy:services:apache-xml:com.intel.multidisplay
-endif
+DEXPREOPT_BOOT_JARS := core:core-junit:bouncycastle:ext:framework:telephony-common:mms-common:android.policy:services:apache-xml
 DEXPREOPT_BOOT_JARS_MODULES := $(subst :, ,$(DEXPREOPT_BOOT_JARS))
 
 DEXPREOPT_BUILD_DIR := $(OUT_DIR)
