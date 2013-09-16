@@ -27,5 +27,6 @@ tests/repo/*/build
 tests/sameNamedLibs/*/build
 tests/sameNamedLibs/*/*/build
 tests/tictactoe/*/build
+lint-results
 /repo
 /out
