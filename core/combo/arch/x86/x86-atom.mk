@@ -10,19 +10,9 @@ ARCH_X86_HAVE_SSE2  := true
 ARCH_X86_HAVE_SSE3  := true
 
 ARCH_X86_HAVE_SSSE3 := true
-
-ifeq ($(TARGET_BOARD_PLATFORM),bigcore)
-ARCH_X86_HAVE_MOVBE := false
-else
 ARCH_X86_HAVE_MOVBE := true
-endif
-
 ARCH_X86_HAVE_POPCNT := false   # popcnt is not supported by current Atom CPUs
 
 # This flag is used to enabled Atom-specific optimizations with our toolchain
 #
-ifeq ($(TARGET_BOARD_PLATFORM),bigcore)
-TARGET_GLOBAL_CFLAGS += -march=corei7 -mssse3
-else
 TARGET_GLOBAL_CFLAGS += -march=atom
-endif
