@@ -410,7 +410,6 @@ event-log-tags: $(event_log_tags_file)
 
 ALL_DEFAULT_INSTALLED_MODULES += $(event_log_tags_file)
 
-
 # #################################################################
 # Targets for boot/OS images
 # #################################################################
@@ -1218,6 +1217,16 @@ vendorimage-nodeps: | $(INTERNAL_USERIMAGES_DEPS)
 	$(build-vendorimage-target)
 
 endif # BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE
+
+# -----------------------------------------------------------------
+# bring in the installer image generation defines if necessary
+ifeq ($(TARGET_USE_DISKINSTALLER),true)
+include bootable/diskinstaller/config.mk
+endif
+
+ifeq ($(strip $(TARGET_USE_USERFASTBOOT)),true)
+include bootable/userfastboot/ramdisk.mk
+endif
 
 # -----------------------------------------------------------------
 # host tools needed to build dist and OTA packages
