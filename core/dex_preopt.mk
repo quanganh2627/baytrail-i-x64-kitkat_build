@@ -5,7 +5,7 @@
 
 # TODO: replace it with device's BOOTCLASSPATH
 DEXPREOPT_BOOT_JARS := core:core-junit:bouncycastle:ext:framework:telephony-common:voip-common:mms-common:android.policy:services:apache-xml:com.intel.multidisplay:com.intel.config
-ifeq ($(strip $(USE_INTEL_ASF)),true)
+ifeq ($(strip $(INTEL_FEATURE_ASF)),true)
 DEXPREOPT_BOOT_JARS:=$(DEXPREOPT_BOOT_JARS):com.intel.asf
 endif
 ifeq ($(strip $(INTEL_FEATURE_ARKHAM)),true)
