@@ -40,6 +40,9 @@ android {
         minSdkVersion 16
         targetSdkVersion 16
 
+        testInstrumentationRunner "android.test.InstrumentationTestRunner"
+        testHandleProfiling false
+
         buildConfig "private final static boolean DEFAULT = true;", \
                     "private final static String FOO = \"foo\";"
     }

@@ -33,6 +33,8 @@ public class TestManifestGenerator {
     private final static String PH_TARGET_SDK_VERSION = "#TARGETSDKVERSION#";
     private final static String PH_TESTED_PACKAGE = "#TESTEDPACKAGE#";
     private final static String PH_TEST_RUNNER = "#TESTRUNNER#";
+    private final static String PH_HANDLE_PROFILING = "#HANDLEPROFILING#";
+    private final static String PH_FUNCTIONAL_TEST = "#FUNCTIONALTEST#";
 
     private final String mOutputFile;
     private final String mPackageName;
@@ -40,19 +42,25 @@ public class TestManifestGenerator {
     private final int mTargetSdkVersion;
     private final String mTestedPackageName;
     private final String mTestRunnerName;
+    private final boolean mHandleProfiling;
+    private final boolean mFunctionalTest;
 
     public TestManifestGenerator(@NonNull String outputFile,
                           @NonNull String packageName,
                           int minSdkVersion,
                           int targetSdkVersion,
                           @NonNull String testedPackageName,
-                          @NonNull String testRunnerName) {
+                          @NonNull String testRunnerName,
+                          @NonNull Boolean handleProfiling,
+                          @NonNull Boolean functionalTest) {
         mOutputFile = outputFile;
         mPackageName = packageName;
         mMinSdkVersion = minSdkVersion;
         mTargetSdkVersion = targetSdkVersion != -1 ? targetSdkVersion : minSdkVersion;
         mTestedPackageName = testedPackageName;
         mTestRunnerName = testRunnerName;
+        mHandleProfiling = handleProfiling;
+        mFunctionalTest = functionalTest;
     }
 
     public void generate() throws IOException {
@@ -62,6 +70,8 @@ public class TestManifestGenerator {
         map.put(PH_TARGET_SDK_VERSION, Integer.toString(mTargetSdkVersion));
         map.put(PH_TESTED_PACKAGE, mTestedPackageName);
         map.put(PH_TEST_RUNNER, mTestRunnerName);
+        map.put(PH_HANDLE_PROFILING, Boolean.toString(mHandleProfiling));
+        map.put(PH_FUNCTIONAL_TEST, Boolean.toString(mFunctionalTest));
 
         TemplateProcessor processor = new TemplateProcessor(
                 TestManifestGenerator.class.getResourceAsStream(TEMPLATE),

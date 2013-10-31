@@ -41,6 +41,8 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
     private String mPackageName = null;
     private String mTestPackageName = null;
     private String mTestInstrumentationRunner = null;
+    private Boolean mTestHandleProfiling = null;
+    private Boolean mTestFunctionalTest = null;
 
 
     @NonNull
@@ -59,6 +61,8 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
 
         clonedFlavor.mTestPackageName = productFlavor.getTestPackageName();
         clonedFlavor.mTestInstrumentationRunner = productFlavor.getTestInstrumentationRunner();
+        clonedFlavor.mTestHandleProfiling = productFlavor.getTestHandleProfiling();
+        clonedFlavor.mTestFunctionalTest = productFlavor.getTestFunctionalTest();
 
         return clonedFlavor;
     }
@@ -116,6 +120,18 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
         return mTestInstrumentationRunner;
     }
 
+    @Nullable
+    @Override
+    public Boolean getTestHandleProfiling() {
+        return mTestHandleProfiling;
+    }
+
+    @Nullable
+    @Override
+    public Boolean getTestFunctionalTest() {
+        return mTestFunctionalTest;
+    }
+
     @Override
     public String toString() {
         return "ProductFlavorImpl{" +
@@ -128,6 +144,8 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
                 ", mPackageName='" + mPackageName + '\'' +
                 ", mTestPackageName='" + mTestPackageName + '\'' +
                 ", mTestInstrumentationRunner='" + mTestInstrumentationRunner + '\'' +
+                ", mTestHandleProfiling='" + mTestHandleProfiling + '\'' +
+                ", mTestFunctionalTest='" + mTestFunctionalTest + '\'' +
                 '}';
     }
 

@@ -41,6 +41,12 @@ public class ProcessTestManifest extends ProcessManifest {
     @Input
     String instrumentationRunner
 
+    @Input
+    Boolean handleProfiling;
+
+    @Input
+    Boolean functionalTest;
+
     @Nested
     List<ManifestDependencyImpl> libraries
 
@@ -52,6 +58,8 @@ public class ProcessTestManifest extends ProcessManifest {
                 getTargetSdkVersion(),
                 getTestedPackageName(),
                 getInstrumentationRunner(),
+                getHandleProfiling(),
+                getFunctionalTest(),
                 getLibraries(),
                 getManifestOutputFile().absolutePath)
     }

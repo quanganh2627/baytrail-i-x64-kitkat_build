@@ -198,6 +198,9 @@ public class AndroidProjectTest extends TestCase {
                 .setVersionName("2.0")
                 .setMinSdkVersion(16)
                 .setTargetSdkVersion(16)
+                .setTestInstrumentationRunner("android.test.InstrumentationTestRunner")
+                .setTestHandleProfiling(Boolean.FALSE)
+                .setTestFunctionalTest(null)
                 .test();
 
         ArtifactInfo debugMainInfo = debugVariant.getMainArtifactInfo();
@@ -528,6 +531,8 @@ public class AndroidProjectTest extends TestCase {
         private int renderscriptTargetApi = -1;
         private String testPackageName = null;
         private String testInstrumentationRunner = null;
+        private Boolean testHandleProfiling = null;
+        private Boolean testFunctionalTest = null;
 
         ProductFlavorTester(@NonNull ProductFlavor productFlavor, @NonNull String name) {
             this.productFlavor = productFlavor;
@@ -544,33 +549,43 @@ public class AndroidProjectTest extends TestCase {
             return this;
         }
 
-         ProductFlavorTester setVersionName(String versionName) {
+        ProductFlavorTester setVersionName(String versionName) {
             this.versionName = versionName;
             return this;
         }
 
-         ProductFlavorTester setMinSdkVersion(int minSdkVersion) {
+        ProductFlavorTester setMinSdkVersion(int minSdkVersion) {
             this.minSdkVersion = minSdkVersion;
             return this;
         }
 
-         ProductFlavorTester setTargetSdkVersion(int targetSdkVersion) {
+        ProductFlavorTester setTargetSdkVersion(int targetSdkVersion) {
             this.targetSdkVersion = targetSdkVersion;
             return this;
         }
 
-         ProductFlavorTester setRenderscriptTargetApi(int renderscriptTargetApi) {
+        ProductFlavorTester setRenderscriptTargetApi(int renderscriptTargetApi) {
             this.renderscriptTargetApi = renderscriptTargetApi;
             return this;
         }
 
-         ProductFlavorTester setTestPackageName(String testPackageName) {
+        ProductFlavorTester setTestPackageName(String testPackageName) {
             this.testPackageName = testPackageName;
             return this;
         }
 
-         ProductFlavorTester setTestInstrumentationRunner(String testInstrumentationRunner) {
+        ProductFlavorTester setTestInstrumentationRunner(String testInstrumentationRunner) {
             this.testInstrumentationRunner = testInstrumentationRunner;
+            return this;
+        }
+
+        ProductFlavorTester setTestHandleProfiling(Boolean testHandleProfiling) {
+            this.testHandleProfiling = testHandleProfiling;
+            return this;
+        }
+
+        ProductFlavorTester setTestFunctionalTest(Boolean testFunctionalTest) {
+            this.testFunctionalTest = testFunctionalTest;
             return this;
         }
 
@@ -587,6 +602,10 @@ public class AndroidProjectTest extends TestCase {
                     testPackageName, productFlavor.getTestPackageName());
             assertEquals(name + ":testInstrumentationRunner",
                     testInstrumentationRunner, productFlavor.getTestInstrumentationRunner());
+            assertEquals(name + ":testHandleProfiling",
+                    testHandleProfiling, productFlavor.getTestHandleProfiling());
+            assertEquals(name + ":testFunctionalTest",
+                    testFunctionalTest, productFlavor.getTestFunctionalTest());
         }
     }
 

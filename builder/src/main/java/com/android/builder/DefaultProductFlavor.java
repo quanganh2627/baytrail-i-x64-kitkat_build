@@ -41,6 +41,8 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     private String mPackageName = null;
     private String mTestPackageName = null;
     private String mTestInstrumentationRunner = null;
+    private Boolean mTestHandleProfiling = null;
+    private Boolean mTestFunctionalTest = null;
     private SigningConfig mSigningConfig = null;
 
     /**
@@ -169,6 +171,30 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         return mTestInstrumentationRunner;
     }
 
+    @Override
+    @Nullable
+    public Boolean getTestHandleProfiling() {
+        return mTestHandleProfiling;
+    }
+
+    @NonNull
+    public ProductFlavor setTestHandleProfiling(boolean handleProfiling) {
+        mTestHandleProfiling = handleProfiling;
+        return this;
+    }
+
+    @Override
+    @Nullable
+    public Boolean getTestFunctionalTest() {
+        return mTestFunctionalTest;
+    }
+
+    @NonNull
+    public ProductFlavor setTestFunctionalTest(boolean functionalTest) {
+        mTestFunctionalTest = functionalTest;
+        return this;
+    }
+
     @Nullable
     public SigningConfig getSigningConfig() {
         return mSigningConfig;
@@ -203,6 +229,12 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         flavor.mTestInstrumentationRunner = chooseString(mTestInstrumentationRunner,
                 base.mTestInstrumentationRunner);
 
+        flavor.mTestHandleProfiling = chooseBoolean(mTestHandleProfiling,
+                base.mTestHandleProfiling);
+
+        flavor.mTestFunctionalTest = chooseBoolean(mTestFunctionalTest,
+                base.mTestFunctionalTest);
+
         flavor.mSigningConfig =
                 mSigningConfig != null ? mSigningConfig : base.mSigningConfig;
 
@@ -215,6 +247,10 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
 
     @Nullable
     private String chooseString(String overlay, String base) {
+        return overlay != null ? overlay : base;
+    }
+
+    private Boolean chooseBoolean(Boolean overlay, Boolean base) {
         return overlay != null ? overlay : base;
     }
 
@@ -238,6 +274,14 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         if (mTestInstrumentationRunner != null ?
                 !mTestInstrumentationRunner.equals(that.mTestInstrumentationRunner) :
                 that.mTestInstrumentationRunner != null)
+            return false;
+        if (mTestHandleProfiling != null ?
+                !mTestHandleProfiling.equals(that.mTestHandleProfiling) :
+                that.mTestHandleProfiling != null)
+            return false;
+        if (mTestFunctionalTest != null ?
+                !mTestFunctionalTest.equals(that.mTestFunctionalTest) :
+                that.mTestFunctionalTest != null)
             return false;
         if (mTestPackageName != null ?
                 !mTestPackageName.equals(that.mTestPackageName) : that.mTestPackageName != null)
@@ -265,6 +309,10 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         result = 31 * result + (mTestPackageName != null ? mTestPackageName.hashCode() : 0);
         result = 31 * result + (mTestInstrumentationRunner != null ?
                 mTestInstrumentationRunner.hashCode() : 0);
+        result = 31 * result + (mTestHandleProfiling != null ?
+                mTestHandleProfiling.hashCode() : 0);
+        result = 31 * result + (mTestFunctionalTest != null ?
+                mTestFunctionalTest.hashCode() : 0);
         result = 31 * result + (mSigningConfig != null ? mSigningConfig.hashCode() : 0);
         return result;
     }
@@ -282,6 +330,8 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
                 .add("packageName", mPackageName)
                 .add("testPackageName", mTestPackageName)
                 .add("testInstrumentationRunner", mTestInstrumentationRunner)
+                .add("testHandleProfiling", mTestHandleProfiling)
+                .add("testFunctionalTest", mTestFunctionalTest)
                 .add("signingConfig", mSigningConfig)
                 .toString();
     }
