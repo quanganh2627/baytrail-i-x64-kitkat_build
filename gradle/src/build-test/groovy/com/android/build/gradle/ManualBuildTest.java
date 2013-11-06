@@ -31,11 +31,9 @@ import javax.imageio.ImageIO;
  * Android Source tree under out/host/<platform>/sdk/... (result of 'make sdk')
  */
 public class ManualBuildTest extends BuildTest {
-    public void testDummy() {
-        // JUnit won't complain that this test class does not have test methods.
-    }
 
-    public void DISABLEDtestOverlay1Content() throws Exception {
+
+    public void testOverlay1Content() throws Exception {
         File project = buildProject("overlay1", BasePlugin.GRADLE_MIN_VERSION);
         File drawableOutput = new File(project, "build/res/all/debug/drawable");
 
@@ -43,7 +41,7 @@ public class ManualBuildTest extends BuildTest {
         checkImageColor(drawableOutput, "type_overlay.png", (int) 0xFF00FF00);
     }
 
-    public void DISABLEDtestOverlay2Content() throws Exception {
+    public void testOverlay2Content() throws Exception {
         File project = buildProject("overlay2", BasePlugin.GRADLE_MIN_VERSION);
         File drawableOutput = new File(project, "build/res/all/one/debug/drawable");
 
@@ -53,7 +51,7 @@ public class ManualBuildTest extends BuildTest {
         checkImageColor(drawableOutput, "type_flavor_overlay.png", (int) 0xFF00FF00);
     }
 
-    public void DISABLEDtestRepo() {
+    public void testRepo() {
         File repo = new File(testDir, "repo");
 
         try {
@@ -73,7 +71,7 @@ public class ManualBuildTest extends BuildTest {
     }
 
     // test whether a library project has its fields ProGuarded
-    public void DISABLEDtestLibProguard() throws Exception {
+    public void testLibProguard() throws Exception {
         File project = new File(testDir, "libProguard");
         File fileOutput = new File(project, "build/proguard/release");
 
@@ -84,7 +82,7 @@ public class ManualBuildTest extends BuildTest {
     }
 
     // test whether proguard.txt has been correctly merged
-    public void DISABLEDtestLibProguardConsumerFile() throws Exception {
+    public void testLibProguardConsumerFile() throws Exception {
         File project = new File(testDir, "libProguardConsumerFiles");
         File debugFileOutput = new File(project, "build/bundles/debug");
         File releaseFileOutput = new File(project, "build/bundles/release");
@@ -95,7 +93,7 @@ public class ManualBuildTest extends BuildTest {
         checkFile(releaseFileOutput, "proguard.txt", new String[]{"A", "B", "C"});
     }
 
-    public void DISABLEDtest3rdPartyTests() throws Exception {
+    public void test3rdPartyTests() throws Exception {
         // custom because we want to run deviceCheck even without devices, since we use
         // a fake DeviceProvider that doesn't use a device, but only record the calls made
         // to the DeviceProvider and the DeviceConnector.
