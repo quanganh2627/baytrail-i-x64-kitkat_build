@@ -17,6 +17,7 @@
 package com.android.builder.internal.incremental;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -74,6 +75,7 @@ public class DependencyData {
      *
      * @param dependencyFile the dependency file
      */
+    @Nullable
     public static DependencyData parseDependencyFile(@NonNull File dependencyFile)
             throws IOException {
         // first check if the dependency file is here.
@@ -91,6 +93,7 @@ public class DependencyData {
     }
 
     @VisibleForTesting
+    @Nullable
     static DependencyData processDependencyData(@NonNull List<String> content) {
         // The format is technically:
         // output1 output2 [...]: dep1 dep2 [...]
@@ -140,6 +143,10 @@ public class DependencyData {
             }
 
             parseMode = nextMode;
+        }
+
+        if (data.getMainFile() == null) {
+            return null;
         }
 
         return data;
