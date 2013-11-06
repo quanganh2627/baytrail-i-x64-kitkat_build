@@ -11,6 +11,7 @@ import java.util.Arrays;
 
 import com.example.android.multiproject.person.Person;
 import com.example.android.multiproject.person.People;
+import com.sample.android.multiproject.library.PersonView;
 
 public class ShowPeopleActivity extends Activity {
     @Override
