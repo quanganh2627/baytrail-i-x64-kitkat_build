@@ -44,6 +44,12 @@ public interface TestData {
     @NonNull
     String getInstrumentationRunner();
 
+    @NonNull
+    Boolean getHandleProfiling();
+
+    @NonNull
+    Boolean getFunctionalTest();
+
     int getMinSdkVersion();
 
     @Nullable

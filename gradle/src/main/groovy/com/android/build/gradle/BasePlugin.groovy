@@ -410,6 +410,12 @@ public abstract class BasePlugin {
         processTestManifestTask.conventionMapping.instrumentationRunner = {
             config.instrumentationRunner
         }
+        processTestManifestTask.conventionMapping.handleProfiling = {
+            config.handleProfiling
+        }
+        processTestManifestTask.conventionMapping.functionalTest = {
+            config.functionalTest
+        }
         processTestManifestTask.conventionMapping.libraries = {
             getManifestDependencies(config.directLibraries)
         }

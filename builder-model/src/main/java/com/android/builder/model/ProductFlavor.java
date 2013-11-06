@@ -107,4 +107,20 @@ public interface ProductFlavor extends BaseConfig {
      */
     @Nullable
     String getTestInstrumentationRunner();
+
+    /**
+     * Returns the handlingProfile value. This is only the value set on this product flavor.
+     *
+     *  @return the handlingProfile value.
+     */
+    @Nullable
+    Boolean getTestHandleProfiling();
+
+    /**
+     * Returns the functionalTest value. This is only the value set on this product flavor.
+     *
+     * @return the functionalTest value.
+     */
+    @Nullable
+    Boolean getTestFunctionalTest();
 }

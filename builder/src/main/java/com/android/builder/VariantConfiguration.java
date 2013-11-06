@@ -457,6 +457,8 @@ public class VariantConfiguration implements TestData {
     }
 
     private final static String DEFAULT_TEST_RUNNER = "android.test.InstrumentationTestRunner";
+    private final static Boolean DEFAULT_HANDLE_PROFILING = false;
+    private final static Boolean DEFAULT_FUNCTIONAL_TEST = false;
 
     /**
      * Returns the instrumentationRunner to use to test this variant, or if the
@@ -472,6 +474,38 @@ public class VariantConfiguration implements TestData {
         }
         String runner = config.mMergedFlavor.getTestInstrumentationRunner();
         return runner != null ? runner : DEFAULT_TEST_RUNNER;
+    }
+
+    /**
+     * Returns handleProfiling value to use to test this variant, or if the
+     * variant is a test, the one to use to test the tested variant.
+     * @return the handleProfiling value
+     */
+    @Override
+    @NonNull
+    public Boolean getHandleProfiling() {
+        VariantConfiguration config = this;
+        if (mType == Type.TEST) {
+            config = getTestedConfig();
+        }
+        Boolean handleProfiling = config.mMergedFlavor.getTestHandleProfiling();
+        return handleProfiling != null ? handleProfiling : DEFAULT_HANDLE_PROFILING;
+    }
+
+    /**
+     * Returns functionalTest value to use to test this variant, or if the
+     * variant is a test, the one to use to test the tested variant.
+     * @return the functionalTest value
+     */
+    @Override
+    @NonNull
+    public Boolean getFunctionalTest() {
+        VariantConfiguration config = this;
+        if (mType == Type.TEST) {
+            config = getTestedConfig();
+        }
+        Boolean functionalTest = config.mMergedFlavor.getTestFunctionalTest();
+        return functionalTest != null ? functionalTest : DEFAULT_FUNCTIONAL_TEST;
     }
 
     /**

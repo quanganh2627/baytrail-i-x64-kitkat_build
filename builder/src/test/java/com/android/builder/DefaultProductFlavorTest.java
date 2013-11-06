@@ -39,6 +39,8 @@ public class DefaultProductFlavorTest extends TestCase {
         mCustom.setPackageName("com.forty.two");
         mCustom.setTestPackageName("com.forty.two.test");
         mCustom.setTestInstrumentationRunner("com.forty.two.test.Runner");
+        mCustom.setTestHandleProfiling(true);
+        mCustom.setTestFunctionalTest(true);
     }
 
     public void testMergeOnDefault() {
@@ -52,6 +54,8 @@ public class DefaultProductFlavorTest extends TestCase {
         assertEquals("com.forty.two", flavor.getPackageName());
         assertEquals("com.forty.two.test", flavor.getTestPackageName());
         assertEquals("com.forty.two.test.Runner", flavor.getTestInstrumentationRunner());
+        assertEquals(Boolean.TRUE, flavor.getTestHandleProfiling());
+        assertEquals(Boolean.TRUE, flavor.getTestFunctionalTest());
     }
 
     public void testMergeOnCustom() {
@@ -65,6 +69,8 @@ public class DefaultProductFlavorTest extends TestCase {
         assertEquals("com.forty.two", flavor.getPackageName());
         assertEquals("com.forty.two.test", flavor.getTestPackageName());
         assertEquals("com.forty.two.test.Runner", flavor.getTestInstrumentationRunner());
+        assertEquals(Boolean.TRUE, flavor.getTestHandleProfiling());
+        assertEquals(Boolean.TRUE, flavor.getTestFunctionalTest());
     }
 
     public void testMergeDefaultOnDefault() {
@@ -78,5 +84,7 @@ public class DefaultProductFlavorTest extends TestCase {
         assertNull(flavor.getPackageName());
         assertNull(flavor.getTestPackageName());
         assertNull(flavor.getTestInstrumentationRunner());
+        assertNull(flavor.getTestHandleProfiling());
+        assertNull(flavor.getTestFunctionalTest());
     }
 }

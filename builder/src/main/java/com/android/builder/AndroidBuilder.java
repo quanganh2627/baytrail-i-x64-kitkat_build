@@ -80,7 +80,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * then build steps can be done with
  * {@link #generateBuildConfig(String, boolean, java.util.List, String)}
  * {@link #processManifest(java.io.File, java.util.List, java.util.List, String, int, String, int, int, String)}
- * {@link #processTestManifest(String, int, int, String, String, java.util.List, String)}
+ * {@link #processTestManifest(String, int, int, String, String, Boolean, Boolean, java.util.List, String)}
  * {@link #processResources(java.io.File, java.io.File, java.io.File, java.util.List, String, String, String, String, String, com.android.builder.VariantConfiguration.Type, boolean, com.android.builder.model.AaptOptions)}
  * {@link #compileAllAidlFiles(java.util.List, java.io.File, java.util.List, com.android.builder.compiling.DependencyFileProcessor)}
  * {@link #convertByteCode(Iterable, Iterable, File, String, DexOptions, boolean)}
@@ -316,6 +316,8 @@ public class AndroidBuilder {
      * @param targetSdkVersion the targetSdkVersion of the test application
      * @param testedPackageName the package name of the tested application
      * @param instrumentationRunner the name of the instrumentation runner
+     * @param handleProfiling whether or not the Instrumentation object will turn profiling on and off
+     * @param functionalTest whether or not the Instrumentation class should run as a functional test
      * @param libraries the library dependency graph
      * @param outManifestLocation the output location for the merged manifest
      *
@@ -324,6 +326,8 @@ public class AndroidBuilder {
      * @see com.android.builder.VariantConfiguration#getMinSdkVersion()
      * @see com.android.builder.VariantConfiguration#getTestedPackageName()
      * @see com.android.builder.VariantConfiguration#getInstrumentationRunner()
+     * @see com.android.builder.VariantConfiguration#getHandleProfiling()
+     * @see com.android.builder.VariantConfiguration#getFunctionalTest()
      * @see com.android.builder.VariantConfiguration#getDirectLibraries()
      */
     public void processTestManifest(
@@ -332,11 +336,15 @@ public class AndroidBuilder {
                      int targetSdkVersion,
             @NonNull String testedPackageName,
             @NonNull String instrumentationRunner,
+            @NonNull Boolean handleProfiling,
+            @NonNull Boolean functionalTest,
             @NonNull List<? extends ManifestDependency> libraries,
             @NonNull String outManifestLocation) {
         checkNotNull(testPackageName, "testPackageName cannot be null.");
         checkNotNull(testedPackageName, "testedPackageName cannot be null.");
         checkNotNull(instrumentationRunner, "instrumentationRunner cannot be null.");
+        checkNotNull(handleProfiling, "handleProfiling cannot be null.");
+        checkNotNull(functionalTest, "functionalTest cannot be null.");
         checkNotNull(libraries, "libraries cannot be null.");
         checkNotNull(outManifestLocation, "outManifestLocation cannot be null.");
 
@@ -351,6 +359,8 @@ public class AndroidBuilder {
                         targetSdkVersion,
                         testedPackageName,
                         instrumentationRunner,
+                        handleProfiling,
+                        functionalTest,
                         generatedTestManifest.getAbsolutePath());
 
                 mergeLibraryManifests(
@@ -368,6 +378,8 @@ public class AndroidBuilder {
                     targetSdkVersion,
                     testedPackageName,
                     instrumentationRunner,
+                    handleProfiling,
+                    functionalTest,
                     outManifestLocation);
         }
     }
@@ -378,6 +390,8 @@ public class AndroidBuilder {
             int targetSdkVersion,
             String testedPackageName,
             String instrumentationRunner,
+            Boolean handleProfiling,
+            Boolean functionalTest,
             String outManifestLocation) {
         TestManifestGenerator generator = new TestManifestGenerator(
                 outManifestLocation,
@@ -385,7 +399,9 @@ public class AndroidBuilder {
                 minSdkVersion,
                 targetSdkVersion,
                 testedPackageName,
-                instrumentationRunner);
+                instrumentationRunner,
+                handleProfiling,
+                functionalTest);
         try {
             generator.generate();
         } catch (IOException e) {
