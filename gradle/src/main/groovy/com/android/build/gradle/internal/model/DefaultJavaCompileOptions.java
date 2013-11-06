@@ -27,9 +27,10 @@ import java.io.Serializable;
 class DefaultJavaCompileOptions implements JavaCompileOptions, Serializable {
     @NonNull
     private final String sourceCompatibility;
+    @NonNull
     private final String targetCompatibility;
 
-    DefaultJavaCompileOptions(CompileOptions options) {
+    DefaultJavaCompileOptions(@NonNull CompileOptions options) {
       sourceCompatibility = options.getSourceCompatibility().toString();
       targetCompatibility = options.getTargetCompatibility().toString();
     }
