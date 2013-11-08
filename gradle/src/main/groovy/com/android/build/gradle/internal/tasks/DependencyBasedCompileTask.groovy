@@ -15,7 +15,6 @@
  */
 
 package com.android.build.gradle.internal.tasks
-
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.builder.compiling.DependencyFileProcessor
@@ -28,7 +27,6 @@ import com.google.common.collect.Multimap
 import org.gradle.api.tasks.OutputDirectory
 
 import java.util.concurrent.Callable
-
 /**
  * Base task for source generators that generate and use dependency files.
  */

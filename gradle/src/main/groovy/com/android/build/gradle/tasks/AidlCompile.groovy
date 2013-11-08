@@ -47,11 +47,6 @@ public class AidlCompile extends DependencyBasedCompileTask {
     }
 
     @Override
-    protected Collection<File> getOutputForIncrementalBuild() {
-        return Collections.singletonList(getSourceOutputDir())
-    }
-
-    @Override
     protected void compileAllFiles(DependencyFileProcessor dependencyFileProcessor) {
         getBuilder().compileAllAidlFiles(
                 getSourceDirs(),

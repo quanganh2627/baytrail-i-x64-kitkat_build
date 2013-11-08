@@ -505,7 +505,7 @@ public abstract class BasePlugin {
         mergeAssetsTask.plugin = this
         mergeAssetsTask.variant = variantData
         mergeAssetsTask.incrementalFolder =
-            project.file("$project.buildDir/incremental/mergeAssets/$variantData.dirName")
+                project.file("$project.buildDir/incremental/mergeAssets/$variantData.dirName")
 
         mergeAssetsTask.conventionMapping.inputAssetSets = {
             variantData.variantConfiguration.getAssetSets(includeDependencies)
@@ -642,8 +642,7 @@ public abstract class BasePlugin {
         compileTask.plugin = this
         compileTask.variant = variantData
         compileTask.incrementalFolder =
-            project.file("$project.buildDir/incremental/aidl/$variantData.dirName")
-
+                project.file("$project.buildDir/incremental/aidl/$variantData.dirName")
 
         compileTask.conventionMapping.sourceDirs = { variantConfiguration.aidlSourceList }
         compileTask.conventionMapping.importDirs = { variantConfiguration.aidlImports }
@@ -1121,8 +1120,6 @@ public abstract class BasePlugin {
 
         dexTask.plugin = this
         dexTask.variant = variantData
-        dexTask.incrementalFolder =
-                project.file("$project.buildDir/incremental/dex/$variantData.dirName")
 
         dexTask.conventionMapping.libraries = libraryClosure
         dexTask.conventionMapping.sourceFiles = sourceClosure
