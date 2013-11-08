@@ -105,6 +105,15 @@ built_odex := $(basename $(LOCAL_BUILT_MODULE)).odex
 $(built_odex) : $(dexpreopted_boot_odex) | $(ACP)
 	$(call copy-file-to-target)
 
+# non odex jar is saved .jar.dex for external releases
+# noopt_jar is generated together with built_odex so depend on the latter
+noopt_jar := $(DEXPREOPT_BOOT_JAR_DIR_FULL_PATH)/$(dexpreopt_boot_jar_module).jar
+built_dexjar := $(basename $(LOCAL_BUILT_MODULE)).jar.dex
+$(built_dexjar): PRIVATE_NOOPT_JAR := $(noopt_jar)
+$(built_dexjar): $(built_odex)
+	@mkdir -p $(dir $@)
+	$(hide) $(ACP) -fp $(PRIVATE_NOOPT_JAR) $@
+
 else # dexpreopt_boot_jar_module
 built_odex := $(basename $(LOCAL_BUILT_MODULE)).odex
 $(built_odex): PRIVATE_MODULE := $(LOCAL_MODULE)
