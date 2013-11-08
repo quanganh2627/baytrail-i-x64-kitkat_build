@@ -26,7 +26,13 @@ public class DexOptionsImpl implements DexOptions {
     private boolean coreLibraryFlag
 
     @Input
-    private boolean isIncrementalFlag = true
+    private boolean isIncrementalFlag = false
+
+    @Input
+    private boolean isPreDexLibrariesFlag = true
+
+    @Input
+    private boolean isJumboModeFlag = false
 
     @Input
     @Optional
@@ -48,6 +54,24 @@ public class DexOptionsImpl implements DexOptions {
     @Override
     boolean getIncremental() {
         return isIncrementalFlag
+    }
+
+    @Override
+    boolean getPreDexLibraries() {
+        return isPreDexLibrariesFlag
+    }
+
+    void setPreDexLibraries(boolean flag) {
+        isPreDexLibrariesFlag = flag
+    }
+
+    public void setJumboMode(boolean flag) {
+        isJumboModeFlag = flag
+    }
+
+    @Override
+    boolean getJumboMode() {
+        return isJumboModeFlag
     }
 
     public void setJavaMaxHeapSize(String theJavaMaxHeapSize) {

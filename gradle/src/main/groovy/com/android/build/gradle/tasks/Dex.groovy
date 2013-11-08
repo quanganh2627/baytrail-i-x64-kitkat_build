@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 package com.android.build.gradle.tasks
-
 import com.android.build.gradle.internal.dsl.DexOptionsImpl
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.ide.common.res2.FileStatus
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 
 public class Dex extends IncrementalTask {
@@ -34,13 +31,10 @@ public class Dex extends IncrementalTask {
     // ----- PRIVATE TASK API -----
 
     @InputFiles
-    Iterable<File> sourceFiles
+    Iterable<File> inputFiles
 
     @InputFiles
-    Iterable<File> libraries
-
-    @InputFile @Optional
-    File proguardedJar
+    Iterable<File> preDexedLibraries
 
     @Nested
     DexOptionsImpl dexOptions
@@ -48,10 +42,9 @@ public class Dex extends IncrementalTask {
     @Override
     protected void doFullTaskAction() {
         getBuilder().convertByteCode(
-                getSourceFiles(),
-                getLibraries(),
-                getProguardedJar(),
-                getOutputFile().absolutePath,
+                getInputFiles(),
+                getPreDexedLibraries(),
+                getOutputFile(),
                 getDexOptions(),
                 false)
     }
@@ -59,10 +52,9 @@ public class Dex extends IncrementalTask {
     @Override
     protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) {
         getBuilder().convertByteCode(
-                getSourceFiles(),
-                getLibraries(),
-                getProguardedJar(),
-                getOutputFile().absolutePath,
+                getInputFiles(),
+                getPreDexedLibraries(),
+                getOutputFile(),
                 getDexOptions(),
                 true)
     }

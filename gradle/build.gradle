@@ -34,7 +34,7 @@ dependencies {
     compile "com.android.tools:common:$project.ext.baseAndroidVersion"
 
     compile "com.android.tools.lint:lint:$project.ext.baseAndroidVersion"
-    compile 'net.sf.proguard:proguard-gradle:4.9'
+    compile 'net.sf.proguard:proguard-gradle:4.10'
 
     testCompile 'junit:junit:3.8.1'
 
@@ -57,7 +57,7 @@ configurations{
 }
 
 dependencies{
-    provided 'net.sf.proguard:proguard-gradle:4.9'
+    provided 'net.sf.proguard:proguard-gradle:4.10'
 }
 
 //Include provided for compilation
