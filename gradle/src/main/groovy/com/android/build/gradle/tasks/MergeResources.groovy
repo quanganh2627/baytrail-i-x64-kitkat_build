@@ -54,11 +54,6 @@ public class MergeResources extends IncrementalTask {
     }
 
     @Override
-    protected Collection<File> getOutputForIncrementalBuild() {
-        return Collections.singletonList(getOutputDir())
-    }
-
-    @Override
     protected void doFullTaskAction() {
         // this is full run, clean the previous output
         File destinationDir = getOutputDir()
