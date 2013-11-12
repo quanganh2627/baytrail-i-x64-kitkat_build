@@ -19,7 +19,9 @@ import com.android.annotations.NonNull
 import com.android.builder.BuilderConstants
 import com.android.builder.DefaultBuildType
 import com.android.builder.model.SigningConfig
+import org.gradle.api.Action
 import org.gradle.api.internal.file.FileResolver
+import org.gradle.internal.reflect.Instantiator
 
 /**
  * DSL overlay to make methods that accept String... work.
@@ -30,9 +32,14 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
     @NonNull
     private final FileResolver fileResolver
 
-    BuildTypeDsl(@NonNull String name, @NonNull FileResolver fileResolver) {
+    private final NdkConfigDsl ndkConfig
+
+    BuildTypeDsl(@NonNull String name,
+                 @NonNull FileResolver fileResolver,
+                 @NonNull Instantiator instantiator) {
         super(name)
         this.fileResolver = fileResolver
+        ndkConfig = instantiator.newInstance(NdkConfigDsl.class)
     }
 
     public void init(SigningConfig debugSigningConfig) {
@@ -54,6 +61,10 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
         if (!super.equals(o)) return false
 
         return true
+    }
+
+    public NdkConfigDsl getNdkConfig() {
+        return ndkConfig
     }
 
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
@@ -100,5 +111,9 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
             consumerProguardFiles.add(fileResolver.resolve(proguardFile));
         }
         return this;
+    }
+
+    void ndk(Action<NdkConfigDsl> action) {
+        action.execute(ndkConfig)
     }
 }

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.test
 import com.android.annotations.NonNull
+import com.android.annotations.Nullable
 import com.android.sdklib.internal.project.ProjectProperties
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy
 import junit.framework.TestCase
@@ -100,10 +101,31 @@ public abstract class BaseTest extends TestCase {
         return null
     }
 
-    protected static File createLocalProp(File project, File sdkDir) {
+    /**
+     * Returns the SDK folder as built from the Android source tree.
+     * @return
+     */
+    protected File getNdkDir() {
+        String androidHome = System.getenv("ANDROID_NDK_HOME");
+        if (androidHome != null) {
+            File f = new File(androidHome);
+            if (f.isDirectory()) {
+                return f;
+            } else {
+                System.out.println("Failed to find NDK in ANDROID_NDK_HOME=" + androidHome)
+            }
+        }
+    }
+
+    protected static File createLocalProp(@NonNull File project,
+                                          @NonNull File sdkDir,
+                                          @Nullable File ndkDir) {
         ProjectPropertiesWorkingCopy localProp = ProjectProperties.create(
                 project.absolutePath, ProjectProperties.PropertyType.LOCAL)
         localProp.setProperty(ProjectProperties.PROPERTY_SDK, sdkDir.absolutePath)
+        if (ndkDir != null) {
+            localProp.setProperty(ProjectProperties.PROPERTY_NDK, ndkDir.absolutePath)
+        }
         localProp.save()
 
         return (File) localProp.file
@@ -112,14 +134,15 @@ public abstract class BaseTest extends TestCase {
     protected File runTasksOn(String name, String gradleVersion, String... tasks) {
         File project = new File(testDir, name)
 
-        runGradleTasks(sdkDir, gradleVersion, project, tasks)
+        runGradleTasks(sdkDir, ndkDir, gradleVersion, project, tasks)
 
         return project;
     }
 
-    protected static void runGradleTasks(File sdkDir, String gradleVersion,
+    protected static void runGradleTasks(File sdkDir, File ndkDir,
+                                         String gradleVersion,
                                          File project, String... tasks) {
-        File localProp = createLocalProp(project, sdkDir)
+        File localProp = createLocalProp(project, sdkDir, ndkDir)
 
         try {
 

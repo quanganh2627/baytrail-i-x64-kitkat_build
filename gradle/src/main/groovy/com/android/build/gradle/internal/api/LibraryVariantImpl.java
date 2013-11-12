@@ -158,7 +158,7 @@ public class LibraryVariantImpl implements LibraryVariant {
     @Override
     @NonNull
     public Copy getProcessJavaResources() {
-        return variantData.processJavaResources;
+        return variantData.processJavaResourcesTask;
     }
 
     @Override

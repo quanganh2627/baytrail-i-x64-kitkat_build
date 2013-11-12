@@ -65,6 +65,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -166,6 +167,7 @@ public class AndroidBuilder {
     /**
      * Helper method to get the boot classpath to be used during compilation.
      */
+    @NonNull
     public static List<String> getBootClasspath(@NonNull SdkParser sdkParser) {
 
         List<String> classpath = Lists.newArrayList();
@@ -195,10 +197,16 @@ public class AndroidBuilder {
      * Returns an {@link AaptRunner} able to run aapt commands.
      * @return an AaptRunner object
      */
+    @NonNull
     public AaptRunner getAaptRunner() {
         return new AaptRunner(
                 mBuildTools.getPath(BuildToolInfo.PathId.AAPT),
                 mCmdLineRunner);
+    }
+
+    @NonNull
+    public CommandLineRunner getCommandLineRunner() {
+        return mCmdLineRunner;
     }
 
     /**
@@ -1074,7 +1082,8 @@ public class AndroidBuilder {
      * @param classesDexLocation the location of the classes.dex file
      * @param packagedJars the jars that are packaged (libraries + jar dependencies)
      * @param javaResourcesLocation the processed Java resource folder
-     * @param jniLibsLocation the location of the compiled JNI libraries
+     * @param jniLibsFolders the folders containing jni shared libraries
+     * @param abiFilters optional ABI filter
      * @param jniDebugBuild whether the app should include jni debug data
      * @param signingConfig the signing configuration
      * @param outApkLocation location of the APK.
@@ -1091,7 +1100,8 @@ public class AndroidBuilder {
             @NonNull String classesDexLocation,
             @NonNull List<File> packagedJars,
             @Nullable String javaResourcesLocation,
-            @Nullable String jniLibsLocation,
+            @Nullable Collection<File> jniLibsFolders,
+            @Nullable Set<String> abiFilters,
             boolean jniDebugBuild,
             @Nullable SigningConfig signingConfig,
             @NonNull String outApkLocation) throws DuplicateFileException, FileNotFoundException,
@@ -1128,8 +1138,10 @@ public class AndroidBuilder {
             }
 
             // also add resources from library projects and jars
-            if (jniLibsLocation != null) {
-                packager.addNativeLibraries(jniLibsLocation);
+            if (jniLibsFolders != null) {
+                for (File jniFolder : jniLibsFolders) {
+                    packager.addNativeLibraries(jniFolder, abiFilters);
+                }
             }
 
             packager.sealApk();

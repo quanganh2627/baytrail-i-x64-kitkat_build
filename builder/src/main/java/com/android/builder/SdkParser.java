@@ -94,6 +94,13 @@ public interface SdkParser {
     @NonNull
     File getAdb();
 
+    /**
+     * Returns the location of artifact repositories built-in the SDK.
+     * @return a non null list of repository folders.
+     */
     @NonNull
     List<File> getRepositories();
+
+    @Nullable
+    File getNdkLocation();
 }

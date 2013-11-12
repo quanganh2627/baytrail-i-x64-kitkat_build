@@ -33,11 +33,13 @@ abstract class BuildTest extends BaseTest {
 
     protected File testDir;
     protected File sdkDir;
+    protected File ndkDir;
 
     @Override
     protected void setUp() throws Exception {
         testDir = getTestDir();
         sdkDir = getSdkDir();
+        ndkDir = getNdkDir();
     }
 
     /**
@@ -59,12 +61,10 @@ abstract class BuildTest extends BaseTest {
         File project = new File(testDir, name);
 
         File buildGradle = new File(project, "build.gradle");
-        if (!buildGradle.isFile()) {
-            return null;
-        }
+        assertTrue("Missing build.gradle for " + name, buildGradle.isFile());
 
         // build the project
-        runGradleTasks(sdkDir, gradleVersion, project, tasks);
+        runGradleTasks(sdkDir, ndkDir, gradleVersion, project, tasks);
 
         return project;
     }

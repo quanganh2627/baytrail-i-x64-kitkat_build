@@ -44,7 +44,6 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
     private Boolean mTestHandleProfiling = null;
     private Boolean mTestFunctionalTest = null;
 
-
     @NonNull
     static ProductFlavorImpl cloneFlavor(ProductFlavor productFlavor) {
         ProductFlavorImpl clonedFlavor = new ProductFlavorImpl();

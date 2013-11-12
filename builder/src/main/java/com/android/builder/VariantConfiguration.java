@@ -948,7 +948,7 @@ public class VariantConfiguration implements TestData {
     @Nullable
     @Override
     public Set<String> getSupportedAbis() {
-        // no ndk support yet, so return null
+        // TODO no ndk support yet, so return null
         return null;
     }
 }

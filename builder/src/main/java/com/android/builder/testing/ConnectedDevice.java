@@ -25,9 +25,11 @@ import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.android.utils.ILogger;
+import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -115,8 +117,19 @@ public class ConnectedDevice extends DeviceConnector {
 
     @NonNull
     @Override
-    public String getAbi() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public List<String> getAbis() {
+        List<String> abis = Lists.newArrayListWithExpectedSize(2);
+        String abi = iDevice.getProperty(IDevice.PROP_DEVICE_CPU_ABI);
+        if (abi != null) {
+            abis.add(abi);
+        }
+
+        abi = iDevice.getProperty(IDevice.PROP_DEVICE_CPU_ABI2);
+        if (abi != null) {
+            abis.add(abi);
+        }
+
+        return abis;
     }
 
     @Override

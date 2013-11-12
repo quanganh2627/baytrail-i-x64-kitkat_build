@@ -50,6 +50,7 @@ import static com.android.SdkConstants.FN_SOURCE_PROP;
 public class DefaultSdkParser implements SdkParser {
 
     private final String mSdkLocation;
+    private final File mNdkLocation;
     private SdkManager mManager;
 
     private IAndroidTarget mTarget;
@@ -60,12 +61,13 @@ public class DefaultSdkParser implements SdkParser {
     private File mAdb;
     private File mZipAlign;
 
-    public DefaultSdkParser(@NonNull String sdkLocation) {
+    public DefaultSdkParser(@NonNull String sdkLocation, @Nullable File ndkLocation) {
         if (!sdkLocation.endsWith(File.separator)) {
             mSdkLocation = sdkLocation + File.separator;
         } else {
             mSdkLocation = sdkLocation;
         }
+        mNdkLocation = ndkLocation;
     }
 
     @Override
@@ -210,5 +212,11 @@ public class DefaultSdkParser implements SdkParser {
         }
 
         return mTools;
+    }
+
+    @Nullable
+    @Override
+    public File getNdkLocation() {
+        return mNdkLocation;
     }
 }

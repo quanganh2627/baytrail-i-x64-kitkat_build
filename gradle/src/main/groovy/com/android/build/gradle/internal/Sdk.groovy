@@ -43,6 +43,7 @@ public class Sdk {
 
     private boolean isSdkParserInitialized = false
     private File androidSdkDir
+    private File androidNdkDir
     private boolean isPlatformSdk = false
     private BaseExtension extension
 
@@ -80,7 +81,7 @@ public class Sdk {
         if (isPlatformSdk) {
             parser = new PlatformSdkParser(androidSdkDir.absolutePath)
         } else {
-            parser = new DefaultSdkParser(androidSdkDir.absolutePath)
+            parser = new DefaultSdkParser(androidSdkDir.absolutePath, androidNdkDir)
         }
 
         List<File> repositories = parser.repositories
@@ -130,9 +131,14 @@ public class Sdk {
         return theParser
     }
 
-    public File getDirectory() {
+    public File getSdkDirectory() {
         checkLocation()
         return androidSdkDir
+    }
+
+    public File getNdkDirectory() {
+        checkLocation()
+        return androidNdkDir
     }
 
     private void checkLocation() {
@@ -179,6 +185,12 @@ public class Sdk {
                             "No sdk.dir property defined in local.properties file.")
                 }
             }
+
+            def ndkDirProp = properties.getProperty('ndk.dir')
+            if (ndkDirProp != null) {
+                androidNdkDir = new File(ndkDirProp)
+            }
+
         } else {
             String envVar = System.getenv("ANDROID_HOME")
             if (envVar != null) {
@@ -188,6 +200,11 @@ public class Sdk {
                 if (property != null) {
                     androidSdkDir = new File(property)
                 }
+            }
+
+            envVar = System.getenv("ANDROID_NDK_HOME")
+            if (envVar != null) {
+                androidNdkDir = new File(envVar)
             }
         }
     }

@@ -40,6 +40,6 @@ public class BuildTypeFactory implements NamedDomainObjectFactory<DefaultBuildTy
 
     @Override
     public DefaultBuildType create(String name) {
-        return instantiator.newInstance(BuildTypeDsl.class, name, fileResolver);
+        return instantiator.newInstance(BuildTypeDsl.class, name, fileResolver, instantiator);
     }
 }

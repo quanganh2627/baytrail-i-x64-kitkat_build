@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -120,8 +121,8 @@ public class FakeDevice extends DeviceConnector {
     }
 
     @NonNull
-    public String getAbi() {
-        return "fake";
+    public List<String> getAbis() {
+        return Collections.singletonList("fake");
     }
 
     public int getDensity() {

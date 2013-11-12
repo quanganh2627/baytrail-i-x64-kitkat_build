@@ -17,8 +17,9 @@
 package com.android.build.gradle.internal.dsl
 import com.android.annotations.NonNull
 import com.android.builder.DefaultProductFlavor
+import org.gradle.api.Action
 import org.gradle.api.internal.file.FileResolver
-
+import org.gradle.internal.reflect.Instantiator
 /**
  * DSL overlay to make methods that accept String... work.
  */
@@ -28,9 +29,19 @@ class ProductFlavorDsl extends DefaultProductFlavor {
     @NonNull
     private final FileResolver fileResolver
 
-    ProductFlavorDsl(String name, @NonNull FileResolver fileResolver) {
+    private final NdkConfigDsl ndkConfig
+
+    ProductFlavorDsl(@NonNull String name,
+                     @NonNull FileResolver fileResolver,
+                     @NonNull Instantiator instantiator) {
         super(name)
         this.fileResolver = fileResolver
+
+        ndkConfig = instantiator.newInstance(NdkConfigDsl.class)
+    }
+
+    public NdkConfigDsl getNdkConfig() {
+        return ndkConfig
     }
 
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
@@ -45,37 +56,41 @@ class ProductFlavorDsl extends DefaultProductFlavor {
 
     @NonNull
     public ProductFlavorDsl proguardFile(Object proguardFile) {
-        proguardFiles.add(fileResolver.resolve(proguardFile));
-        return this;
+        proguardFiles.add(fileResolver.resolve(proguardFile))
+        return this
     }
 
     @NonNull
     public ProductFlavorDsl proguardFiles(Object... proguardFileArray) {
-        proguardFiles.addAll(fileResolver.resolveFiles(proguardFileArray).files);
-        return this;
+        proguardFiles.addAll(fileResolver.resolveFiles(proguardFileArray).files)
+        return this
     }
 
     @NonNull
     public ProductFlavorDsl setProguardFiles(Iterable<?> proguardFileIterable) {
-        proguardFiles.clear();
+        proguardFiles.clear()
         for (Object proguardFile : proguardFileIterable) {
-            proguardFiles.add(fileResolver.resolve(proguardFile));
+            proguardFiles.add(fileResolver.resolve(proguardFile))
         }
-        return this;
+        return this
     }
 
     @NonNull
     public ProductFlavorDsl consumerProguardFiles(Object... proguardFileArray) {
-        consumerProguardFiles.addAll(fileResolver.resolveFiles(proguardFileArray).files);
-        return this;
+        consumerProguardFiles.addAll(fileResolver.resolveFiles(proguardFileArray).files)
+        return this
     }
 
     @NonNull
     public ProductFlavorDsl setconsumerProguardFiles(Iterable<?> proguardFileIterable) {
-        consumerProguardFiles.clear();
+        consumerProguardFiles.clear()
         for (Object proguardFile : proguardFileIterable) {
-            consumerProguardFiles.add(fileResolver.resolve(proguardFile));
+            consumerProguardFiles.add(fileResolver.resolve(proguardFile))
         }
-        return this;
+        return this
+    }
+
+    void ndk(Action<NdkConfigDsl> action) {
+        action.execute(ndkConfig)
     }
 }

@@ -37,9 +37,9 @@ public class AutomatedBuildTest extends BuildTest {
             "aidl", "api", "applibtest", "assets", "attrOrder", "basic", "dependencies",
             "dependencyChecker", "flavored", "flavorlib", "flavors", "libProguardJarDep",
             "libProguardLibDep", "libTestDep", "libsTest", "localJars", "migrated", "multiproject",
-            "multires", "overlay1", "overlay2", "pkgOverride", "proguard", "proguardLib",
-            "renderscript", "renderscriptInLib", "renderscriptMultiSrc", "sameNamedLibs",
-            "tictactoe" /*, "autorepo"*/
+            "multires", "ndkSanAngeles", "overlay1", "overlay2", "pkgOverride", "proguard",
+            "proguardLib", "renderscript", "renderscriptInLib", "renderscriptMultiSrc",
+            "sameNamedLibs", "tictactoe" /*, "autorepo"*/
     };
 
     private static final String[] sReportProjects = new String[] {

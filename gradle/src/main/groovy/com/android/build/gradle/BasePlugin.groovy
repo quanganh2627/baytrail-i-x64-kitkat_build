@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.dependency.LibraryDependencyImpl
 import com.android.build.gradle.internal.dependency.ManifestDependencyImpl
 import com.android.build.gradle.internal.dependency.SymbolFileProviderImpl
 import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dsl.NdkConfigDsl
 import com.android.build.gradle.internal.dsl.SigningConfigDsl
 import com.android.build.gradle.internal.model.ModelBuilder
 import com.android.build.gradle.internal.tasks.AndroidReportTask
@@ -56,6 +57,7 @@ import com.android.build.gradle.tasks.GenerateBuildConfig
 import com.android.build.gradle.tasks.Lint
 import com.android.build.gradle.tasks.MergeAssets
 import com.android.build.gradle.tasks.MergeResources
+import com.android.build.gradle.tasks.NdkCompile
 import com.android.build.gradle.tasks.PackageApplication
 import com.android.build.gradle.tasks.PreDex
 import com.android.build.gradle.tasks.ProcessAndroidResources
@@ -303,7 +305,11 @@ public abstract class BasePlugin {
     }
 
     File getSdkDirectory() {
-        return sdk.directory
+        return sdk.sdkDirectory
+    }
+
+    File getNdkDirectory() {
+        return sdk.ndkDirectory
     }
 
     ILogger getLogger() {
@@ -611,7 +617,7 @@ public abstract class BasePlugin {
 
         Copy processResources = project.tasks.create("process${variantData.name}JavaRes",
                 ProcessResources);
-        variantData.processJavaResources = processResources
+        variantData.processJavaResourcesTask = processResources
 
         // set the input
         processResources.from(((AndroidSourceSet) variantConfiguration.defaultSourceSet).resources)
@@ -655,13 +661,13 @@ public abstract class BasePlugin {
 
     protected void createCompileTask(BaseVariantData variantData,
                                      BaseVariantData testedVariantData) {
-        def compileTask = project.tasks.create("compile${variantData.name}", JavaCompile)
+        def compileTask = project.tasks.create("compile${variantData.name}Java", JavaCompile)
         variantData.javaCompileTask = compileTask
         compileTask.dependsOn variantData.sourceGenTask
 
         VariantConfiguration config = variantData.variantConfiguration
 
-        List<Object> sourceList = new ArrayList<Object>();
+        List<Object> sourceList = Lists.newArrayList()
         sourceList.add(((AndroidSourceSet) config.defaultSourceSet).java)
         sourceList.add({ variantData.processResourcesTask.sourceOutputDir })
         sourceList.add({ variantData.generateBuildConfigTask.sourceOutputDir })
@@ -718,6 +724,69 @@ public abstract class BasePlugin {
         }
     }
 
+    protected void createNdkTasks(@NonNull BaseVariantData variantData) {
+        NdkCompile ndkCompile = project.tasks.create(
+                "compile${variantData.name}Ndk", NdkCompile)
+
+        ndkCompile.plugin = this
+        ndkCompile.variant = variantData
+        variantData.ndkCompileTask = ndkCompile
+
+        VariantConfiguration variantConfig = variantData.variantConfiguration
+
+        ndkCompile.conventionMapping.sourceFolders = {
+
+            Set<File> sourceList = Sets.newHashSet()
+
+            sourceList.addAll(((AndroidSourceSet) variantConfig.defaultSourceSet).jni.srcDirs)
+
+            if (variantConfig.getType() != VariantConfiguration.Type.TEST) {
+                sourceList.addAll(((AndroidSourceSet) variantConfig.buildTypeSourceSet).jni.srcDirs)
+            }
+            if (variantConfig.hasFlavors()) {
+                for (SourceProvider flavorSourceSet : variantConfig.flavorSourceSets) {
+                    sourceList.addAll(((AndroidSourceSet) flavorSourceSet).jni.srcDirs)
+                }
+            }
+
+            return sourceList
+        }
+
+        ndkCompile.conventionMapping.generatedMakefile = {
+            project.file("$project.buildDir/ndk/$variantData.dirName/Android.mk")
+        }
+
+        ndkCompile.conventionMapping.ndkConfig = {
+
+            //noinspection GroovyAssignabilityCheck
+            NdkConfigDsl mergedConfig = new NdkConfigDsl(variantConfig.defaultConfig.ndkConfig)
+            if (variantConfig.hasFlavors()) {
+                for (DefaultProductFlavor flavorConfig : variantConfig.flavorConfigs) {
+                    //noinspection GroovyAssignabilityCheck
+                    mergedConfig.append(flavorConfig.ndkConfig)
+                }
+            }
+            if (variantConfig.getType() != VariantConfiguration.Type.TEST) {
+                //noinspection GroovyAssignabilityCheck
+                mergedConfig.append(variantConfig.buildType.ndkConfig)
+            }
+
+            return mergedConfig
+        }
+
+        ndkCompile.conventionMapping.debuggable = {
+            variantConfig.buildType.jniDebugBuild
+        }
+
+        ndkCompile.conventionMapping.objFolder = {
+            project.file("$project.buildDir/ndk/$variantData.dirName/obj")
+        }
+
+        ndkCompile.conventionMapping.soFolder = {
+            project.file("$project.buildDir/ndk/$variantData.dirName/lib")
+        }
+    }
+
     /**
      * Creates the tasks to build the test apk.
      *
@@ -769,6 +838,9 @@ public abstract class BasePlugin {
 
         // Add a task to compile the test application
         createCompileTask(variantData, testedVariantData)
+
+        // Add NDK tasks
+        createNdkTasks(variantData)
 
         addPackageTasks(variantData, null)
 
@@ -1166,7 +1238,7 @@ public abstract class BasePlugin {
         // Add a task to generate application package
         def packageApp = project.tasks.create("package${variantData.name}", PackageApplication)
         variantData.packageApplicationTask = packageApp
-        packageApp.dependsOn variantData.processResourcesTask, dexTask, variantData.processJavaResources
+        packageApp.dependsOn variantData.processResourcesTask, dexTask, variantData.processJavaResourcesTask, variantData.ndkCompileTask
 
         packageApp.plugin = this
         packageApp.variant = variantData
@@ -1179,7 +1251,15 @@ public abstract class BasePlugin {
         packageApp.conventionMapping.dexFile = { dexTask.outputFile }
         packageApp.conventionMapping.packagedJars = { config.packagedJars }
         packageApp.conventionMapping.javaResourceDir = {
-            getOptionalDir(variantData.processJavaResources.destinationDir)
+            getOptionalDir(variantData.processJavaResourcesTask.destinationDir)
+        }
+        packageApp.conventionMapping.jniFolders = {
+            // for now only the project's compilation output.
+            // TODO add dependencies
+            Collections.singleton(variantData.ndkCompileTask.soFolder)
+        }
+        packageApp.conventionMapping.abiFilters = {
+            variantData.ndkCompileTask.getNdkConfig().abiFilters
         }
         packageApp.conventionMapping.jniDebugBuild = { config.buildType.jniDebugBuild }
 

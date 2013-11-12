@@ -232,6 +232,9 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
         // Add a compile task
         createCompileTask(variantData, null/*testedVariant*/)
 
+        // Add NDK tasks
+        createNdkTasks(variantData)
+
         // package the aidl files into the bundle folder
         Sync packageAidl = project.tasks.create("package${variantData.name}Aidl", Sync)
         // packageAidl from 3 sources. the order is important to make sure the override works well.
@@ -281,9 +284,9 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
 
             // jar the classes.
             Jar jar = project.tasks.create("package${buildType.name.capitalize()}Jar", Jar);
-            jar.dependsOn variantData.javaCompileTask, variantData.processJavaResources
+            jar.dependsOn variantData.javaCompileTask, variantData.processJavaResourcesTask
             jar.from(variantData.javaCompileTask.outputs);
-            jar.from(variantData.processJavaResources.destinationDir)
+            jar.from(variantData.processJavaResourcesTask.destinationDir)
 
             jar.destinationDir = project.file("$project.buildDir/$DIR_BUNDLES/${variantData.dirName}")
             jar.archiveName = "classes.jar"

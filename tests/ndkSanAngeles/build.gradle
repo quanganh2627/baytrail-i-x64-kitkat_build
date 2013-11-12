@@ -1,0 +1,40 @@
+buildscript {
+    repositories {
+        maven { url '../../../../out/host/gradle/repo' }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.6.2-SNAPSHOT'
+    }
+}
+apply plugin: 'android'
+
+android {
+    compileSdkVersion 15
+    buildToolsVersion "18.0.1"
+
+    defaultConfig {
+        ndk {
+            moduleName "sanangeles"
+            cFlags "-DANDROID_NDK -DDISABLE_IMPORTGL"
+            ldLibs "-lGLESv1_CM -ldl -llog"
+        }
+    }
+
+    productFlavors {
+        x86 {
+            ndk {
+                abiFilter "x86"
+            }
+        }
+        arm {
+            ndk {
+                abiFilter "armeabi-v7a"
+            }
+        }
+        mips {
+            ndk {
+                abiFilter "mips"
+            }
+        }
+    }
+}
