@@ -83,7 +83,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * {@link #processTestManifest(String, int, int, String, String, Boolean, Boolean, java.util.List, String)}
  * {@link #processResources(java.io.File, java.io.File, java.io.File, java.util.List, String, String, String, String, String, com.android.builder.VariantConfiguration.Type, boolean, com.android.builder.model.AaptOptions)}
  * {@link #compileAllAidlFiles(java.util.List, java.io.File, java.util.List, com.android.builder.compiling.DependencyFileProcessor)}
- * {@link #convertByteCode(Iterable, Iterable, File, String, DexOptions, boolean)}
+ * {@link #convertByteCode(Iterable, Iterable, File, DexOptions, boolean)}
  * {@link #packageApk(String, String, java.util.List, String, String, boolean, SigningConfig, String)}
  *
  * Java compilation is not handled but the builder provides the bootclasspath with
@@ -926,8 +926,8 @@ public class AndroidBuilder {
 
     /**
      * Converts the bytecode to Dalvik format
-     * @param classesLocation the location of the compiler output
-     * @param libraries the list of libraries
+     * @param inputs the input files
+     * @param preDexedLibraries the list of pre-dexed libraries
      * @param outDexFile the location of the output classes.dex file
      * @param dexOptions dex options
      * @param incremental true if it should attempt incremental dex if applicable
@@ -937,14 +937,13 @@ public class AndroidBuilder {
      * @throws LoggedErrorException
      */
     public void convertByteCode(
-            @NonNull Iterable<File> classesLocation,
-            @NonNull Iterable<File> libraries,
-            @Nullable File proguardFile,
-            @NonNull String outDexFile,
+            @NonNull Iterable<File> inputs,
+            @NonNull Iterable<File> preDexedLibraries,
+            @NonNull File outDexFile,
             @NonNull DexOptions dexOptions,
             boolean incremental) throws IOException, InterruptedException, LoggedErrorException {
-        checkNotNull(classesLocation, "classesLocation cannot be null.");
-        checkNotNull(libraries, "libraries cannot be null.");
+        checkNotNull(inputs, "inputs cannot be null.");
+        checkNotNull(preDexedLibraries, "preDexedLibraries cannot be null.");
         checkNotNull(outDexFile, "outDexFile cannot be null.");
         checkNotNull(dexOptions, "dexOptions cannot be null.");
 
@@ -972,44 +971,98 @@ public class AndroidBuilder {
             command.add("--core-library");
         }
 
+        if (dexOptions.getJumboMode()) {
+            command.add("--force-jumbo");
+        }
+
         if (incremental) {
             command.add("--incremental");
             command.add("--no-strict");
         }
 
         command.add("--output");
-        command.add(outDexFile);
+        command.add(outDexFile.getAbsolutePath());
 
-        // clean up and add class inputs
-        List<String> classesList = Lists.newArrayList();
-        for (File f : classesLocation) {
+        // clean up input list
+        List<String> inputList = Lists.newArrayList();
+        for (File f : inputs) {
             if (f != null && f.exists()) {
-                classesList.add(f.getAbsolutePath());
+                inputList.add(f.getAbsolutePath());
             }
         }
 
-        if (!classesList.isEmpty()) {
-            mLogger.verbose("Dex class inputs: " + classesList);
-            command.addAll(classesList);
+        if (!inputList.isEmpty()) {
+            mLogger.verbose("Dex inputs: " + inputList);
+            command.addAll(inputList);
         }
 
         // clean up and add library inputs.
         List<String> libraryList = Lists.newArrayList();
-        for (File f : libraries) {
+        for (File f : preDexedLibraries) {
             if (f != null && f.exists()) {
                 libraryList.add(f.getAbsolutePath());
             }
         }
 
         if (!libraryList.isEmpty()) {
-            mLogger.verbose("Dex library inputs: " + libraryList);
+            mLogger.verbose("Dex pre-dexed inputs: " + libraryList);
             command.addAll(libraryList);
         }
 
-        if (proguardFile != null && proguardFile.exists()) {
-            mLogger.verbose("ProGuarded inputs " + proguardFile);
-            command.add(proguardFile.getAbsolutePath());
+        mCmdLineRunner.runCmdLine(command, null);
+    }
+
+    /**
+     * Converts the bytecode to Dalvik format
+     * @param inputFile the input file
+     * @param outFile the location of the output classes.dex file
+     * @param dexOptions dex options
+     *
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws LoggedErrorException
+     */
+    public void preDexLibrary(
+            @NonNull File inputFile,
+            @NonNull File outFile,
+            @NonNull DexOptions dexOptions)
+            throws IOException, InterruptedException, LoggedErrorException {
+        checkNotNull(inputFile, "inputFile cannot be null.");
+        checkNotNull(outFile, "outFile cannot be null.");
+        checkNotNull(dexOptions, "dexOptions cannot be null.");
+
+        // launch dx: create the command line
+        ArrayList<String> command = Lists.newArrayList();
+
+        String dx = mBuildTools.getPath(BuildToolInfo.PathId.DX);
+        if (dx == null || !new File(dx).isFile()) {
+            throw new IllegalStateException("dx is missing");
         }
+
+        command.add(dx);
+
+        if (dexOptions.getJavaMaxHeapSize() != null) {
+            command.add("-JXmx" + dexOptions.getJavaMaxHeapSize());
+        }
+
+        command.add("--dex");
+
+        if (mVerboseExec) {
+            command.add("--verbose");
+        }
+
+        if (dexOptions.isCoreLibrary()) {
+            command.add("--core-library");
+        }
+
+        if (dexOptions.getJumboMode()) {
+            command.add("--force-jumbo");
+        }
+
+        command.add("--output");
+        command.add(outFile.getAbsolutePath());
+
+        command.add(inputFile.getAbsolutePath());
 
         mCmdLineRunner.runCmdLine(command, null);
     }

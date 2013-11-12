@@ -57,6 +57,7 @@ import com.android.build.gradle.tasks.Lint
 import com.android.build.gradle.tasks.MergeAssets
 import com.android.build.gradle.tasks.MergeResources
 import com.android.build.gradle.tasks.PackageApplication
+import com.android.build.gradle.tasks.PreDex
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.build.gradle.tasks.ProcessAppManifest
 import com.android.build.gradle.tasks.ProcessTestManifest
@@ -1096,39 +1097,71 @@ public abstract class BasePlugin {
 
         VariantConfiguration variantConfig = variantData.variantConfiguration
 
-        Closure libraryClosure = { project.files(variantConfig.packagedJars) }
-        Closure sourceClosure = { variantData.javaCompileTask.outputs.files }
-        Closure proguardFileClosure = { }
+        boolean runProguard = !(variantData instanceof TestVariantData) && variantConfig.buildType.runProguard
 
-        if (!(variantData instanceof TestVariantData) && variantConfig.buildType.runProguard) {
-            libraryClosure = { Collections.emptyList() }
-            sourceClosure = { Collections.emptyList() }
-
-            File outFile = createProguardTasks(variantData, variantConfig)
-            proguardFileClosure = { outFile }
-        }
-
-        // Add a dex task
-        def dexTaskName = "dex${variantData.name}"
-        def dexTask = project.tasks.create(dexTaskName, Dex)
+        // common dex task configuration
+        String dexTaskName = "dex${variantData.name}"
+        Dex dexTask = project.tasks.create(dexTaskName, Dex)
         variantData.dexTask = dexTask
-        if (variantData.proguardTask != null) {
-            dexTask.dependsOn variantData.proguardTask
-        } else {
-            dexTask.dependsOn variantData.javaCompileTask
-        }
 
         dexTask.plugin = this
         dexTask.variant = variantData
 
-        dexTask.conventionMapping.libraries = libraryClosure
-        dexTask.conventionMapping.sourceFiles = sourceClosure
-        dexTask.conventionMapping.proguardedJar = proguardFileClosure
         dexTask.conventionMapping.outputFile = {
             project.file(
                     "${project.buildDir}/libs/${project.archivesBaseName}-${variantData.baseName}.dex")
         }
         dexTask.dexOptions = extension.dexOptions
+
+        if (runProguard) {
+
+            // first proguard task.
+            File outFile = createProguardTasks(variantData, variantConfig)
+
+            // then dexing task
+            dexTask.dependsOn variantData.proguardTask
+            dexTask.conventionMapping.inputFiles = { project.files(outFile) }
+            dexTask.conventionMapping.preDexedLibraries = { Collections.emptyList() }
+
+        } else {
+
+            // if required, pre-dexing task.
+            PreDex preDexTask = null;
+            boolean runPreDex = extension.dexOptions.preDexLibraries
+            if (runPreDex) {
+                def preDexTaskName = "preDex${variantData.name}"
+                preDexTask = project.tasks.create(preDexTaskName, PreDex)
+
+                preDexTask.dependsOn variantData.javaCompileTask
+                preDexTask.plugin = this
+                preDexTask.dexOptions = extension.dexOptions
+
+                preDexTask.conventionMapping.inputFiles = {
+                    project.files(variantConfig.packagedJars)
+                }
+                preDexTask.conventionMapping.outputFolder = {
+                    project.file(
+                            "${project.buildDir}/pre-dexed/${variantData.dirName}")
+                }
+            }
+
+            // then dexing task
+            dexTask.dependsOn variantData.javaCompileTask
+            if (runPreDex) {
+                dexTask.dependsOn preDexTask
+            }
+
+            dexTask.conventionMapping.inputFiles = { variantData.javaCompileTask.outputs.files }
+            if (runPreDex) {
+                dexTask.conventionMapping.preDexedLibraries = {
+                    project.fileTree(preDexTask.outputFolder).files
+                }
+            } else {
+                dexTask.conventionMapping.preDexedLibraries = {
+                    project.files(variantConfig.packagedJars)
+                }
+            }
+        }
 
         // Add a task to generate application package
         def packageApp = project.tasks.create("package${variantData.name}", PackageApplication)
@@ -1144,13 +1177,10 @@ public abstract class BasePlugin {
             variantData.processResourcesTask.packageOutputFile
         }
         packageApp.conventionMapping.dexFile = { dexTask.outputFile }
-
         packageApp.conventionMapping.packagedJars = { config.packagedJars }
-
         packageApp.conventionMapping.javaResourceDir = {
             getOptionalDir(variantData.processJavaResources.destinationDir)
         }
-
         packageApp.conventionMapping.jniDebugBuild = { config.buildType.jniDebugBuild }
 
         SigningConfigDsl sc = (SigningConfigDsl) config.signingConfig
