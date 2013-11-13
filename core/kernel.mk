@@ -70,17 +70,22 @@ $(info Building kernel from source)
 ifeq ($(TARGET_ARCH),x86)
   KERNEL_TARGET := bzImage
   TARGET_KERNEL_CONFIG ?= android-x86_defconfig
+  KERNEL_ARCH_DIR := x86
   ifeq ($(TARGET_KERNEL_ARCH),)
     TARGET_KERNEL_ARCH := i386
   endif
-endif
-
-ifeq ($(TARGET_ARCH),arm)
+else ifeq ($(TARGET_ARCH),x86_64)
+  KERNEL_TARGET := bzImage
+  TARGET_KERNEL_CONFIG ?= android-x86_defconfig
+  KERNEL_ARCH_DIR := x86
+  TARGET_KERNEL_ARCH := x86_64
+else ifeq ($(TARGET_ARCH),arm)
   KERNEL_TARGET := zImage
   TARGET_KERNEL_CONFIG ?= goldfish_defconfig
   ifeq ($(TARGET_KERNEL_ARCH),)
     TARGET_KERNEL_ARCH := arm
   endif
+  KERNEL_ARCH_DIR := $(TARGET_KERNEL_ARCH)
 endif
 
 TARGET_KERNEL_SOURCE ?= kernel
@@ -108,8 +113,8 @@ mk_kernel = $(mk_kernel_base) -C $(TARGET_KERNEL_SOURCE)  O=$(PRODUCT_KERNEL_OUT
 # If there's a file in the arch-specific configs directory that matches
 # what's in $(TARGET_KERNEL_CONFIG), use that. Otherwise, use $(TARGET_KERNEL_CONFIG)
 # verbatim
-ifneq ($(wildcard $(TARGET_KERNEL_SOURCE)/arch/$(TARGET_ARCH)/configs/$(TARGET_KERNEL_CONFIG)),)
-  kernel_config_file := $(TARGET_KERNEL_SOURCE)/arch/$(TARGET_ARCH)/configs/$(TARGET_KERNEL_CONFIG)
+ifneq ($(wildcard $(TARGET_KERNEL_SOURCE)/arch/$(KERNEL_ARCH_DIR)/configs/$(TARGET_KERNEL_CONFIG)),)
+  kernel_config_file := $(TARGET_KERNEL_SOURCE)/arch/$(KERNEL_ARCH_DIR)/configs/$(TARGET_KERNEL_CONFIG)
 else
   kernel_config_file := $(TARGET_KERNEL_CONFIG)
 endif
@@ -149,7 +154,7 @@ $(kernel_dotconfig_file): $(kernel_config_file) $(TARGET_KERNEL_CONFIG_OVERRIDES
 	$(mk_kernel) oldnoconfig
 	$(hide) rm -f $@.old
 
-built_kernel_target := $(PRODUCT_KERNEL_OUTPUT)/arch/$(TARGET_ARCH)/boot/$(KERNEL_TARGET)
+built_kernel_target := $(PRODUCT_KERNEL_OUTPUT)/arch/$(KERNEL_ARCH_DIR)/boot/$(KERNEL_TARGET)
 
 # Declared .PHONY to force a rebuild each time. We can't tell if the kernel
 # sources have changed from this context
