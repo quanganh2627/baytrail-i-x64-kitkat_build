@@ -71,7 +71,6 @@ public class PackageApplication extends IncrementalTask implements OutputFileTas
         return src == null ? getProject().files().getAsFileTree() : src
     }
 
-
     @Override
     protected void doFullTaskAction() {
         try {

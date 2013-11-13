@@ -39,7 +39,7 @@ public class AutomatedBuildTest extends BuildTest {
             "libProguardLibDep", "libTestDep", "libsTest", "localJars", "migrated", "multiproject",
             "multires", "ndkSanAngeles", "overlay1", "overlay2", "pkgOverride", "proguard",
             "proguardLib", "renderscript", "renderscriptInLib", "renderscriptMultiSrc",
-            "sameNamedLibs", "tictactoe" /*, "autorepo"*/
+            "rsSupportMode", "sameNamedLibs", "tictactoe" /*, "autorepo"*/
     };
 
     private static final String[] sReportProjects = new String[] {

@@ -36,6 +36,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     private int mMinSdkVersion = -1;
     private int mTargetSdkVersion = -1;
     private int mRenderscriptTargetApi = -1;
+    private Boolean mRenderscriptSupportMode;
     private int mVersionCode = -1;
     private String mVersionName = null;
     private String mPackageName = null;
@@ -147,6 +148,16 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         mRenderscriptTargetApi = renderscriptTargetApi;
     }
 
+    @Override
+    public boolean getRenderscriptSupportMode() {
+        // default is false
+        return mRenderscriptSupportMode != null && mRenderscriptSupportMode.booleanValue();
+    }
+
+    public void setRenderscriptSupportMode(boolean renderscriptSupportMode) {
+        mRenderscriptSupportMode = renderscriptSupportMode;
+    }
+
     @NonNull
     public ProductFlavor setTestPackageName(String testPackageName) {
         mTestPackageName = testPackageName;
@@ -219,6 +230,8 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         flavor.mTargetSdkVersion = chooseInt(mTargetSdkVersion, base.mTargetSdkVersion);
         flavor.mRenderscriptTargetApi = chooseInt(mRenderscriptTargetApi,
                 base.mRenderscriptTargetApi);
+        flavor.mRenderscriptSupportMode = chooseBoolean(mRenderscriptSupportMode,
+                base.mRenderscriptSupportMode);
 
         flavor.mVersionCode = chooseInt(mVersionCode, base.mVersionCode);
         flavor.mVersionName = chooseString(mVersionName, base.mVersionName);
@@ -266,6 +279,10 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         if (mMinSdkVersion != that.mMinSdkVersion) return false;
         if (mTargetSdkVersion != that.mTargetSdkVersion) return false;
         if (mRenderscriptTargetApi != that.mRenderscriptTargetApi) return false;
+        if (mRenderscriptSupportMode != null ?
+                !mRenderscriptSupportMode.equals(that.mRenderscriptSupportMode) :
+                that.mRenderscriptSupportMode != null)
+            return false;
         if (mVersionCode != that.mVersionCode) return false;
         if (mPackageName != null ?
                 !mPackageName.equals(that.mPackageName) :
@@ -303,6 +320,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         result = 31 * result + mMinSdkVersion;
         result = 31 * result + mTargetSdkVersion;
         result = 31 * result + mRenderscriptTargetApi;
+        result = 31 * result + (mRenderscriptSupportMode != null ? mRenderscriptSupportMode.hashCode() : 0);
         result = 31 * result + mVersionCode;
         result = 31 * result + (mVersionName != null ? mVersionName.hashCode() : 0);
         result = 31 * result + (mPackageName != null ? mPackageName.hashCode() : 0);
@@ -325,6 +343,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
                 .add("minSdkVersion", mMinSdkVersion)
                 .add("targetSdkVersion", mTargetSdkVersion)
                 .add("renderscriptTargetApi", mRenderscriptTargetApi)
+                .add("renderscriptSupportMode", mRenderscriptSupportMode)
                 .add("versionCode", mVersionCode)
                 .add("versionName", mVersionName)
                 .add("packageName", mPackageName)
