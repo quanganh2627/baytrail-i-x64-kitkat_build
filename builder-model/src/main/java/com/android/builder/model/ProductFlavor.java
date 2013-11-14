@@ -18,6 +18,7 @@ package com.android.builder.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.NdkConfig;
 
 /**
  * a Product Flavor. This is only the configuration of the flavor.
@@ -125,4 +126,7 @@ public interface ProductFlavor extends BaseConfig {
      */
     @Nullable
     Boolean getTestFunctionalTest();
+
+    @Nullable
+    NdkConfig getNdkConfig();
 }

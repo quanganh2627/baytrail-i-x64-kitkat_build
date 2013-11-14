@@ -15,7 +15,6 @@
  */
 
 package com.android.build.gradle
-
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.gradle.api.AndroidSourceSet
@@ -29,7 +28,6 @@ import com.android.build.gradle.internal.dependency.LibraryDependencyImpl
 import com.android.build.gradle.internal.dependency.ManifestDependencyImpl
 import com.android.build.gradle.internal.dependency.SymbolFileProviderImpl
 import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.dsl.NdkConfigDsl
 import com.android.build.gradle.internal.dsl.SigningConfigDsl
 import com.android.build.gradle.internal.model.ModelBuilder
 import com.android.build.gradle.internal.tasks.AndroidReportTask
@@ -123,7 +121,6 @@ import static com.android.builder.BuilderConstants.FD_INSTRUMENT_TESTS
 import static com.android.builder.BuilderConstants.FD_REPORTS
 import static com.android.builder.BuilderConstants.INSTRUMENT_TEST
 import static java.io.File.separator
-
 /**
  * Base class for all Android plugins
  */
@@ -464,24 +461,7 @@ public abstract class BasePlugin {
         renderscriptTask.conventionMapping.libOutputDir = {
             project.file("$project.buildDir/rs/$variantData.dirName/lib")
         }
-        renderscriptTask.conventionMapping.ndkConfig = {
-
-            //noinspection GroovyAssignabilityCheck
-            NdkConfigDsl mergedConfig = new NdkConfigDsl(config.defaultConfig.ndkConfig)
-            if (config.hasFlavors()) {
-                for (DefaultProductFlavor flavorConfig : config.flavorConfigs) {
-                    //noinspection GroovyAssignabilityCheck
-                    mergedConfig.append(flavorConfig.ndkConfig)
-                }
-            }
-            if (config.getType() != VariantConfiguration.Type.TEST) {
-                //noinspection GroovyAssignabilityCheck
-                mergedConfig.append(config.buildType.ndkConfig)
-            }
-
-            return mergedConfig
-        }
-
+        renderscriptTask.conventionMapping.ndkConfig = { config.ndkConfig }
     }
 
     protected void createMergeResourcesTask(@NonNull BaseVariantData variantData,
@@ -750,6 +730,14 @@ public abstract class BasePlugin {
     }
 
     protected void createNdkTasks(@NonNull BaseVariantData variantData) {
+        createNdkTasks(
+                variantData,
+                { project.file("$project.buildDir/ndk/$variantData.dirName/lib") }
+        )
+    }
+
+    protected void createNdkTasks(@NonNull BaseVariantData variantData,
+                                  @NonNull Closure<File> soFolderClosure) {
         NdkCompile ndkCompile = project.tasks.create(
                 "compile${variantData.name}Ndk", NdkCompile)
 
@@ -781,23 +769,7 @@ public abstract class BasePlugin {
             project.file("$project.buildDir/ndk/$variantData.dirName/Android.mk")
         }
 
-        ndkCompile.conventionMapping.ndkConfig = {
-
-            //noinspection GroovyAssignabilityCheck
-            NdkConfigDsl mergedConfig = new NdkConfigDsl(variantConfig.defaultConfig.ndkConfig)
-            if (variantConfig.hasFlavors()) {
-                for (DefaultProductFlavor flavorConfig : variantConfig.flavorConfigs) {
-                    //noinspection GroovyAssignabilityCheck
-                    mergedConfig.append(flavorConfig.ndkConfig)
-                }
-            }
-            if (variantConfig.getType() != VariantConfiguration.Type.TEST) {
-                //noinspection GroovyAssignabilityCheck
-                mergedConfig.append(variantConfig.buildType.ndkConfig)
-            }
-
-            return mergedConfig
-        }
+        ndkCompile.conventionMapping.ndkConfig = { variantConfig.ndkConfig }
 
         ndkCompile.conventionMapping.debuggable = {
             variantConfig.buildType.jniDebugBuild
@@ -806,10 +778,7 @@ public abstract class BasePlugin {
         ndkCompile.conventionMapping.objFolder = {
             project.file("$project.buildDir/ndk/$variantData.dirName/obj")
         }
-
-        ndkCompile.conventionMapping.soFolder = {
-            project.file("$project.buildDir/ndk/$variantData.dirName/lib")
-        }
+        ndkCompile.conventionMapping.soFolder = soFolderClosure
     }
 
     /**
@@ -1278,10 +1247,10 @@ public abstract class BasePlugin {
         }
         packageApp.conventionMapping.jniFolders = {
             // for now only the project's compilation output.
-            // TODO add dependencies
             Set<File> set = Sets.newHashSet()
             set.addAll(variantData.ndkCompileTask.soFolder)
             set.addAll(variantData.renderscriptCompileTask.libOutputDir)
+            set.addAll(variantConfig.libraryJniFolders)
 
             if (variantConfig.mergedFlavor.renderscriptSupportMode) {
                 File rsLibs = getAndroidBuilder(variantData).getSupportNativeLibFolder()
@@ -1292,9 +1261,7 @@ public abstract class BasePlugin {
 
             return set
         }
-        packageApp.conventionMapping.abiFilters = {
-            variantData.ndkCompileTask.getNdkConfig().abiFilters
-        }
+        packageApp.conventionMapping.abiFilters = { variantConfig.supportedAbis }
         packageApp.conventionMapping.jniDebugBuild = { variantConfig.buildType.jniDebugBuild }
 
         SigningConfigDsl sc = (SigningConfigDsl) variantConfig.signingConfig

@@ -16,17 +16,15 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.dsl.NdkConfigDsl
-import com.android.build.gradle.internal.tasks.BaseTask
+import com.android.build.gradle.internal.tasks.NdkTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 /**
  * Task to compile Renderscript files. Supports incremental update.
  */
-public class RenderscriptCompile extends BaseTask {
+public class RenderscriptCompile extends NdkTask {
 
     // ----- PUBLIC TASK API -----
 
@@ -63,9 +61,6 @@ public class RenderscriptCompile extends BaseTask {
     @Input
     boolean debugBuild
 
-    @Nested
-    NdkConfigDsl ndkConfig
-
     @TaskAction
     void taskAction() {
         // this is full run (always), clean the previous outputs
@@ -97,6 +92,6 @@ public class RenderscriptCompile extends BaseTask {
                 getDebugBuild(),
                 getOptimLevel(),
                 getSupportMode(),
-                getNdkConfig().abiFilters)
+                getNdkConfig()?.abiFilters)
     }
 }

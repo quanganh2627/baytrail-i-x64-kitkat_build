@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
+import com.android.builder.NdkConfig;
 import com.google.common.collect.Sets;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
@@ -27,7 +28,7 @@ import java.util.Set;
 
 /**
  */
-public class NdkConfigDsl implements Serializable {
+public class NdkConfigDsl implements NdkConfig, Serializable {
     private static final long serialVersionUID = 1L;
 
     private String moduleName;
@@ -45,6 +46,7 @@ public class NdkConfigDsl implements Serializable {
         setSrcDirs(ndkConfig.abiFilters);
     }
 
+    @Override
     @Input @Optional
     public String getModuleName() {
         return moduleName;
@@ -54,6 +56,7 @@ public class NdkConfigDsl implements Serializable {
         this.moduleName = moduleName;
     }
 
+    @Override
     @Input @Optional
     public String getcFlags() {
         return cFlags;
@@ -63,6 +66,7 @@ public class NdkConfigDsl implements Serializable {
         this.cFlags = cFlags;
     }
 
+    @Override
     @Input @Optional
     public String getLdLibs() {
         return ldLibs;
@@ -72,6 +76,7 @@ public class NdkConfigDsl implements Serializable {
         this.ldLibs = ldLibs;
     }
 
+    @Override
     @Input @Optional
     public Set<String> getAbiFilters() {
         return abiFilters;
@@ -110,33 +115,5 @@ public class NdkConfigDsl implements Serializable {
             abiFilters = null;
         }
         return this;
-    }
-
-    public void append(@NonNull NdkConfigDsl ndkConfig) {
-        // override
-        if (ndkConfig.moduleName != null) {
-            moduleName = ndkConfig.moduleName;
-        }
-        if (ndkConfig.abiFilters != null) {
-            if (abiFilters == null) {
-                abiFilters = Sets.newHashSetWithExpectedSize(ndkConfig.abiFilters.size());
-            } else {
-                abiFilters.clear();
-            }
-            abiFilters.addAll(ndkConfig.abiFilters);
-        }
-
-        // append
-        if (cFlags == null) {
-            cFlags = ndkConfig.cFlags;
-        } else if (ndkConfig.cFlags != null) {
-            cFlags = cFlags + " " + ndkConfig.cFlags;
-        }
-
-        if (ldLibs == null) {
-            ldLibs = ndkConfig.ldLibs;
-        } else if (ndkConfig.ldLibs != null) {
-            ldLibs = ldLibs + " " + ndkConfig.ldLibs;
-        }
     }
 }

@@ -22,6 +22,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.builder.dependency.DependencyContainer;
 import com.android.builder.dependency.JarDependency;
 import com.android.builder.dependency.LibraryDependency;
+import com.android.builder.internal.NdkConfigImpl;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.testing.TestData;
@@ -64,6 +65,7 @@ public class VariantConfiguration implements TestData {
     private LibraryDependency mOutput;
 
     private DefaultProductFlavor mMergedFlavor;
+    private final NdkConfigImpl mMergedNdkConfig = new NdkConfigImpl();
 
     private final Set<JarDependency> mJars = Sets.newHashSet();
 
@@ -104,7 +106,7 @@ public class VariantConfiguration implements TestData {
             @NonNull DefaultProductFlavor defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
             @NonNull DefaultBuildType buildType,
-            @NonNull SourceProvider buildTypeSourceProvider,
+            @Nullable SourceProvider buildTypeSourceProvider,
             @Nullable String debugName) {
         this(defaultConfig, defaultSourceProvider,
                 buildType, buildTypeSourceProvider,
@@ -164,6 +166,7 @@ public class VariantConfiguration implements TestData {
         checkState(mType != Type.TEST || mTestedConfig != null);
 
         mMergedFlavor = mDefaultConfig;
+        computeNdkConfig();
 
         if (testedConfig != null &&
                 testedConfig.mType == Type.LIBRARY &&
@@ -181,7 +184,9 @@ public class VariantConfiguration implements TestData {
      * comes to resolving Android resources overlays (ie earlier added flavors supersedes
      * latter added ones).
      *
-     * @param sourceProvider the configured product flavor
+     * @param productFlavor the configured product flavor
+     * @param sourceProvider
+     *
      * @return the config object
      */
     @NonNull
@@ -189,9 +194,30 @@ public class VariantConfiguration implements TestData {
                                                  @NonNull SourceProvider sourceProvider) {
         mFlavorConfigs.add(productFlavor);
         mFlavorSourceProviders.add(sourceProvider);
+
         mMergedFlavor = productFlavor.mergeOver(mMergedFlavor);
+        computeNdkConfig();
 
         return this;
+    }
+
+    private void computeNdkConfig() {
+        mMergedNdkConfig.reset();
+
+        if (mDefaultConfig.getNdkConfig() != null) {
+            mMergedNdkConfig.append(mDefaultConfig.getNdkConfig());
+        }
+
+        for (int i = mFlavorConfigs.size() - 1 ; i >= 0 ; i--) {
+            NdkConfig ndkConfig = mFlavorConfigs.get(i).getNdkConfig();
+            if (ndkConfig != null) {
+                mMergedNdkConfig.append(ndkConfig);
+            }
+        }
+
+        if (mBuildType.getNdkConfig() != null && mType != Type.TEST) {
+            mMergedNdkConfig.append(mBuildType.getNdkConfig());
+        }
     }
 
     /**
@@ -721,6 +747,21 @@ public class VariantConfiguration implements TestData {
         return assetSets;
     }
 
+    @NonNull
+    public List<File> getLibraryJniFolders() {
+        List<File> list = Lists.newArrayListWithExpectedSize(mFlatLibraries.size());
+
+        for (int n = mFlatLibraries.size() - 1 ; n >= 0 ; n--) {
+            LibraryDependency dependency = mFlatLibraries.get(n);
+            File jniFolder = dependency.getJniFolder();
+            if (jniFolder.isDirectory()) {
+                list.add(jniFolder);
+            }
+        }
+
+        return list;
+    }
+
     /**
      * Returns all the renderscript import folder that are outside of the current project.
      */
@@ -944,11 +985,18 @@ public class VariantConfiguration implements TestData {
         }
     }
 
+    @NonNull
+    public NdkConfig getNdkConfig() {
+        return mMergedNdkConfig;
+    }
 
     @Nullable
     @Override
     public Set<String> getSupportedAbis() {
-        // TODO no ndk support yet, so return null
+        if (mMergedNdkConfig != null) {
+            return mMergedNdkConfig.getAbiFilters();
+        }
+
         return null;
     }
 }
