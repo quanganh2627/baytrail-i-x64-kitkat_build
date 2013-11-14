@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.NdkConfig;
 import com.android.builder.model.BuildType;
 
 import java.io.File;
@@ -125,5 +126,11 @@ class BuildTypeImpl implements BuildType, Serializable {
     @Override
     public List<File> getConsumerProguardFiles() {
         return Collections.emptyList();
+    }
+
+    @Override
+    @Nullable
+    public NdkConfig getNdkConfig() {
+        return null;
     }
 }

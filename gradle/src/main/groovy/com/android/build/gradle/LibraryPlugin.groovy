@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 package com.android.build.gradle
-
 import com.android.SdkConstants
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
@@ -55,7 +54,6 @@ import org.gradle.tooling.BuildException
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
 import javax.inject.Inject
-
 /**
  * Gradle plugin class for 'library' projects.
  */
@@ -137,10 +135,13 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
         createLibraryVariant(releaseVariantData, true)
 
         VariantConfiguration testVariantConfig = new VariantConfiguration(
-                defaultConfigData.productFlavor, defaultConfigData.testSourceSet,
-                debugBuildTypeData.buildType, null,
+                defaultConfigData.productFlavor,
+                defaultConfigData.testSourceSet,
+                debugBuildTypeData.buildType,
+                null,
                 VariantConfiguration.Type.TEST,
-                debugVariantData.variantConfiguration, project.name)
+                debugVariantData.variantConfiguration,
+                project.name)
 
         TestVariantData testVariantData = new TestVariantData(testVariantConfig, debugVariantData)
         // link the testVariant to the tested variant in the other direction
@@ -168,9 +169,12 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
     protected LibraryVariantData createLibVariant(@NonNull ProductFlavorData configData,
                                                   @NonNull BuildTypeData buildTypeData) {
         VariantConfiguration variantConfig = new VariantConfiguration(
-                configData.productFlavor, configData.sourceSet,
-                buildTypeData.buildType, buildTypeData.sourceSet,
-                VariantConfiguration.Type.LIBRARY, project.name)
+                configData.productFlavor,
+                configData.sourceSet,
+                buildTypeData.buildType,
+                buildTypeData.sourceSet,
+                VariantConfiguration.Type.LIBRARY,
+                project.name)
 
         LibraryVariantData variantData = new LibraryVariantData(variantConfig)
 
@@ -233,7 +237,9 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
         createCompileTask(variantData, null/*testedVariant*/)
 
         // Add NDK tasks
-        createNdkTasks(variantData)
+        createNdkTasks(
+                variantData,
+                { project.file("$project.buildDir/$DIR_BUNDLES/${variantData.dirName}/jni") });
 
         // package the aidl files into the bundle folder
         Sync packageAidl = project.tasks.create("package${variantData.name}Aidl", Sync)
@@ -251,11 +257,11 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
                 "$project.buildDir/$DIR_BUNDLES/${variantData.dirName}/$SdkConstants.FD_RENDERSCRIPT"))
 
         // merge consumer proguard files from different build types and flavors
-        MergeFileTask mergeFileTask = project.tasks.create("merge${variantData.name}ProguardFiles",
+        MergeFileTask mergeProGuardFileTask = project.tasks.create("merge${variantData.name}ProguardFiles",
                 MergeFileTask)
-        mergeFileTask.conventionMapping.inputFiles = {
+        mergeProGuardFileTask.conventionMapping.inputFiles = {
             project.files(variantConfig.getConsumerProguardFiles()).files }
-        mergeFileTask.conventionMapping.outputFile = {
+        mergeProGuardFileTask.conventionMapping.outputFile = {
             project.file(
                     "$project.buildDir/$DIR_BUNDLES/${variantData.dirName}/$LibraryBundle.FN_PROGUARD_TXT")
         }
@@ -273,9 +279,9 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
             createProguardTasks(variantData, variantConfig)
 
             // hack since bundle can't depend on variantData.proguardTask
-            mergeFileTask.dependsOn variantData.proguardTask
+            mergeProGuardFileTask.dependsOn variantData.proguardTask
 
-            bundle.dependsOn packageRes, packageAidl, packageRenderscript, mergeFileTask, lintCopy
+            bundle.dependsOn packageRes, packageAidl, packageRenderscript, mergeProGuardFileTask, lintCopy, variantData.ndkCompileTask
         } else {
             Sync packageLocalJar = project.tasks.create("package${variantData.name}LocalJar", Sync)
             packageLocalJar.from(getLocalJarFileList(variantData.variantDependency))
@@ -304,7 +310,7 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
             jar.exclude(packageName + "/BuildConfig.class")
 
             bundle.dependsOn packageRes, jar, packageAidl, packageRenderscript, packageLocalJar,
-                    mergeFileTask, lintCopy
+                    mergeProGuardFileTask, lintCopy, variantData.ndkCompileTask
         }
 
         bundle.setDescription("Assembles a bundle containing the library in ${variantData.name}.");

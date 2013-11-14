@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.dsl
 import com.android.annotations.NonNull
+import com.android.annotations.Nullable
 import com.android.builder.DefaultProductFlavor
+import com.android.builder.NdkConfig
 import org.gradle.api.Action
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.internal.reflect.Instantiator
@@ -40,8 +42,10 @@ class ProductFlavorDsl extends DefaultProductFlavor {
         ndkConfig = instantiator.newInstance(NdkConfigDsl.class)
     }
 
-    public NdkConfigDsl getNdkConfig() {
-        return ndkConfig
+    @Override
+    @Nullable
+    public NdkConfig getNdkConfig() {
+        return ndkConfig;
     }
 
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.

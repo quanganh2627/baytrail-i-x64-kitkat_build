@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.NdkConfig;
 import com.android.builder.model.ProductFlavor;
 
 import java.io.File;
@@ -138,23 +139,6 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
         return mTestFunctionalTest;
     }
 
-    @Override
-    public String toString() {
-        return "ProductFlavorImpl{" +
-                "name='" + name + '\'' +
-                ", mMinSdkVersion=" + mMinSdkVersion +
-                ", mTargetSdkVersion=" + mTargetSdkVersion +
-                ", mRenderscriptTargetApi=" + mRenderscriptTargetApi +
-                ", mRenderscriptSupportMode=" + mRenderscriptSupportMode +
-                ", mVersionCode=" + mVersionCode +
-                ", mVersionName='" + mVersionName + '\'' +
-                ", mPackageName='" + mPackageName + '\'' +
-                ", mTestPackageName='" + mTestPackageName + '\'' +
-                ", mTestInstrumentationRunner='" + mTestInstrumentationRunner + '\'' +
-                ", mTestHandleProfiling='" + mTestHandleProfiling + '\'' +
-                ", mTestFunctionalTest='" + mTestFunctionalTest + '\'' +
-                '}';
-    }
 
     @NonNull
     @Override
@@ -173,4 +157,29 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
     public List<File> getConsumerProguardFiles() {
         return Collections.emptyList();
     }
+
+    @Override
+    @Nullable
+    public NdkConfig getNdkConfig() {
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return "ProductFlavorImpl{" +
+                "name='" + name + '\'' +
+                ", mMinSdkVersion=" + mMinSdkVersion +
+                ", mTargetSdkVersion=" + mTargetSdkVersion +
+                ", mRenderscriptTargetApi=" + mRenderscriptTargetApi +
+                ", mRenderscriptSupportMode=" + mRenderscriptSupportMode +
+                ", mVersionCode=" + mVersionCode +
+                ", mVersionName='" + mVersionName + '\'' +
+                ", mPackageName='" + mPackageName + '\'' +
+                ", mTestPackageName='" + mTestPackageName + '\'' +
+                ", mTestInstrumentationRunner='" + mTestInstrumentationRunner + '\'' +
+                ", mTestHandleProfiling='" + mTestHandleProfiling + '\'' +
+                ", mTestFunctionalTest='" + mTestFunctionalTest + '\'' +
+                '}';
+    }
+
 }

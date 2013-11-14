@@ -17,8 +17,8 @@
 package com.android.build.gradle.tasks
 
 import com.android.annotations.NonNull
-import com.android.build.gradle.internal.dsl.NdkConfigDsl
-import com.android.build.gradle.internal.tasks.BaseTask
+import com.android.build.gradle.internal.tasks.NdkTask
+import com.android.builder.NdkConfig
 import com.android.sdklib.IAndroidTarget
 import com.google.common.base.Charsets
 import com.google.common.base.Joiner
@@ -28,24 +28,19 @@ import org.gradle.api.GradleException
 import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import org.gradle.api.tasks.util.PatternSet
-
 /**
  */
-class NdkCompile extends BaseTask {
+class NdkCompile extends NdkTask {
 
     Set<File> sourceFolders
 
     @OutputFile
     File generatedMakefile
-
-    @Nested
-    NdkConfigDsl ndkConfig
 
     @Input
     boolean debuggable
@@ -57,7 +52,7 @@ class NdkCompile extends BaseTask {
     File objFolder
 
     @InputFiles
-    public FileTree getSource() {
+    FileTree getSource() {
         FileTree src = null
         Set<File> sources = getSourceFolders()
         if (!sources.isEmpty()) {
@@ -117,7 +112,7 @@ class NdkCompile extends BaseTask {
     }
 
     private void writeMakefile(@NonNull Set<File> sourceFiles, @NonNull File makefile) {
-        NdkConfigDsl ndk = getNdkConfig()
+        NdkConfig ndk = getNdkConfig()
 
         StringBuilder sb = new StringBuilder()
 
@@ -148,7 +143,7 @@ class NdkCompile extends BaseTask {
     }
 
     private void runNdkBuild(@NonNull File ndkLocation, @NonNull File makefile) {
-        NdkConfigDsl ndk = getNdkConfig()
+        NdkConfig ndk = getNdkConfig()
 
         List<String> commands = Lists.newArrayList()
 

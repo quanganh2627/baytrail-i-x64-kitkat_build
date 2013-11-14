@@ -18,6 +18,7 @@ package com.android.builder.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.NdkConfig;
 
 /**
  * a Build Type. This is only the configuration of the build type.
@@ -97,4 +98,7 @@ public interface BuildType extends BaseConfig {
      * @return true if zipalign is enabled.
      */
     boolean isZipAlign();
+
+    @Nullable
+    NdkConfig getNdkConfig();
 }

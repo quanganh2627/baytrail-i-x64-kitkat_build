@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.internal.dsl
 import com.android.annotations.NonNull
+import com.android.annotations.Nullable
 import com.android.builder.BuilderConstants
 import com.android.builder.DefaultBuildType
+import com.android.builder.NdkConfig
 import com.android.builder.model.SigningConfig
 import org.gradle.api.Action
 import org.gradle.api.internal.file.FileResolver
@@ -42,6 +44,12 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
         ndkConfig = instantiator.newInstance(NdkConfigDsl.class)
     }
 
+    @Override
+    @Nullable
+    public NdkConfig getNdkConfig() {
+        return ndkConfig;
+    }
+
     public void init(SigningConfig debugSigningConfig) {
         if (BuilderConstants.DEBUG.equals(getName())) {
             setDebuggable(true)
@@ -61,10 +69,6 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
         if (!super.equals(o)) return false
 
         return true
-    }
-
-    public NdkConfigDsl getNdkConfig() {
-        return ndkConfig
     }
 
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.

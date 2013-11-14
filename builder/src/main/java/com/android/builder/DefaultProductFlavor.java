@@ -217,6 +217,12 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         return this;
     }
 
+    @Override
+    @Nullable
+    public NdkConfig getNdkConfig() {
+        return null;
+    }
+
     /**
      * Merges the flavor on top of a base platform and returns a new object with the result.
      * @param base the flavor to merge on top of
@@ -359,5 +365,4 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         release signing info (keystore, key alias, passwords,...).
         native abi filter
     */
-
 }

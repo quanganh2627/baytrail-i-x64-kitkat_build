@@ -15,7 +15,6 @@
  */
 
 package com.android.build.gradle
-
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.gradle.api.BaseVariant
@@ -57,7 +56,6 @@ import static com.android.builder.BuilderConstants.INSTRUMENT_TEST
 import static com.android.builder.BuilderConstants.LINT
 import static com.android.builder.BuilderConstants.RELEASE
 import static com.android.builder.BuilderConstants.UI_TEST
-
 /**
  * Gradle plugin class for 'application' projects.
  */
@@ -295,8 +293,10 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
 
         for (BuildTypeData buildTypeData : buildTypes.values()) {
             def variantConfig = new VariantConfiguration(
-                    defaultConfigData.productFlavor, defaultConfigData.sourceSet,
-                    buildTypeData.buildType, buildTypeData.sourceSet, project.name)
+                    defaultConfigData.productFlavor,
+                    defaultConfigData.sourceSet,
+                    buildTypeData.buildType,
+                    buildTypeData.sourceSet, project.name)
 
             // create the variant and get its internal storage object.
             ApplicationVariantData appVariantData = new ApplicationVariantData(variantConfig)
@@ -315,8 +315,10 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
 
         // handle the test variant
         def testVariantConfig = new VariantConfiguration(
-                defaultConfigData.productFlavor, defaultConfigData.testSourceSet,
-                testData.buildType, null,
+                defaultConfigData.productFlavor,
+                defaultConfigData.testSourceSet,
+                testData.buildType,
+                null,
                 VariantConfiguration.Type.TEST, testedVariantData.variantConfiguration,
                 project.name)
 
@@ -429,11 +431,16 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
             variantProviders.add(buildTypeData)
 
             VariantConfiguration variantConfig = new VariantConfiguration(
-                    extension.defaultConfig, getDefaultConfigData().sourceSet,
-                    buildTypeData.buildType, buildTypeData.sourceSet, project.name)
+                    extension.defaultConfig,
+                    getDefaultConfigData().sourceSet,
+                    buildTypeData.buildType,
+                    buildTypeData.sourceSet,
+                    project.name)
 
             for (ProductFlavorData data : flavorDataList) {
-                variantConfig.addProductFlavor(data.productFlavor, data.sourceSet)
+                variantConfig.addProductFlavor(
+                        data.productFlavor,
+                        data.sourceSet)
                 variantProviders.add(data.mainProvider)
             }
 
@@ -458,8 +465,10 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
 
         // handle test variant
         VariantConfiguration testVariantConfig = new VariantConfiguration(
-                extension.defaultConfig, getDefaultConfigData().testSourceSet,
-                testData.buildType, null,
+                extension.defaultConfig,
+                getDefaultConfigData().testSourceSet,
+                testData.buildType,
+                null,
                 VariantConfiguration.Type.TEST,
                 testedVariantData.variantConfiguration, project.name)
 
@@ -469,7 +478,9 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
         List<ConfigurationProvider> testVariantProviders = []
 
         for (ProductFlavorData data : flavorDataList) {
-            testVariantConfig.addProductFlavor(data.productFlavor, data.testSourceSet)
+            testVariantConfig.addProductFlavor(
+                    data.productFlavor,
+                    data.testSourceSet)
             testVariantProviders.add(data.testProvider)
         }
 
