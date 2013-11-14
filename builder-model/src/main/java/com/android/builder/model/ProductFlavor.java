@@ -89,6 +89,8 @@ public interface ProductFlavor extends BaseConfig {
      */
     int getRenderscriptTargetApi();
 
+    boolean getRenderscriptSupportMode();
+
     /**
      * Returns the test package name. This is only the value set on this product flavor.
      * To get the final value, use {@link Variant#getTestArtifactInfo()} and

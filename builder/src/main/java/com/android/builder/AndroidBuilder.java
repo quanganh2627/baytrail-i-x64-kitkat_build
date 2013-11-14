@@ -16,7 +16,6 @@
 
 package com.android.builder;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -28,12 +27,13 @@ import com.android.builder.internal.SymbolLoader;
 import com.android.builder.internal.SymbolWriter;
 import com.android.builder.internal.TestManifestGenerator;
 import com.android.builder.internal.compiler.AidlProcessor;
-import com.android.builder.internal.compiler.FileGatherer;
 import com.android.builder.internal.compiler.LeafFolderGatherer;
+import com.android.builder.internal.compiler.RenderScriptProcessor;
 import com.android.builder.internal.compiler.SourceSearcher;
 import com.android.builder.internal.packaging.JavaResourceProcessor;
 import com.android.builder.internal.packaging.Packager;
 import com.android.builder.model.AaptOptions;
+import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.DuplicateFileException;
 import com.android.builder.packaging.PackagerException;
@@ -55,6 +55,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
 import java.io.File;
@@ -65,6 +66,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -84,7 +86,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * {@link #processResources(java.io.File, java.io.File, java.io.File, java.util.List, String, String, String, String, String, com.android.builder.VariantConfiguration.Type, boolean, com.android.builder.model.AaptOptions)}
  * {@link #compileAllAidlFiles(java.util.List, java.io.File, java.util.List, com.android.builder.compiling.DependencyFileProcessor)}
  * {@link #convertByteCode(Iterable, Iterable, File, DexOptions, boolean)}
- * {@link #packageApk(String, String, java.util.List, String, String, boolean, SigningConfig, String)}
+ * {@link #packageApk(String, String, java.util.List, String, java.util.Collection, java.util.Set, boolean, com.android.builder.model.SigningConfig, String)}
  *
  * Java compilation is not handled but the builder provides the bootclasspath with
  * {@link #getBootClasspath(SdkParser)}.
@@ -166,6 +168,7 @@ public class AndroidBuilder {
     /**
      * Helper method to get the boot classpath to be used during compilation.
      */
+    @NonNull
     public static List<String> getBootClasspath(@NonNull SdkParser sdkParser) {
 
         List<String> classpath = Lists.newArrayList();
@@ -190,15 +193,76 @@ public class AndroidBuilder {
         return classpath;
     }
 
+    /**
+     * Returns the compile classpath for this config. If the config tests a library, this
+     * will include the classpath of the tested config
+     *
+     * @return a non null, but possibly empty set.
+     */
+    @NonNull
+    public Set<File> getCompileClasspath(@NonNull VariantConfiguration variantConfiguration) {
+        Set<File> compileClasspath = variantConfiguration.getCompileClasspath();
+
+        ProductFlavor mergedFlavor = variantConfiguration.getMergedFlavor();
+
+        if (mergedFlavor.getRenderscriptSupportMode()) {
+            File renderScriptSupportJar = RenderScriptProcessor.getSupportJar(
+                    mBuildTools.getLocation().getAbsolutePath());
+
+            Set<File> fullJars = Sets.newHashSetWithExpectedSize(compileClasspath.size() + 1);
+            fullJars.addAll(compileClasspath);
+            fullJars.add(renderScriptSupportJar);
+            compileClasspath = fullJars;
+        }
+
+        return compileClasspath;
+    }
+
+    /**
+     * Returns the list of packaged jars for this config. If the config tests a library, this
+     * will include the jars of the tested config
+     *
+     * @return a non null, but possibly empty list.
+     */
+    @NonNull
+    public List<File> getPackagedJars(@NonNull VariantConfiguration variantConfiguration) {
+        List<File> packagedJars = variantConfiguration.getPackagedJars();
+
+        ProductFlavor mergedFlavor = variantConfiguration.getMergedFlavor();
+
+        if (mergedFlavor.getRenderscriptSupportMode()) {
+            File renderScriptSupportJar = RenderScriptProcessor.getSupportJar(
+                    mBuildTools.getLocation().getAbsolutePath());
+
+            List<File> fullJars = Lists.newArrayListWithCapacity(packagedJars.size() + 1);
+            fullJars.addAll(packagedJars);
+            fullJars.add(renderScriptSupportJar);
+            packagedJars = fullJars;
+        }
+
+        return packagedJars;
+    }
+
+    @NonNull
+    public File getSupportNativeLibFolder() {
+        return RenderScriptProcessor.getSupportNativeLibFolder(
+                mBuildTools.getLocation().getAbsolutePath());
+    }
 
     /**
      * Returns an {@link AaptRunner} able to run aapt commands.
      * @return an AaptRunner object
      */
+    @NonNull
     public AaptRunner getAaptRunner() {
         return new AaptRunner(
                 mBuildTools.getPath(BuildToolInfo.PathId.AAPT),
                 mCmdLineRunner);
+    }
+
+    @NonNull
+    public CommandLineRunner getCommandLineRunner() {
+        return mCmdLineRunner;
     }
 
     /**
@@ -798,9 +862,13 @@ public class AndroidBuilder {
                                             @NonNull List<File> importFolders,
                                             @NonNull File sourceOutputDir,
                                             @NonNull File resOutputDir,
+                                            @NonNull File objOutputDir,
+                                            @NonNull File libOutputDir,
                                             int targetApi,
                                             boolean debugBuild,
-                                            int optimLevel)
+                                            int optimLevel,
+                                            boolean supportMode,
+                                            @Nullable Set<String> abiFilters)
             throws IOException, InterruptedException, LoggedErrorException {
         checkNotNull(sourceFolders, "sourceFolders cannot be null.");
         checkNotNull(importFolders, "importFolders cannot be null.");
@@ -812,76 +880,25 @@ public class AndroidBuilder {
             throw new IllegalStateException("llvm-rs-cc is missing");
         }
 
-        // gather the files to compile
-        FileGatherer fileGatherer = new FileGatherer();
-        SourceSearcher searcher = new SourceSearcher(sourceFolders, "rs", "fs");
-        searcher.setUseExecutor(false);
-        searcher.search(fileGatherer);
-
-        List<File> renderscriptFiles = fileGatherer.getFiles();
-
-        if (renderscriptFiles.isEmpty()) {
-            return;
+        if (supportMode && mBuildTools.getRevision().compareTo(new FullRevision(18,1, 0)) == -1) {
+            throw new IllegalStateException(
+                    "RenderScript Support Mode requires buildToolsVersion >= 18.1");
         }
 
-        String rsPath = mBuildTools.getPath(BuildToolInfo.PathId.ANDROID_RS);
-        String rsClangPath = mBuildTools.getPath(BuildToolInfo.PathId.ANDROID_RS_CLANG);
-
-        // the renderscript compiler doesn't expect the top res folder,
-        // but the raw folder directly.
-        File rawFolder = new File(resOutputDir, SdkConstants.FD_RES_RAW);
-
-        // compile all the files in a single pass
-        ArrayList<String> command = Lists.newArrayList();
-
-        command.add(renderscript);
-
-        if (debugBuild) {
-            command.add("-g");
-        }
-
-        command.add("-O");
-        command.add(Integer.toString(optimLevel));
-
-        // add all import paths
-        command.add("-I");
-        command.add(rsPath);
-        command.add("-I");
-        command.add(rsClangPath);
-
-        for (File importPath : importFolders) {
-            if (importPath.isDirectory()) {
-                command.add("-I");
-                command.add(importPath.getAbsolutePath());
-            }
-        }
-
-        // source output
-        command.add("-p");
-        command.add(sourceOutputDir.getAbsolutePath());
-
-        // res output
-        command.add("-o");
-        command.add(rawFolder.getAbsolutePath());
-
-        command.add("-target-api");
-        command.add(Integer.toString(targetApi < 11 ? 11 : targetApi));
-
-        // input files
-        for (File sourceFile : renderscriptFiles) {
-            command.add(sourceFile.getAbsolutePath());
-        }
-
-        Map<String, String> env = null;
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
-            env = Maps.newHashMap();
-            env.put("DYLD_LIBRARY_PATH", mBuildTools.getLocation().getAbsolutePath());
-        } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_LINUX) {
-            env = Maps.newHashMap();
-            env.put("LD_LIBRARY_PATH", mBuildTools.getLocation().getAbsolutePath());
-        }
-
-        mCmdLineRunner.runCmdLine(command, env);
+        RenderScriptProcessor processor = new RenderScriptProcessor(
+                sourceFolders,
+                importFolders,
+                sourceOutputDir,
+                resOutputDir,
+                objOutputDir,
+                libOutputDir,
+                mBuildTools,
+                targetApi,
+                debugBuild,
+                optimLevel,
+                supportMode,
+                abiFilters);
+        processor.build(mCmdLineRunner);
     }
 
     /**
@@ -1074,7 +1091,8 @@ public class AndroidBuilder {
      * @param classesDexLocation the location of the classes.dex file
      * @param packagedJars the jars that are packaged (libraries + jar dependencies)
      * @param javaResourcesLocation the processed Java resource folder
-     * @param jniLibsLocation the location of the compiled JNI libraries
+     * @param jniLibsFolders the folders containing jni shared libraries
+     * @param abiFilters optional ABI filter
      * @param jniDebugBuild whether the app should include jni debug data
      * @param signingConfig the signing configuration
      * @param outApkLocation location of the APK.
@@ -1091,7 +1109,8 @@ public class AndroidBuilder {
             @NonNull String classesDexLocation,
             @NonNull List<File> packagedJars,
             @Nullable String javaResourcesLocation,
-            @Nullable String jniLibsLocation,
+            @Nullable Collection<File> jniLibsFolders,
+            @Nullable Set<String> abiFilters,
             boolean jniDebugBuild,
             @Nullable SigningConfig signingConfig,
             @NonNull String outApkLocation) throws DuplicateFileException, FileNotFoundException,
@@ -1128,8 +1147,10 @@ public class AndroidBuilder {
             }
 
             // also add resources from library projects and jars
-            if (jniLibsLocation != null) {
-                packager.addNativeLibraries(jniLibsLocation);
+            if (jniLibsFolders != null) {
+                for (File jniFolder : jniLibsFolders) {
+                    packager.addNativeLibraries(jniFolder, abiFilters);
+                }
             }
 
             packager.sealApk();

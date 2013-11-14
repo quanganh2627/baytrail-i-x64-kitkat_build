@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.annotations.NonNull
 import org.gradle.api.internal.file.FileResolver
+import org.gradle.internal.reflect.Instantiator
 
 /**
  * A version of ProductFlavorDsl that can receive a group name
@@ -27,7 +28,10 @@ public class GroupableProductFlavorDsl extends ProductFlavorDsl {
 
     String flavorGroup
 
-    public GroupableProductFlavorDsl(@NonNull String name, @NonNull FileResolver fileResolver) {
-        super(name, fileResolver)
+    public GroupableProductFlavorDsl(
+            @NonNull String name,
+            @NonNull FileResolver fileResolver,
+            @NonNull Instantiator instantiator) {
+        super(name, fileResolver, instantiator)
     }
 }

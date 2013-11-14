@@ -19,6 +19,7 @@ import com.android.build.gradle.internal.dsl.SigningConfigDsl
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.OutputFileTask
 import com.android.builder.packaging.DuplicateFileException
+import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
@@ -41,11 +42,13 @@ public class PackageApplication extends IncrementalTask implements OutputFileTas
     @InputDirectory @Optional
     File javaResourceDir
 
-    @InputDirectory @Optional
-    File jniDir
+    Set<File> jniFolders
 
     @OutputFile
     File outputFile
+
+    @Input @Optional
+    Set<String> abiFilters
 
     // ----- PRIVATE TASK API -----
 
@@ -58,6 +61,16 @@ public class PackageApplication extends IncrementalTask implements OutputFileTas
     @Nested @Optional
     SigningConfigDsl signingConfig
 
+    @InputFiles
+    public FileTree getNativeLibraries() {
+        FileTree src = null
+        Set<File> folders = getJniFolders()
+        if (!folders.isEmpty()) {
+            src = getProject().files(new ArrayList<Object>(folders)).getAsFileTree()
+        }
+        return src == null ? getProject().files().getAsFileTree() : src
+    }
+
     @Override
     protected void doFullTaskAction() {
         try {
@@ -66,7 +79,8 @@ public class PackageApplication extends IncrementalTask implements OutputFileTas
                     getDexFile().absolutePath,
                     getPackagedJars(),
                     getJavaResourceDir()?.absolutePath,
-                    getJniDir()?.absolutePath,
+                    getJniFolders(),
+                    getAbiFilters(),
                     getJniDebugBuild(),
                     getSigningConfig(),
                     getOutputFile().absolutePath)
@@ -81,5 +95,4 @@ public class PackageApplication extends IncrementalTask implements OutputFileTas
             throw new BuildException(e.getMessage(), e);
         }
     }
-
 }

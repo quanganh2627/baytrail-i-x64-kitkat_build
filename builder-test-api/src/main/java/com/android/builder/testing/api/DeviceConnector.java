@@ -23,6 +23,7 @@ import com.android.utils.ILogger;
 import com.google.common.annotations.Beta;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * A connector to a device to install/uninstall APKs, and run shell command.
@@ -60,10 +61,18 @@ public abstract class DeviceConnector implements IShellEnabledDevice {
      */
     public abstract void uninstallPackage(@NonNull String packageName, int timeout, ILogger logger) throws DeviceException;
 
+    /**
+     * Returns the API level of the device, or 0 if it could not be queried.
+     * @return the api level
+     */
     public abstract int getApiLevel();
 
+    /**
+     * The device supported ABIs. This is in preferred order.
+     * @return the list of supported ABIs
+     */
     @NonNull
-    public abstract String getAbi();
+    public abstract List<String> getAbis();
 
     public abstract int getDensity();
 

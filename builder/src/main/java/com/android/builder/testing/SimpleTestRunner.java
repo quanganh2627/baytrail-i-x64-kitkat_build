@@ -26,6 +26,7 @@ import com.android.utils.ILogger;
 
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Basic {@link TestRunner} running tests on all devices.
@@ -47,21 +48,11 @@ public class SimpleTestRunner implements TestRunner {
 
         WaitableExecutor<Boolean> executor = new WaitableExecutor<Boolean>(maxThreads);
 
-        int minSdkVersion = testData.getMinSdkVersion();
         for (DeviceConnector device : deviceList) {
-            int deviceApiLevel = device.getApiLevel();
-            if (minSdkVersion <= deviceApiLevel) {
+            if (filterOutDevice(device, testData, logger, projectName, variantName)) {
                 executor.execute(new SimpleTestCallable(device, projectName, variantName,
                         testApk, testedApk, testData,
                         resultsDir, timeout, logger));
-            } else {
-                if (deviceApiLevel == 0) {
-                    logger.info("Skipping device '%s' for '%s:%s': Unknown API Level",
-                            device.getName(), projectName, variantName);
-                } else {
-                    logger.info("Skipping device '%s' for '%s:%s'",
-                            device.getName(), projectName, variantName);
-                }
             }
         }
 
@@ -81,5 +72,46 @@ public class SimpleTestRunner implements TestRunner {
         }
 
         return success;
+    }
+
+    private boolean filterOutDevice(@NonNull DeviceConnector device, @NonNull TestData testData,
+                                    @NonNull ILogger logger,
+                                    @NonNull String projectName, @NonNull String variantName) {
+        int deviceApiLevel = device.getApiLevel();
+        if (deviceApiLevel == 0) {
+            logger.info("Skipping device '%s' for '%s:%s': Unknown API Level",
+                    device.getName(), projectName, variantName);
+            return false;
+        }
+
+        if (testData.getMinSdkVersion() > deviceApiLevel) {
+            logger.info("Skipping device '%s' for '%s:%s'",
+                    device.getName(), projectName, variantName);
+
+            return false;
+        }
+
+        Set<String> appAbis = testData.getSupportedAbis();
+        if (appAbis != null) {
+            List<String> deviceAbis = device.getAbis();
+            if (deviceAbis == null || deviceAbis.isEmpty()) {
+                logger.info("Skipping device '%s' for '%s:%s': Unknown ABI",
+                        device.getName(), projectName, variantName);
+                return false;
+            }
+
+            boolean compatibleAbi = false;
+            for (String deviceAbi : deviceAbis) {
+                if (appAbis.contains(deviceAbi)) {
+                    compatibleAbi = true;
+                }
+            }
+
+            if (!compatibleAbi) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

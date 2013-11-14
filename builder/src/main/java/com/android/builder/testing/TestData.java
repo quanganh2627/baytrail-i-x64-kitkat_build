@@ -52,6 +52,10 @@ public interface TestData {
 
     int getMinSdkVersion();
 
+    /**
+     * List of supported ABIs. Null means all.
+     * @return a list of abi or null for all
+     */
     @Nullable
     Set<String> getSupportedAbis();
 }

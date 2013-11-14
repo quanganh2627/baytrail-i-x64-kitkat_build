@@ -172,7 +172,7 @@ public class ApplicationVariantImpl implements ApplicationVariant {
     @Override
     @NonNull
     public Copy getProcessJavaResources() {
-        return variantData.processJavaResources;
+        return variantData.processJavaResourcesTask;
     }
 
     @Override

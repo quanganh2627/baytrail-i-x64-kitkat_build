@@ -40,6 +40,7 @@ class GroupableProductFlavorFactory implements NamedDomainObjectFactory<Groupabl
 
     @Override
     public GroupableProductFlavorDsl create(String name) {
-        return instantiator.newInstance(GroupableProductFlavorDsl.class, name, fileResolver);
+        return instantiator.newInstance(GroupableProductFlavorDsl.class,
+                name, fileResolver, instantiator);
     }
 }

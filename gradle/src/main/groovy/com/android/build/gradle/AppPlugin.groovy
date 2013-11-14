@@ -561,6 +561,9 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
         // Add a compile task
         createCompileTask(variant, null/*testedVariant*/)
 
+        // Add NDK tasks
+        createNdkTasks(variant)
+
         addPackageTasks(variant, assembleTask)
     }
 }

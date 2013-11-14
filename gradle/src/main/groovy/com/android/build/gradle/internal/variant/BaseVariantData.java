@@ -24,6 +24,7 @@ import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.MergeAssets;
 import com.android.build.gradle.tasks.MergeResources;
+import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ProcessManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
@@ -61,7 +62,8 @@ public abstract class BaseVariantData {
 
     public JavaCompile javaCompileTask;
     public ProGuardTask proguardTask;
-    public Copy processJavaResources;
+    public Copy processJavaResourcesTask;
+    public NdkCompile ndkCompileTask;
 
     private Object outputFile;
 

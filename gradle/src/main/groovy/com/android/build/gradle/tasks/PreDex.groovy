@@ -61,6 +61,7 @@ public class PreDex extends BaseTask {
         AndroidBuilder builder = getBuilder()
 
         taskInputs.outOfDate { change ->
+
             //noinspection GroovyAssignabilityCheck
             File preDexedFile = getDexFileName(outFolder, change.file)
             //noinspection GroovyAssignabilityCheck

@@ -170,7 +170,7 @@ public class TestVariantImpl implements TestVariant {
     @Override
     @NonNull
     public Copy getProcessJavaResources() {
-        return variantData.processJavaResources;
+        return variantData.processJavaResourcesTask;
     }
 
     @Override

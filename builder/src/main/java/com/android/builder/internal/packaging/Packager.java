@@ -39,6 +39,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.regex.Pattern;
@@ -402,7 +403,7 @@ public final class Packager implements IArchiveBuilder {
      *
      * This may or may not copy gdbserver into the apk based on whether the debug mode is set.
      *
-     * @param jniLibLocation the root folder containing the abi folders which contain the .so
+     * @param nativeFolder the root folder containing the abi folders which contain the .so
      *
      * @throws PackagerException if an error occurred
      * @throws SealedPackageException if the APK is already sealed.
@@ -411,13 +412,11 @@ public final class Packager implements IArchiveBuilder {
      *
      * @see #setJniDebugMode(boolean)
      */
-    public void addNativeLibraries(String jniLibLocation)
+    public void addNativeLibraries(@NonNull File nativeFolder, @Nullable Set<String> abiFilters)
             throws PackagerException, SealedPackageException, DuplicateFileException {
         if (mIsSealed) {
             throw new SealedPackageException("APK is already sealed");
         }
-
-        File nativeFolder = new File(jniLibLocation);
 
         if (!nativeFolder.isDirectory()) {
             // not a directory? check if it's a file or doesn't exist
@@ -434,6 +433,10 @@ public final class Packager implements IArchiveBuilder {
 
         if (abiList != null) {
             for (File abi : abiList) {
+                if (abiFilters != null && !abiFilters.contains(abi.getName())) {
+                    continue;
+                }
+
                 if (abi.isDirectory()) { // ignore files
 
                     File[] libs = abi.listFiles();

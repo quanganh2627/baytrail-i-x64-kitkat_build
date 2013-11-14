@@ -15,9 +15,12 @@
  */
 
 package com.android.build.gradle.tasks
+
+import com.android.build.gradle.internal.dsl.NdkConfigDsl
 import com.android.build.gradle.internal.tasks.BaseTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 /**
@@ -33,6 +36,13 @@ public class RenderscriptCompile extends BaseTask {
     @OutputDirectory
     File resOutputDir
 
+    @OutputDirectory
+    File objOutputDir
+
+    @OutputDirectory
+    File libOutputDir
+
+
     // ----- PRIVATE TASK API -----
 
     @InputFiles
@@ -42,13 +52,19 @@ public class RenderscriptCompile extends BaseTask {
     List<File> importDirs
 
     @Input
-    int optimLevel
-
-    @Input
     int targetApi
 
     @Input
+    boolean supportMode
+
+    @Input
+    int optimLevel
+
+    @Input
     boolean debugBuild
+
+    @Nested
+    NdkConfigDsl ndkConfig
 
     @TaskAction
     void taskAction() {
@@ -58,6 +74,12 @@ public class RenderscriptCompile extends BaseTask {
 
         File resDestDir = getResOutputDir()
         emptyFolder(resDestDir)
+
+        File objDestDir = getObjOutputDir()
+        emptyFolder(objDestDir)
+
+        File libDestDir = getLibOutputDir()
+        emptyFolder(libDestDir)
 
         // get the import folders. If the .rsh files are not directly under the import folders,
         // we need to get the leaf folders, as this is what llvm-rs-cc expects.
@@ -69,8 +91,12 @@ public class RenderscriptCompile extends BaseTask {
                 importFolders,
                 sourceDestDir,
                 resDestDir,
+                objDestDir,
+                libDestDir,
                 getTargetApi(),
                 getDebugBuild(),
-                getOptimLevel())
+                getOptimLevel(),
+                getSupportMode(),
+                getNdkConfig().abiFilters)
     }
 }

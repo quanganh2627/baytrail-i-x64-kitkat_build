@@ -36,6 +36,7 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
     private int mMinSdkVersion = -1;
     private int mTargetSdkVersion = -1;
     private int mRenderscriptTargetApi = -1;
+    private boolean mRenderscriptSupportMode = false;
     private int mVersionCode = -1;
     private String mVersionName = null;
     private String mPackageName = null;
@@ -43,7 +44,6 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
     private String mTestInstrumentationRunner = null;
     private Boolean mTestHandleProfiling = null;
     private Boolean mTestFunctionalTest = null;
-
 
     @NonNull
     static ProductFlavorImpl cloneFlavor(ProductFlavor productFlavor) {
@@ -53,6 +53,7 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
         clonedFlavor.mMinSdkVersion = productFlavor.getMinSdkVersion();
         clonedFlavor.mTargetSdkVersion = productFlavor.getTargetSdkVersion();
         clonedFlavor.mRenderscriptTargetApi = productFlavor.getRenderscriptTargetApi();
+        clonedFlavor.mRenderscriptSupportMode = productFlavor.getRenderscriptSupportMode();
 
         clonedFlavor.mVersionCode = productFlavor.getVersionCode();
         clonedFlavor.mVersionName = productFlavor.getVersionName();
@@ -108,6 +109,11 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
         return mRenderscriptTargetApi;
     }
 
+    @Override
+    public boolean getRenderscriptSupportMode() {
+        return mRenderscriptSupportMode;
+    }
+
     @Nullable
     @Override
     public String getTestPackageName() {
@@ -139,6 +145,7 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
                 ", mMinSdkVersion=" + mMinSdkVersion +
                 ", mTargetSdkVersion=" + mTargetSdkVersion +
                 ", mRenderscriptTargetApi=" + mRenderscriptTargetApi +
+                ", mRenderscriptSupportMode=" + mRenderscriptSupportMode +
                 ", mVersionCode=" + mVersionCode +
                 ", mVersionName='" + mVersionName + '\'' +
                 ", mPackageName='" + mPackageName + '\'' +

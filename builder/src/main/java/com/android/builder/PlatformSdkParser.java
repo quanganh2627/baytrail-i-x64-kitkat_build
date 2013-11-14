@@ -165,4 +165,10 @@ public class PlatformSdkParser implements SdkParser {
         }
         return mHostTools;
     }
+
+    @Nullable
+    @Override
+    public File getNdkLocation() {
+        return null;
+    }
 }
