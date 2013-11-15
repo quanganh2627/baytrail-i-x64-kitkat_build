@@ -17,8 +17,11 @@ android {
             moduleName "sanangeles"
             cFlags "-DANDROID_NDK -DDISABLE_IMPORTGL"
             ldLibs "-lGLESv1_CM -ldl -llog"
+            stl "stlport_static"
         }
     }
+
+    buildTypes.debug.jniDebugBuild true
 
     productFlavors {
         x86 {

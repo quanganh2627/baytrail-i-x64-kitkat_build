@@ -48,4 +48,7 @@ public interface NdkConfig {
      */
     @Nullable
     public Set<String> getAbiFilters();
+
+    @Nullable
+    public String getStl();
 }

@@ -31,6 +31,7 @@ public class NdkConfigImpl implements NdkConfig {
     private String cFlags;
     private String ldLibs;
     private Set<String> abiFilters;
+    private String stl;
 
     public void reset() {
         moduleName = null;
@@ -63,11 +64,22 @@ public class NdkConfigImpl implements NdkConfig {
         return abiFilters;
     }
 
+    @Override
+    @Nullable
+    public String getStl() {
+        return stl;
+    }
+
     public void append(@NonNull NdkConfig ndkConfig) {
         // override
         if (ndkConfig.getModuleName() != null) {
             moduleName = ndkConfig.getModuleName();
         }
+
+        if (ndkConfig.getStl() != null) {
+            stl = ndkConfig.getStl();
+        }
+
         if (ndkConfig.getAbiFilters() != null) {
             if (abiFilters == null) {
                 abiFilters = Sets.newHashSetWithExpectedSize(ndkConfig.getAbiFilters().size());

@@ -177,6 +177,10 @@ class NdkCompile extends NdkTask {
             commands.add("NDK_DEBUG=1")
         }
 
+        if (ndk.getStl() != null) {
+            commands.add("APP_STL=" + ndk.getStl())
+        }
+
         Set<String> abiFilters = ndk.abiFilters
         if (abiFilters != null && !abiFilters.isEmpty()) {
             if (abiFilters.size() == 1) {

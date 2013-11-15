@@ -28,21 +28,26 @@ class NdkTask extends BaseTask {
 
     @Input @Optional
     String getModuleName() {
-        return getNdkConfig()?.moduleName;
+        return getNdkConfig()?.moduleName
     }
 
     @Input @Optional
     String getcFlags() {
-        return getNdkConfig()?.cFlags;
+        return getNdkConfig()?.cFlags
     }
 
     @Input @Optional
     String getLdLibs() {
-        return getNdkConfig()?.ldLibs;
+        return getNdkConfig()?.ldLibs
     }
 
     @Input @Optional
     Set<String> getAbiFilters() {
-        return getNdkConfig()?.abiFilters;
+        return getNdkConfig()?.abiFilters
+    }
+
+    @Input @Optional
+    String getStl() {
+        return getNdkConfig().stl
     }
 }
