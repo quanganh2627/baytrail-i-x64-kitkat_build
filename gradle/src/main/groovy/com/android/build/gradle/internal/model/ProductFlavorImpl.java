@@ -39,6 +39,7 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
     private int mTargetSdkVersion = -1;
     private int mRenderscriptTargetApi = -1;
     private boolean mRenderscriptSupportMode = false;
+    private boolean mRenderscriptNdkMode = false;
     private int mVersionCode = -1;
     private String mVersionName = null;
     private String mPackageName = null;
@@ -56,6 +57,7 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
         clonedFlavor.mTargetSdkVersion = productFlavor.getTargetSdkVersion();
         clonedFlavor.mRenderscriptTargetApi = productFlavor.getRenderscriptTargetApi();
         clonedFlavor.mRenderscriptSupportMode = productFlavor.getRenderscriptSupportMode();
+        clonedFlavor.mRenderscriptNdkMode = productFlavor.getRenderscriptNdkMode();
 
         clonedFlavor.mVersionCode = productFlavor.getVersionCode();
         clonedFlavor.mVersionName = productFlavor.getVersionName();
@@ -116,6 +118,11 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
         return mRenderscriptSupportMode;
     }
 
+    @Override
+    public boolean getRenderscriptNdkMode() {
+        return mRenderscriptNdkMode;
+    }
+
     @Nullable
     @Override
     public String getTestPackageName() {
@@ -173,6 +180,7 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
                 ", mTargetSdkVersion=" + mTargetSdkVersion +
                 ", mRenderscriptTargetApi=" + mRenderscriptTargetApi +
                 ", mRenderscriptSupportMode=" + mRenderscriptSupportMode +
+                ", mRenderscriptNdkMode=" + mRenderscriptNdkMode +
                 ", mVersionCode=" + mVersionCode +
                 ", mVersionName='" + mVersionName + '\'' +
                 ", mPackageName='" + mPackageName + '\'' +

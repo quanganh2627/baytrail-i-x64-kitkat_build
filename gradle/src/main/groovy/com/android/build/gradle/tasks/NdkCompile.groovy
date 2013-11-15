@@ -15,7 +15,6 @@
  */
 
 package com.android.build.gradle.tasks
-
 import com.android.annotations.NonNull
 import com.android.build.gradle.internal.tasks.NdkTask
 import com.android.builder.model.NdkConfig
@@ -50,6 +49,9 @@ class NdkCompile extends NdkTask {
 
     @OutputDirectory
     File objFolder
+
+    @Input
+    boolean ndkRenderScriptMode
 
     @InputFiles
     FileTree getSource() {
@@ -117,26 +119,38 @@ class NdkCompile extends NdkTask {
         StringBuilder sb = new StringBuilder()
 
         sb.append(
-                "LOCAL_PATH := \$(call my-dir)\n" +
-                "include \$(CLEAR_VARS)\n\n")
+                'LOCAL_PATH := $(call my-dir)\n' +
+                'include \$(CLEAR_VARS)\n\n')
 
-        sb.append("LOCAL_MODULE := ").append(ndk.moduleName != null ? ndk.moduleName : project.name).append('\n')
+        sb.append('LOCAL_MODULE := ').append(ndk.moduleName != null ? ndk.moduleName : project.name).append('\n')
 
         if (ndk.cFlags != null) {
-            sb.append("LOCAL_CFLAGS := ").append(ndk.cFlags).append('\n')
+            sb.append('LOCAL_CFLAGS := ').append(ndk.cFlags).append('\n')
         }
 
+        List<String> fullLdlibs = Lists.newArrayList()
         if (ndk.ldLibs != null) {
+            fullLdlibs.addAll(ndk.ldLibs)
+        }
+        if (getNdkRenderScriptMode()) {
+            fullLdlibs.add("dl")
+            fullLdlibs.add("log")
+            fullLdlibs.add("jnigraphics")
+            fullLdlibs.add("RScpp_static")
+            fullLdlibs.add("cutils")
+        }
+
+        if (!fullLdlibs.isEmpty()) {
             sb.append('LOCAL_LDLIBS := \\\n')
-            for (String lib : ndk.ldLibs) {
+            for (String lib : fullLdlibs) {
                 sb.append('\t-l') .append(lib).append(' \\\n')
             }
             sb.append('\n')
         }
 
-        sb.append("LOCAL_SRC_FILES := \\\n")
+        sb.append('LOCAL_SRC_FILES := \\\n')
         for (File sourceFile : sourceFiles) {
-            sb.append('\t').append(sourceFile.absolutePath).append(" \\\n")
+            sb.append('\t').append(sourceFile.absolutePath).append(' \\\n')
         }
         sb.append('\n')
 
@@ -144,8 +158,16 @@ class NdkCompile extends NdkTask {
             sb.append("LOCAL_C_INCLUDES += ${sourceFolder.absolutePath}\n")
         }
 
+        if (getNdkRenderScriptMode()) {
+            sb.append('LOCAL_LDFLAGS += -L$(call host-path,$(TARGET_C_INCLUDES)/../lib/rs)\n')
+
+            sb.append('LOCAL_C_INCLUDES += $(TARGET_C_INCLUDES)/rs/cpp\n')
+            sb.append('LOCAL_C_INCLUDES += $(TARGET_C_INCLUDES)/rs\n')
+            sb.append('LOCAL_C_INCLUDES += $(TARGET_OBJS)/$(LOCAL_MODULE)\n')
+        }
+
         sb.append(
-                "\ninclude \$(BUILD_SHARED_LIBRARY)\n")
+                '\ninclude \$(BUILD_SHARED_LIBRARY)\n')
 
         Files.write(sb.toString(), makefile, Charsets.UTF_8)
     }

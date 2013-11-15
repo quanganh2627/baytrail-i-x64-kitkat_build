@@ -103,6 +103,8 @@ public class RenderScriptProcessor {
 
     private final int mOptimLevel;
 
+    private final boolean mNdkMode;
+
     private final boolean mSupportMode;
     private final Set<String> mAbiFilters;
 
@@ -120,6 +122,7 @@ public class RenderScriptProcessor {
             int targetApi,
             boolean debugBuild,
             int optimLevel,
+            boolean ndkMode,
             boolean supportMode,
             @Nullable Set<String> abiFilters) {
         mSourceFolders = sourceFolders;
@@ -132,6 +135,7 @@ public class RenderScriptProcessor {
         mTargetApi = targetApi;
         mDebugBuild = debugBuild;
         mOptimLevel = optimLevel;
+        mNdkMode = ndkMode;
         mSupportMode = supportMode;
         mAbiFilters = abiFilters;
 
@@ -236,6 +240,10 @@ public class RenderScriptProcessor {
         // source output
         command.add("-p");
         command.add(mSourceOutputDir.getAbsolutePath());
+
+        if (mNdkMode) {
+            command.add("-reflect-c++");
+        }
 
         // res output
         command.add("-o");

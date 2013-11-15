@@ -452,13 +452,21 @@ public abstract class BasePlugin {
                 RenderscriptCompile)
         variantData.renderscriptCompileTask = renderscriptTask
 
-        variantData.sourceGenTask.dependsOn renderscriptTask
+        ProductFlavor mergedFlavor = config.mergedFlavor
+        boolean ndkMode = mergedFlavor.renderscriptNdkMode
+
+        // only put this dependency if rs will generate Java code
+        if (!ndkMode) {
+            variantData.sourceGenTask.dependsOn renderscriptTask
+        }
+
         renderscriptTask.dependsOn variantData.prepareDependenciesTask
         renderscriptTask.plugin = this
         renderscriptTask.variant = variantData
 
-        renderscriptTask.targetApi = config.mergedFlavor.renderscriptTargetApi
-        renderscriptTask.supportMode = config.mergedFlavor.renderscriptSupportMode
+        renderscriptTask.targetApi = mergedFlavor.renderscriptTargetApi
+        renderscriptTask.supportMode = mergedFlavor.renderscriptSupportMode
+        renderscriptTask.ndkMode = ndkMode
         renderscriptTask.debugBuild = config.buildType.renderscriptDebugBuild
         renderscriptTask.optimLevel = config.buildType.renderscriptOptimLevel
 
@@ -727,7 +735,9 @@ public abstract class BasePlugin {
         sourceList.add({ variantData.processResourcesTask.sourceOutputDir })
         sourceList.add({ variantData.generateBuildConfigTask.sourceOutputDir })
         sourceList.add({ variantData.aidlCompileTask.sourceOutputDir })
-        sourceList.add({ variantData.renderscriptCompileTask.sourceOutputDir })
+        if (!config.mergedFlavor.renderscriptNdkMode) {
+            sourceList.add({ variantData.renderscriptCompileTask.sourceOutputDir })
+        }
 
         if (config.getType() != VariantConfiguration.Type.TEST) {
             sourceList.add(((AndroidSourceSet) config.buildTypeSourceSet).java)
@@ -798,7 +808,21 @@ public abstract class BasePlugin {
 
         VariantConfiguration variantConfig = variantData.variantConfiguration
 
-        ndkCompile.conventionMapping.sourceFolders = { variantConfig.jniSourceList }
+        if (variantConfig.mergedFlavor.renderscriptNdkMode) {
+            ndkCompile.ndkRenderScriptMode = true
+            ndkCompile.dependsOn variantData.renderscriptCompileTask
+        } else {
+            ndkCompile.ndkRenderScriptMode = false
+        }
+
+        ndkCompile.conventionMapping.sourceFolders = {
+            List<File> sourceList = variantConfig.jniSourceList
+            if (variantConfig.mergedFlavor.renderscriptNdkMode) {
+                sourceList.add(variantData.renderscriptCompileTask.sourceOutputDir)
+            }
+
+            return sourceList
+        }
 
         ndkCompile.conventionMapping.generatedMakefile = {
             project.file("$project.buildDir/ndk/${variantData.variantConfiguration.dirName}/Android.mk")
@@ -1059,7 +1083,7 @@ public abstract class BasePlugin {
                 // first the connected one.
                 def connectedTask = createDeviceProviderInstrumentTestTask(
                         hasFlavors ?
-                            "${connectedRootName}${baseVariantData.variantConfiguration.fullName}" : connectedRootName,
+                            "${connectedRootName}${baseVariantData.variantConfiguration.fullName.capitalize()}" : connectedRootName,
                         "Installs and runs the tests for Build '${baseVariantData.variantConfiguration.fullName}' on connected devices.",
                         isLibraryTest ?
                             DeviceProviderInstrumentTestLibraryTask :
@@ -1077,7 +1101,7 @@ public abstract class BasePlugin {
                 for (DeviceProvider deviceProvider : providers) {
                     DefaultTask providerTask = createDeviceProviderInstrumentTestTask(
                             hasFlavors ?
-                                "${deviceProvider.name}${INSTRUMENT_TEST.capitalize()}${baseVariantData.variantConfiguration.fullName}" :
+                                "${deviceProvider.name}${INSTRUMENT_TEST.capitalize()}${baseVariantData.variantConfiguration.fullName.capitalize()}" :
                                 "${deviceProvider.name}${INSTRUMENT_TEST.capitalize()}",
                             "Installs and runs the tests for Build '${baseVariantData.variantConfiguration.fullName}' using Provider '${deviceProvider.name.capitalize()}'.",
                             isLibraryTest ?

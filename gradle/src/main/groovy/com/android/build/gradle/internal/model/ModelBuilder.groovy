@@ -275,8 +275,10 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         folders.add(variantData.processResourcesTask.sourceOutputDir)
         folders.add(variantData.aidlCompileTask.sourceOutputDir)
-        folders.add(variantData.renderscriptCompileTask.sourceOutputDir)
         folders.add(variantData.generateBuildConfigTask.sourceOutputDir)
+        if (!variantData.variantConfiguration.mergedFlavor.renderscriptNdkMode) {
+            folders.add(variantData.renderscriptCompileTask.sourceOutputDir)
+        }
 
         List<File> extraFolders = variantData.extraGeneratedSourceFolders
         if (extraFolders != null) {

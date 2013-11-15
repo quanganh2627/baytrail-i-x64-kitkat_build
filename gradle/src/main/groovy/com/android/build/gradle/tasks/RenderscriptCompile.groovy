@@ -61,6 +61,9 @@ public class RenderscriptCompile extends NdkTask {
     @Input
     boolean debugBuild
 
+    @Input
+    boolean ndkMode
+
     @TaskAction
     void taskAction() {
         // this is full run (always), clean the previous outputs
@@ -91,6 +94,7 @@ public class RenderscriptCompile extends NdkTask {
                 getTargetApi(),
                 getDebugBuild(),
                 getOptimLevel(),
+                getNdkMode(),
                 getSupportMode(),
                 getNdkConfig()?.abiFilters)
     }

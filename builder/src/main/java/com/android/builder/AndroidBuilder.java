@@ -868,6 +868,7 @@ public class AndroidBuilder {
                                             int targetApi,
                                             boolean debugBuild,
                                             int optimLevel,
+                                            boolean ndkMode,
                                             boolean supportMode,
                                             @Nullable Set<String> abiFilters)
             throws IOException, InterruptedException, LoggedErrorException {
@@ -897,6 +898,7 @@ public class AndroidBuilder {
                 targetApi,
                 debugBuild,
                 optimLevel,
+                ndkMode,
                 supportMode,
                 abiFilters);
         processor.build(mCmdLineRunner);

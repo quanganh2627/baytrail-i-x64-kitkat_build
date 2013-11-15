@@ -24,8 +24,9 @@ import com.google.common.collect.Sets;
 import java.util.Set;
 
 /**
+ * Implementation of NdkConfig used to merge multiple configs together.
  */
-public class NdkConfigImpl implements NdkConfig {
+public class MergedNdkConfig implements NdkConfig {
 
     private String moduleName;
     private String cFlags;
