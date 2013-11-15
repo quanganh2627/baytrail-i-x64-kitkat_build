@@ -276,7 +276,7 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
 
         if (variantConfig.buildType.runProguard) {
             // run proguard on output of compile task
-            createProguardTasks(variantData, variantConfig)
+            createProguardTasks(variantData, null)
 
             // hack since bundle can't depend on variantData.proguardTask
             mergeProGuardFileTask.dependsOn variantData.proguardTask

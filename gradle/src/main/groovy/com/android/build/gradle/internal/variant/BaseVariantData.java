@@ -144,10 +144,6 @@ public abstract class BaseVariantData {
         return StringHelper.capitalize(variantConfiguration.getBuildType().getName());
     }
 
-    public boolean getRunProguard() {
-      return getVariantConfiguration().getBuildType().isRunProguard();
-    }
-
     public void setOutputFile(Object file) {
         outputFile = file;
     }
