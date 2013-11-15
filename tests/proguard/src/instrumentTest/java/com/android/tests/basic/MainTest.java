@@ -38,5 +38,12 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
     public void testTextViewContent() {
         assertEquals("1234", mTextView.getText());
     }
+
+    /** Test using a obfuscated class */
+    public void testObfuscatedCode() {
+        final Main a = getActivity();
+        StringProvider sp = a.getStringProvider();
+        assertEquals("42", sp.getString(42));
+    }
 }
 

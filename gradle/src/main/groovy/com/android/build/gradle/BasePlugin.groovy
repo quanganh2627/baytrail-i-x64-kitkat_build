@@ -606,7 +606,7 @@ public abstract class BasePlugin {
             project.file(
                     "$project.buildDir/libs/${project.archivesBaseName}-${variantData.baseName}.ap_")
         }
-        if (variantData.runProguard) {
+        if (variantConfiguration.buildType.runProguard) {
             processResources.conventionMapping.proguardOutputFile = {
                 project.file("$project.buildDir/proguard/${variantData.dirName}/aapt_rules.txt")
             }
@@ -1160,10 +1160,12 @@ public abstract class BasePlugin {
      */
     protected void addPackageTasks(@NonNull ApkVariantData variantData,
                                    @Nullable Task assembleTask) {
-
         VariantConfiguration variantConfig = variantData.variantConfiguration
 
-        boolean runProguard = !(variantData instanceof TestVariantData) && variantConfig.buildType.runProguard
+        boolean runProguard = variantConfig.buildType.runProguard &&
+                (variantConfig.type != VariantConfiguration.Type.TEST ||
+                        (variantConfig.type == VariantConfiguration.Type.TEST &&
+                                variantConfig.testedConfig.type != VariantConfiguration.Type.LIBRARY))
 
         // common dex task configuration
         String dexTaskName = "dex${variantData.name}"
@@ -1182,7 +1184,8 @@ public abstract class BasePlugin {
         if (runProguard) {
 
             // first proguard task.
-            File outFile = createProguardTasks(variantData, variantConfig)
+            BaseVariantData testedVariantData = variantData instanceof TestVariantData ? variantData.testedVariantData : null as BaseVariantData
+            File outFile = createProguardTasks(variantData, testedVariantData)
 
             // then dexing task
             dexTask.dependsOn variantData.proguardTask
@@ -1348,15 +1351,24 @@ public abstract class BasePlugin {
     /**
      * Creates the proguarding task for the given Variant.
      * @param variantData the variant data.
-     * @param variantConfig the variant configuration of variantData
+     * @param testedVariantData optional. variant data representing the tested variant, null if the
+     *                          variant is not a test variant
      * @return outFile file outputted by proguard
      */
     @NonNull
     protected File createProguardTasks(@NonNull BaseVariantData variantData,
-            @NonNull VariantConfiguration variantConfig) {
-        def proguardTask = project.tasks.create("proguard${variantData.name}", ProGuardTask);
+                                       @Nullable BaseVariantData testedVariantData) {
+        VariantConfiguration variantConfig = variantData.variantConfiguration
+
+        def proguardTask = project.tasks.create("proguard${variantData.name}", ProGuardTask)
         proguardTask.dependsOn variantData.javaCompileTask
+        if (testedVariantData != null) {
+            proguardTask.dependsOn testedVariantData.proguardTask
+        }
+
         variantData.proguardTask = proguardTask
+
+        // --- Output File ---
 
         File outFile;
         if (variantData instanceof LibraryVariantData) {
@@ -1367,82 +1379,110 @@ public abstract class BasePlugin {
                     "${project.buildDir}/classes-proguard/${variantData.dirName}/classes.jar")
         }
 
-        // because the Proguard task acts on all the config right away and not when the
-        // task actually runs, let's configure it in its doFirst
-        proguardTask.doFirst {
-            // all the config files coming from build type, product flavors.
-            List<Object> proguardFiles = variantConfig.getProguardFiles(true /*includeLibs*/);
-            for (Object proguardFile : proguardFiles) {
-                proguardTask.configuration(proguardFile)
-            }
+        // --- Proguard Config ---
 
-            // also the config file output by aapt
-            proguardTask.configuration(variantData.processResourcesTask.proguardOutputFile)
+        if (testedVariantData != null) {
+            // don't remove any code in tested app
+            proguardTask.dontshrink()
+            proguardTask.keepnames("class * extends junit.framework.TestCase")
+            proguardTask.keepclassmembers("class * extends junit.framework.TestCase {\n" +
+                    "    void test*(...);\n" +
+                    "}")
 
-            List<File> packagedJars = getAndroidBuilder(variantData).getPackagedJars(variantConfig)
+            // input the mapping from the tested app so that we can deal with obfuscated code
+            proguardTask.applymapping("${project.buildDir}/proguard/${testedVariantData.dirName}/mapping.txt")
 
-            if (variantData instanceof LibraryVariantData) {
-                String packageName = variantConfig.getPackageFromManifest()
-                if (packageName == null) {
-                    throw new BuildException("Failed to read manifest", null)
-                }
-                packageName = packageName.replace('.', '/');
-
-                // injar: the compilation output
-                // exclude R files and such from output
-                String exclude = '!' + packageName + "/R.class"
-                exclude += (', !' + packageName + "/R\$*.class")
-                exclude += (', !' + packageName + "/Manifest.class")
-                exclude += (', !' + packageName + "/Manifest\$*.class")
-                exclude += (', !' + packageName + "/BuildConfig.class")
-                proguardTask.injars(variantData.javaCompileTask.destinationDir, filter: exclude)
-
-                // include R files and such for compilation
-                String include = exclude.replace('!', '')
-                proguardTask.libraryjars(variantData.javaCompileTask.destinationDir, filter: include)
-
-
-                // injar: the local dependencies, filter out local jars from packagedJars
-                Object[] jars = LibraryPlugin.getLocalJarFileList(variantData.variantDependency)
-                for (Object inJar : jars) {
-                    if (packagedJars.contains(inJar)) {
-                        packagedJars.remove(inJar);
-                    }
-                    proguardTask.injars((File) inJar, filter: '!META-INF/MANIFEST.MF')
-                }
-
-                // libjar: the library dependencies
-                for (File libJar : packagedJars) {
-                    proguardTask.libraryjars(libJar, filter: '!META-INF/MANIFEST.MF')
-                }
-
-                // ensure local jars keep their package names
-                proguardTask.keeppackagenames()
-            } else {
-                // injar: the compilation output
-                proguardTask.injars(variantData.javaCompileTask.destinationDir)
-
-                // injar: the dependencies
-                for (File inJar : packagedJars) {
-                    proguardTask.injars(inJar, filter: '!META-INF/MANIFEST.MF')
-                }
-            }
-
-            // libraryJars: the runtime jars
-            for (String runtimeJar : getRuntimeJarList()) {
-                proguardTask.libraryjars(runtimeJar)
-            }
-
-            proguardTask.outjars(outFile)
-
-            proguardTask.dump("${project.buildDir}/proguard/${variantData.dirName}/dump.txt")
-            proguardTask.printseeds(
-                    "${project.buildDir}/proguard/${variantData.dirName}/seeds.txt")
-            proguardTask.printusage(
-                    "${project.buildDir}/proguard/${variantData.dirName}/usage.txt")
-            proguardTask.printmapping(
-                    "${project.buildDir}/proguard/${variantData.dirName}/mapping.txt")
+            // for tested app, we only care about their aapt config since the base
+            // configs are the same files anyway.
+            proguardTask.configuration(testedVariantData.processResourcesTask.proguardOutputFile)
         }
+
+        // all the config files coming from build type, product flavors.
+        List<Object> proguardFiles = variantConfig.getProguardFiles(true /*includeLibs*/)
+        for (Object proguardFile : proguardFiles) {
+            proguardTask.configuration(proguardFile)
+        }
+
+        // also the config file output by aapt
+        proguardTask.configuration(variantData.processResourcesTask.proguardOutputFile)
+
+        // --- InJars / LibraryJars ---
+
+        List<File> packagedJars = getAndroidBuilder(variantData).getPackagedJars(variantConfig)
+
+        if (variantData instanceof LibraryVariantData) {
+            String packageName = variantConfig.getPackageFromManifest()
+            if (packageName == null) {
+                throw new BuildException("Failed to read manifest", null)
+            }
+            packageName = packageName.replace('.', '/');
+
+            // injar: the compilation output
+            // exclude R files and such from output
+            String exclude = '!' + packageName + "/R.class"
+            exclude += (', !' + packageName + "/R\$*.class")
+            exclude += (', !' + packageName + "/Manifest.class")
+            exclude += (', !' + packageName + "/Manifest\$*.class")
+            exclude += (', !' + packageName + "/BuildConfig.class")
+            proguardTask.injars(variantData.javaCompileTask.destinationDir, filter: exclude)
+
+            // include R files and such for compilation
+            String include = exclude.replace('!', '')
+            proguardTask.libraryjars(variantData.javaCompileTask.destinationDir, filter: include)
+
+            // injar: the local dependencies, filter out local jars from packagedJars
+            Object[] jars = LibraryPlugin.getLocalJarFileList(variantData.variantDependency)
+            for (Object inJar : jars) {
+                if (packagedJars.contains(inJar)) {
+                    packagedJars.remove(inJar);
+                }
+                proguardTask.injars((File) inJar, filter: '!META-INF/MANIFEST.MF')
+            }
+
+            // libjar: the library dependencies
+            for (File libJar : packagedJars) {
+                proguardTask.libraryjars(libJar, filter: '!META-INF/MANIFEST.MF')
+            }
+
+            // ensure local jars keep their package names
+            proguardTask.keeppackagenames()
+        } else {
+            // injar: the compilation output
+            proguardTask.injars(variantData.javaCompileTask.destinationDir)
+
+            // injar: the dependencies
+            for (File inJar : packagedJars) {
+                proguardTask.injars(inJar, filter: '!META-INF/MANIFEST.MF')
+            }
+        }
+
+        // libraryJars: the runtime jars
+        for (String runtimeJar : getRuntimeJarList()) {
+            proguardTask.libraryjars(runtimeJar)
+        }
+
+        if (testedVariantData != null) {
+            // input the tested app as library
+            proguardTask.libraryjars(testedVariantData.javaCompileTask.destinationDir)
+            // including its dependencies
+            List<File> testedPackagedJars = getAndroidBuilder(testedVariantData).getPackagedJars(testedVariantData.variantConfiguration)
+            for (File inJar : testedPackagedJars) {
+                proguardTask.libraryjars(inJar, filter: '!META-INF/MANIFEST.MF')
+            }
+        }
+
+        // --- Out files ---
+
+        proguardTask.outjars(outFile)
+
+        proguardTask.dump("${project.buildDir}/proguard/${variantData.dirName}/dump.txt")
+        proguardTask.printseeds(
+                "${project.buildDir}/proguard/${variantData.dirName}/seeds.txt")
+        proguardTask.printusage(
+                "${project.buildDir}/proguard/${variantData.dirName}/usage.txt")
+        proguardTask.printmapping(
+                "${project.buildDir}/proguard/${variantData.dirName}/mapping.txt")
+
         return outFile
     }
 

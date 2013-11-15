@@ -1,5 +1,6 @@
 0.7.0
 - Switch to ProGuard 4.10
+   - Added ability to test proguarded (obfuscated) apps.
 - Jar files are now pre-dexed for faster dexing.
 - First pass at NDK integration
 
