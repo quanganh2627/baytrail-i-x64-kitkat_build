@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.NdkConfig;
 import com.google.common.collect.Sets;
 import org.gradle.api.tasks.Input;
@@ -35,6 +36,7 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
     private String cFlags;
     private String ldLibs;
     private Set<String> abiFilters;
+    private String stl;
 
     public NdkConfigDsl() {
     }
@@ -115,5 +117,15 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
             abiFilters = null;
         }
         return this;
+    }
+
+    @Override
+    @Nullable
+    public String getStl() {
+        return stl;
+    }
+
+    public void setStl(String stl) {
+        this.stl = stl;
     }
 }

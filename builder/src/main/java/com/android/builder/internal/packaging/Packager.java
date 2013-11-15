@@ -444,14 +444,16 @@ public final class Packager implements IArchiveBuilder {
                         for (File lib : libs) {
                             // only consider files that are .so or, if in debug mode, that
                             // are gdbserver executables
+                            String libName = lib.getName();
                             if (lib.isFile() &&
                                     (PATTERN_NATIVELIB_EXT.matcher(lib.getName()).matches() ||
-                                            (mJniDebugMode &&
-                                                    SdkConstants.FN_GDBSERVER.equals(
-                                                            lib.getName())))) {
+                                        (mJniDebugMode &&
+                                            (SdkConstants.FN_GDBSERVER.equals(libName) ||
+                                             SdkConstants.FN_GDB_SETUP.equals(libName))))) {
+
                                 String path =
                                     SdkConstants.FD_APK_NATIVE_LIBS + "/" +
-                                    abi.getName() + "/" + lib.getName();
+                                    abi.getName() + "/" + libName;
 
                                 try {
                                     doAddFile(lib, path);
