@@ -25,7 +25,7 @@ else
 my_prebuilt_src_file := $(LOCAL_PATH)/$(LOCAL_SRC_FILES)
 endif
 
-ifneq ($(filter APPS,$(LOCAL_MODULE_CLASS)),)
+ifneq ($(filter APPS JAVA_LIBRARIES,$(LOCAL_IS_HOST_MODULE)$(LOCAL_MODULE_CLASS)),)
 ifeq (true,$(WITH_DEXPREOPT))
 ifeq (true,$(WITH_DEXPREOPT_PREBUILT))
 ifeq (,$(TARGET_BUILD_APPS))
@@ -215,4 +215,35 @@ $(common_javalib_jar) : $(common_classes_jar) | $(ACP)
 
 # make sure the classes.jar and javalib.jar are built before $(LOCAL_BUILT_MODULE)
 $(built_module) : $(common_javalib_jar)
+
+# Do pre-optimization of the libraries according to build settings.
+# Use the same procedure as java_library.mk for compiled modules.
+ifeq ($(LOCAL_DEX_PREOPT),true)
+dexpreopt_boot_jar_module := $(filter $(LOCAL_MODULE),$(DEXPREOPT_BOOT_JARS_MODULES))
+ifneq ($(dexpreopt_boot_jar_module),)
+# boot jar's rules are defined in dex_preopt.mk
+dexpreopted_boot_jar := $(DEXPREOPT_BOOT_JAR_DIR_FULL_PATH)/$(dexpreopt_boot_jar_module)_nodex.jar
+$(built_module) : $(dexpreopted_boot_jar) | $(ACP)
+	$(call copy-file-to-target)
+
+dexpreopted_boot_odex := $(DEXPREOPT_BOOT_JAR_DIR_FULL_PATH)/$(dexpreopt_boot_jar_module).odex
+built_odex := $(basename $(LOCAL_BUILT_MODULE)).odex
+$(built_odex) : $(dexpreopted_boot_odex) | $(ACP)
+	$(call copy-file-to-target)
+else # dexpreopt_boot_jar_module
+built_odex := $(basename $(LOCAL_BUILT_MODULE)).odex
+$(built_odex): PRIVATE_MODULE := $(LOCAL_MODULE)
+# Make sure the boot jars get dex-preopt-ed first
+$(built_odex) : $(DEXPREOPT_BOOT_ODEXS)
+$(built_odex) : $(common_javalib_jar) | $(DEXPREOPT) $(DEXOPT)
+	@echo "Dexpreopt Jar: $(PRIVATE_MODULE) ($@)"
+	$(hide) rm -f $@
+	@mkdir -p $(dir $@)
+	$(call dexpreopt-one-file,$<,$@)
+
+$(LOCAL_BUILT_MODULE) : $(common_javalib_jar) | $(ACP)
+	$(call copy-file-to-target)
+	$(call dexpreopt-remove-classes.dex,$@)
+endif # dexpreopt_boot_jar_module
+endif # LOCAL_DEX_PREOPT
 endif # TARGET JAVA_LIBRARIES
