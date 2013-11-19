@@ -21,7 +21,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.gradle.api.internal.ErroringAction;
 import org.gradle.api.internal.html.SimpleHtmlWriter;
-import org.gradle.api.internal.tasks.testing.junit.report.TestFailure;
+import org.gradle.api.internal.tasks.testing.junit.result.TestFailure;
 import org.gradle.reporting.CodePanelRenderer;
 
 import java.io.IOException;
