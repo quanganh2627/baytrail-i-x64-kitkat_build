@@ -1,4 +1,5 @@
 0.7.0
+- Requires Gradle 1.9
 - Switch to ProGuard 4.10
    - Added ability to test proguarded (obfuscated) apps.
 - Jar files are now pre-dexed for faster dexing.

@@ -15,7 +15,7 @@
  */
 package com.android.build.gradle.internal.test.report;
 
-import org.gradle.api.internal.tasks.testing.junit.report.TestFailure;
+import org.gradle.api.internal.tasks.testing.junit.result.TestFailure;
 import org.gradle.api.internal.tasks.testing.junit.report.TestResultModel;
 
 import java.util.ArrayList;
@@ -101,7 +101,7 @@ class TestResult extends TestResultModel implements Comparable<TestResult> {
     public void addFailure(String message, String stackTrace,
                            String deviceName, String projectName, String flavorName) {
         classResults.failed(this, deviceName, projectName, flavorName);
-        failures.add(new TestFailure(message, stackTrace));
+        failures.add(new TestFailure(message, stackTrace, null));
     }
 
     public void ignored() {
