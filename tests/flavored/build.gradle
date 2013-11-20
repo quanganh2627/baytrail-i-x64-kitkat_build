@@ -23,12 +23,12 @@ android {
         f1 {
             packageName = "com.android.tests.flavored.f1"
             versionName = "1.0.0-f1"
-            buildConfig "private final static String FLAVOR = \"f1\";"
+            buildConfig "public final static String FLAVOR = \"f1\";"
         }
         f2 {
             packageName = "com.android.tests.flavored.f2"
             versionName = "1.0.0-f2"
-            buildConfig "private final static String FLAVOR = \"f2\";"
+            buildConfig "public final static String FLAVOR = \"f2\";"
         }
     }
     

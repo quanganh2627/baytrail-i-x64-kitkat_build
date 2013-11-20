@@ -91,6 +91,13 @@ public interface Variant {
     ProductFlavor getMergedFlavor();
 
     /**
+     * The variant specific SourceProvider.
+     * @return a source provider or null
+     */
+    @Nullable
+    SourceProvider getSourceProvider();
+
+    /**
      * Returns the resource configuration for this variant.
      * TODO implement this.
      *

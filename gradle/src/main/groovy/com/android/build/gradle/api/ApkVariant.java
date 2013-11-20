@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.tasks.Dex;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.ZipAlign;
-import com.android.builder.DefaultBuildType;
 import com.android.builder.DefaultProductFlavor;
 import com.android.builder.model.SigningConfig;
 import org.gradle.api.DefaultTask;
@@ -33,11 +32,6 @@ import java.util.List;
  */
 public interface ApkVariant extends BaseVariant {
 
-    /**
-     * Returns the {@link com.android.builder.DefaultBuildType} for this build variant.
-     */
-    @NonNull
-    DefaultBuildType getBuildType();
 
     /**
      * Returns the list of {@link com.android.builder.DefaultProductFlavor} for this build variant.

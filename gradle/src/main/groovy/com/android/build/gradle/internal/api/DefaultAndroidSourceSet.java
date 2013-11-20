@@ -267,7 +267,6 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
 
     // --- SourceProvider
 
-
     @NonNull
     @Override
     public Set<File> getJavaDirectories() {

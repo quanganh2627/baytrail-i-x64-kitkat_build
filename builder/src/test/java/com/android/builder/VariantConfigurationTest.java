@@ -128,7 +128,7 @@ public class VariantConfigurationTest extends TestCase {
         VariantConfiguration variant = new VariantConfiguration(
                 mDefaultConfig, new MockSourceProvider("main"),
                 mBuildType, new MockSourceProvider("debug"),
-                VariantConfiguration.Type.DEFAULT, "test") {
+                VariantConfiguration.Type.DEFAULT) {
             // don't do validation.
             @Override
             protected void validate() {
@@ -145,7 +145,7 @@ public class VariantConfigurationTest extends TestCase {
         VariantConfiguration variant = new VariantConfiguration(
                 mDefaultConfig, new MockSourceProvider("main"),
                 mBuildType, new MockSourceProvider("debug"),
-                VariantConfiguration.Type.DEFAULT, "test") {
+                VariantConfiguration.Type.DEFAULT) {
             @Override
             public String getPackageFromManifest() {
                 return packageName;
@@ -165,7 +165,7 @@ public class VariantConfigurationTest extends TestCase {
         VariantConfiguration variant = new VariantConfiguration(
                 mDefaultConfig, new MockSourceProvider("main"),
                 mBuildType, new MockSourceProvider("debug"),
-                VariantConfiguration.Type.DEFAULT, "test") {
+                VariantConfiguration.Type.DEFAULT) {
             @Override
             public String getVersionNameFromManifest() {
                 return versionName;

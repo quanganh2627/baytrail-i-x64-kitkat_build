@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.StringHelper;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
@@ -28,8 +29,6 @@ import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ProcessManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
-import com.android.builder.BuilderConstants;
-import com.android.builder.DefaultProductFlavor;
 import com.android.builder.VariantConfiguration;
 import groovy.lang.Closure;
 import org.gradle.api.Task;
@@ -44,7 +43,6 @@ import java.io.File;
  */
 public abstract class BaseVariantData {
 
-    private String name;
     private final VariantConfiguration variantConfiguration;
     private VariantDependencies variantDependency;
 
@@ -71,11 +69,7 @@ public abstract class BaseVariantData {
 
     public BaseVariantData(@NonNull VariantConfiguration variantConfiguration) {
         this.variantConfiguration = variantConfiguration;
-        this.name = computeName();
     }
-
-    @NonNull
-    protected abstract String computeName();
 
     @NonNull
     public VariantConfiguration getVariantConfiguration() {
@@ -92,36 +86,7 @@ public abstract class BaseVariantData {
     }
 
     @NonNull
-    public String getName() {
-        return name;
-    }
-
-    @NonNull
     public abstract String getDescription();
-
-    @NonNull
-    public abstract String getDirName();
-
-    @NonNull
-    public String getFlavorDirName() {
-        if (variantConfiguration.hasFlavors()) {
-            return getFlavoredName(false);
-        } else {
-            return "";
-        }
-    }
-
-    @NonNull
-    public String getFlavorName() {
-        if (variantConfiguration.hasFlavors()) {
-            return getFlavoredName(true);
-        } else {
-            return StringHelper.capitalize(BuilderConstants.MAIN);
-        }
-    }
-
-    @NonNull
-    public abstract String getBaseName();
 
     @Nullable
     public String getPackageName() {
@@ -129,19 +94,13 @@ public abstract class BaseVariantData {
     }
 
     @NonNull
-    protected String getFlavoredName(boolean capitalized) {
-        StringBuilder builder = new StringBuilder();
-        for (DefaultProductFlavor flavor : variantConfiguration.getFlavorConfigs()) {
-            String name = flavor.getName();
-            builder.append(capitalized ? StringHelper.capitalize(name) : name);
-        }
-
-        return builder.toString();
+    protected String getCapitalizedBuildTypeName() {
+        return StringHelper.capitalize(variantConfiguration.getBuildType().getName());
     }
 
     @NonNull
-    protected String getCapitalizedBuildTypeName() {
-        return StringHelper.capitalize(variantConfiguration.getBuildType().getName());
+    protected String getCapitalizedFlavorName() {
+        return StringHelper.capitalize(variantConfiguration.getFlavorName());
     }
 
     public void setOutputFile(Object file) {
@@ -158,5 +117,11 @@ public abstract class BaseVariantData {
 
         assert false;
         return null;
+    }
+
+    @VisibleForTesting
+    @NonNull
+    String getName() {
+        return variantConfiguration.getFullName();
     }
 }

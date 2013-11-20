@@ -346,7 +346,8 @@ public abstract class BasePlugin {
 
     protected void createProcessManifestTask(BaseVariantData variantData,
                                              String manifestOurDir) {
-        def processManifestTask = project.tasks.create("process${variantData.name}Manifest",
+        def processManifestTask = project.tasks.create(
+                "process${variantData.variantConfiguration.fullName.capitalize()}Manifest",
                 ProcessAppManifest)
         variantData.processManifestTask = processManifestTask
         processManifestTask.dependsOn variantData.prepareDependenciesTask
@@ -383,13 +384,14 @@ public abstract class BasePlugin {
         }
         processManifestTask.conventionMapping.manifestOutputFile = {
             project.file(
-                    "$project.buildDir/${manifestOurDir}/$variantData.dirName/AndroidManifest.xml")
+                    "$project.buildDir/${manifestOurDir}/${variantData.variantConfiguration.dirName}/AndroidManifest.xml")
         }
     }
 
     protected void createProcessTestManifestTask(BaseVariantData variantData,
                                                  String manifestOurDir) {
-        def processTestManifestTask = project.tasks.create("process${variantData.name}TestManifest",
+        def processTestManifestTask = project.tasks.create(
+                "process${variantData.variantConfiguration.fullName.capitalize()}Manifest",
                 ProcessTestManifest)
         variantData.processManifestTask = processTestManifestTask
         processTestManifestTask.dependsOn variantData.prepareDependenciesTask
@@ -425,14 +427,15 @@ public abstract class BasePlugin {
         }
         processTestManifestTask.conventionMapping.manifestOutputFile = {
             project.file(
-                    "$project.buildDir/${manifestOurDir}/$variantData.dirName/AndroidManifest.xml")
+                    "$project.buildDir/${manifestOurDir}/${variantData.variantConfiguration.dirName}/AndroidManifest.xml")
         }
     }
 
     protected void createRenderscriptTask(BaseVariantData variantData) {
         VariantConfiguration config = variantData.variantConfiguration
 
-        def renderscriptTask = project.tasks.create("compile${variantData.name}Renderscript",
+        def renderscriptTask = project.tasks.create(
+                "compile${variantData.variantConfiguration.fullName.capitalize()}Renderscript",
                 RenderscriptCompile)
         variantData.renderscriptCompileTask = renderscriptTask
 
@@ -450,16 +453,16 @@ public abstract class BasePlugin {
         renderscriptTask.conventionMapping.importDirs = { config.renderscriptImports }
 
         renderscriptTask.conventionMapping.sourceOutputDir = {
-            project.file("$project.buildDir/source/rs/$variantData.dirName")
+            project.file("$project.buildDir/source/rs/${variantData.variantConfiguration.dirName}")
         }
         renderscriptTask.conventionMapping.resOutputDir = {
-            project.file("$project.buildDir/res/rs/$variantData.dirName")
+            project.file("$project.buildDir/res/rs/${variantData.variantConfiguration.dirName}")
         }
         renderscriptTask.conventionMapping.objOutputDir = {
-            project.file("$project.buildDir/rs/$variantData.dirName/obj")
+            project.file("$project.buildDir/rs/${variantData.variantConfiguration.dirName}/obj")
         }
         renderscriptTask.conventionMapping.libOutputDir = {
-            project.file("$project.buildDir/rs/$variantData.dirName/lib")
+            project.file("$project.buildDir/rs/${variantData.variantConfiguration.dirName}/lib")
         }
         renderscriptTask.conventionMapping.ndkConfig = { config.ndkConfig }
     }
@@ -469,7 +472,7 @@ public abstract class BasePlugin {
         MergeResources mergeResourcesTask = basicCreateMergeResourcesTask(
                 variantData,
                 "merge",
-                "$project.buildDir/res/all/$variantData.dirName",
+                "$project.buildDir/res/all/${variantData.variantConfiguration.dirName}",
                 true /*includeDependencies*/,
                 process9Patch)
         variantData.mergeResourcesTask = mergeResourcesTask
@@ -482,13 +485,14 @@ public abstract class BasePlugin {
             final boolean includeDependencies,
             final boolean process9Patch) {
         MergeResources mergeResourcesTask = project.tasks.create(
-                "$taskNamePrefix${variantData.name}Resources", MergeResources)
+                "$taskNamePrefix${variantData.variantConfiguration.fullName.capitalize()}Resources",
+                MergeResources)
 
         mergeResourcesTask.dependsOn variantData.prepareDependenciesTask, variantData.renderscriptCompileTask
         mergeResourcesTask.plugin = this
         mergeResourcesTask.variant = variantData
         mergeResourcesTask.incrementalFolder = project.file(
-                "$project.buildDir/incremental/${taskNamePrefix}Resources/$variantData.dirName")
+                "$project.buildDir/incremental/${taskNamePrefix}Resources/${variantData.variantConfiguration.dirName}")
 
         mergeResourcesTask.process9Patch = process9Patch
 
@@ -507,17 +511,19 @@ public abstract class BasePlugin {
                                          @Nullable String outputLocation,
                                          final boolean includeDependencies) {
         if (outputLocation == null) {
-            outputLocation = "$project.buildDir/assets/$variantData.dirName"
+            outputLocation = "$project.buildDir/assets/${variantData.variantConfiguration.dirName}"
         }
 
-        def mergeAssetsTask = project.tasks.create("merge${variantData.name}Assets", MergeAssets)
+        def mergeAssetsTask = project.tasks.create(
+                "merge${variantData.variantConfiguration.fullName.capitalize()}Assets",
+                MergeAssets)
         variantData.mergeAssetsTask = mergeAssetsTask
 
         mergeAssetsTask.dependsOn variantData.prepareDependenciesTask
         mergeAssetsTask.plugin = this
         mergeAssetsTask.variant = variantData
         mergeAssetsTask.incrementalFolder =
-                project.file("$project.buildDir/incremental/mergeAssets/$variantData.dirName")
+                project.file("$project.buildDir/incremental/mergeAssets/${variantData.variantConfiguration.dirName}")
 
         mergeAssetsTask.conventionMapping.inputAssetSets = {
             variantData.variantConfiguration.getAssetSets(includeDependencies)
@@ -527,7 +533,8 @@ public abstract class BasePlugin {
 
     protected void createBuildConfigTask(BaseVariantData variantData) {
         def generateBuildConfigTask = project.tasks.create(
-                "generate${variantData.name}BuildConfig", GenerateBuildConfig)
+                "generate${variantData.variantConfiguration.fullName.capitalize()}BuildConfig",
+                GenerateBuildConfig)
         variantData.generateBuildConfigTask = generateBuildConfigTask
 
         VariantConfiguration variantConfiguration = variantData.variantConfiguration
@@ -555,16 +562,17 @@ public abstract class BasePlugin {
         }
 
         generateBuildConfigTask.conventionMapping.sourceOutputDir = {
-            project.file("$project.buildDir/source/buildConfig/${variantData.dirName}")
+            project.file("$project.buildDir/source/buildConfig/${variantData.variantConfiguration.dirName}")
         }
     }
 
     protected void createProcessResTask(BaseVariantData variantData) {
-        createProcessResTask(variantData, "$project.buildDir/symbols/$variantData.dirName")
+        createProcessResTask(variantData, "$project.buildDir/symbols/${variantData.variantConfiguration.dirName}")
     }
 
     protected void createProcessResTask(BaseVariantData variantData, final String symbolLocation) {
-        def processResources = project.tasks.create("process${variantData.name}Resources",
+        def processResources = project.tasks.create(
+                "process${variantData.variantConfiguration.fullName.capitalize()}Resources",
                 ProcessAndroidResources)
         variantData.processResourcesTask = processResources
 
@@ -597,18 +605,18 @@ public abstract class BasePlugin {
 
         // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
         processResources.conventionMapping.sourceOutputDir = {
-            project.file("$project.buildDir/source/r/$variantData.dirName")
+            project.file("$project.buildDir/source/r/${variantData.variantConfiguration.dirName}")
         }
         processResources.conventionMapping.textSymbolOutputDir = {
             project.file(symbolLocation)
         }
         processResources.conventionMapping.packageOutputFile = {
             project.file(
-                    "$project.buildDir/libs/${project.archivesBaseName}-${variantData.baseName}.ap_")
+                    "$project.buildDir/libs/${project.archivesBaseName}-${variantData.variantConfiguration.baseName}.ap_")
         }
         if (variantConfiguration.buildType.runProguard) {
             processResources.conventionMapping.proguardOutputFile = {
-                project.file("$project.buildDir/proguard/${variantData.dirName}/aapt_rules.txt")
+                project.file("$project.buildDir/proguard/${variantData.variantConfiguration.dirName}/aapt_rules.txt")
             }
         }
 
@@ -620,7 +628,8 @@ public abstract class BasePlugin {
     protected void createProcessJavaResTask(BaseVariantData variantData) {
         VariantConfiguration variantConfiguration = variantData.variantConfiguration
 
-        Copy processResources = project.tasks.create("process${variantData.name}JavaRes",
+        Copy processResources = project.tasks.create(
+                "process${variantData.variantConfiguration.fullName.capitalize()}JavaRes",
                 ProcessResources);
         variantData.processJavaResourcesTask = processResources
 
@@ -638,14 +647,16 @@ public abstract class BasePlugin {
         }
 
         processResources.conventionMapping.destinationDir = {
-            project.file("$project.buildDir/javaResources/$variantData.dirName")
+            project.file("$project.buildDir/javaResources/${variantData.variantConfiguration.dirName}")
         }
     }
 
     protected void createAidlTask(BaseVariantData variantData) {
         VariantConfiguration variantConfiguration = variantData.variantConfiguration
 
-        def compileTask = project.tasks.create("compile${variantData.name}Aidl", AidlCompile)
+        def compileTask = project.tasks.create(
+                "compile${variantData.variantConfiguration.fullName.capitalize()}Aidl",
+                AidlCompile)
         variantData.aidlCompileTask = compileTask
 
         variantData.sourceGenTask.dependsOn compileTask
@@ -654,19 +665,21 @@ public abstract class BasePlugin {
         compileTask.plugin = this
         compileTask.variant = variantData
         compileTask.incrementalFolder =
-                project.file("$project.buildDir/incremental/aidl/$variantData.dirName")
+                project.file("$project.buildDir/incremental/aidl/${variantData.variantConfiguration.dirName}")
 
         compileTask.conventionMapping.sourceDirs = { variantConfiguration.aidlSourceList }
         compileTask.conventionMapping.importDirs = { variantConfiguration.aidlImports }
 
         compileTask.conventionMapping.sourceOutputDir = {
-            project.file("$project.buildDir/source/aidl/$variantData.dirName")
+            project.file("$project.buildDir/source/aidl/${variantData.variantConfiguration.dirName}")
         }
     }
 
     protected void createCompileTask(BaseVariantData variantData,
                                      BaseVariantData testedVariantData) {
-        def compileTask = project.tasks.create("compile${variantData.name}Java", JavaCompile)
+        def compileTask = project.tasks.create(
+                "compile${variantData.variantConfiguration.fullName.capitalize()}Java",
+                JavaCompile)
         variantData.javaCompileTask = compileTask
         compileTask.dependsOn variantData.sourceGenTask
 
@@ -707,10 +720,10 @@ public abstract class BasePlugin {
         compileTask.dependsOn project.configurations.compile.buildDependencies
 
         compileTask.conventionMapping.destinationDir = {
-            project.file("$project.buildDir/classes/$variantData.dirName")
+            project.file("$project.buildDir/classes/${variantData.variantConfiguration.dirName}")
         }
         compileTask.conventionMapping.dependencyCacheDir = {
-            project.file("$project.buildDir/dependency-cache/$variantData.dirName")
+            project.file("$project.buildDir/dependency-cache/${variantData.variantConfiguration.dirName}")
         }
 
         // set source/target compatibility
@@ -732,14 +745,15 @@ public abstract class BasePlugin {
     protected void createNdkTasks(@NonNull BaseVariantData variantData) {
         createNdkTasks(
                 variantData,
-                { project.file("$project.buildDir/ndk/$variantData.dirName/lib") }
+                { project.file("$project.buildDir/ndk/${variantData.variantConfiguration.dirName}/lib") }
         )
     }
 
     protected void createNdkTasks(@NonNull BaseVariantData variantData,
                                   @NonNull Closure<File> soFolderClosure) {
         NdkCompile ndkCompile = project.tasks.create(
-                "compile${variantData.name}Ndk", NdkCompile)
+                "compile${variantData.variantConfiguration.fullName.capitalize()}Ndk",
+                NdkCompile)
 
         ndkCompile.plugin = this
         ndkCompile.variant = variantData
@@ -747,26 +761,10 @@ public abstract class BasePlugin {
 
         VariantConfiguration variantConfig = variantData.variantConfiguration
 
-        ndkCompile.conventionMapping.sourceFolders = {
-
-            Set<File> sourceList = Sets.newHashSet()
-
-            sourceList.addAll(((AndroidSourceSet) variantConfig.defaultSourceSet).jni.srcDirs)
-
-            if (variantConfig.getType() != VariantConfiguration.Type.TEST) {
-                sourceList.addAll(((AndroidSourceSet) variantConfig.buildTypeSourceSet).jni.srcDirs)
-            }
-            if (variantConfig.hasFlavors()) {
-                for (SourceProvider flavorSourceSet : variantConfig.flavorSourceSets) {
-                    sourceList.addAll(((AndroidSourceSet) flavorSourceSet).jni.srcDirs)
-                }
-            }
-
-            return sourceList
-        }
+        ndkCompile.conventionMapping.sourceFolders = { variantConfig.jniSourceList }
 
         ndkCompile.conventionMapping.generatedMakefile = {
-            project.file("$project.buildDir/ndk/$variantData.dirName/Android.mk")
+            project.file("$project.buildDir/ndk/${variantData.variantConfiguration.dirName}/Android.mk")
         }
 
         ndkCompile.conventionMapping.ndkConfig = { variantConfig.ndkConfig }
@@ -776,7 +774,7 @@ public abstract class BasePlugin {
         }
 
         ndkCompile.conventionMapping.objFolder = {
-            project.file("$project.buildDir/ndk/$variantData.dirName/obj")
+            project.file("$project.buildDir/ndk/${variantData.variantConfiguration.dirName}/obj")
         }
         ndkCompile.conventionMapping.soFolder = soFolderClosure
     }
@@ -794,7 +792,7 @@ public abstract class BasePlugin {
         // to test both.
         if (!variantData.isSigned()) {
             throw new GradleException(
-                    "Tested Variant '${testedVariantData.name}' is not configured to create a signed APK.")
+                    "Tested Variant '${testedVariantData.variantConfiguration.fullName}' is not configured to create a signed APK.")
         }
 
         createAnchorTasks(variantData)
@@ -866,7 +864,7 @@ public abstract class BasePlugin {
         int count = variantDataList.size()
         for (int i = 0 ; i < count ; i++) {
             final BaseVariantData baseVariantData = variantDataList.get(i)
-            String variantName = baseVariantData.computeName()
+            String variantName = baseVariantData.variantConfiguration.fullName
             Task lintCheck = project.tasks.create("lint" + variantName, Lint)
             lintCheck.dependsOn baseVariantData.javaCompileTask, lintCompile
             lint.dependsOn lintCheck
@@ -890,6 +888,9 @@ public abstract class BasePlugin {
             javaSource.add(config.defaultSourceSet.javaDirectories)
             if (config.getType() != VariantConfiguration.Type.TEST) {
                 javaSource.add(config.buildTypeSourceSet.javaDirectories)
+            }
+            if (config.variantSourceProvider != null) {
+                javaSource.add(config.variantSourceProvider.javaDirectories)
             }
 
             resourceSource.add(config.defaultSourceSet.resDirectories)
@@ -928,7 +929,8 @@ public abstract class BasePlugin {
 
                 // set lint project options
                 lintCheck.setSources(javaSource)
-                lintCheck.setClasspath("$project.buildDir/classes/$baseVariantData.dirName")
+                lintCheck.setClasspath(
+                        "$project.buildDir/classes/$baseVariantData.variantConfiguration.dirName")
                 lintCheck.setLintResources(resourceSource)
             }
         }
@@ -1013,8 +1015,8 @@ public abstract class BasePlugin {
                 // first the connected one.
                 def connectedTask = createDeviceProviderInstrumentTestTask(
                         hasFlavors ?
-                            "${connectedRootName}${baseVariantData.name}" : connectedRootName,
-                        "Installs and runs the tests for Build '${baseVariantData.name}' on connected devices.",
+                            "${connectedRootName}${baseVariantData.variantConfiguration.fullName}" : connectedRootName,
+                        "Installs and runs the tests for Build '${baseVariantData.variantConfiguration.fullName}' on connected devices.",
                         isLibraryTest ?
                             DeviceProviderInstrumentTestLibraryTask :
                             DeviceProviderInstrumentTestTask,
@@ -1031,9 +1033,9 @@ public abstract class BasePlugin {
                 for (DeviceProvider deviceProvider : providers) {
                     DefaultTask providerTask = createDeviceProviderInstrumentTestTask(
                             hasFlavors ?
-                                "${deviceProvider.name}${INSTRUMENT_TEST.capitalize()}${baseVariantData.name}" :
+                                "${deviceProvider.name}${INSTRUMENT_TEST.capitalize()}${baseVariantData.variantConfiguration.fullName}" :
                                 "${deviceProvider.name}${INSTRUMENT_TEST.capitalize()}",
-                            "Installs and runs the tests for Build '${baseVariantData.name}' using Provider '${deviceProvider.name.capitalize()}'.",
+                            "Installs and runs the tests for Build '${baseVariantData.variantConfiguration.fullName}' using Provider '${deviceProvider.name.capitalize()}'.",
                             isLibraryTest ?
                                 DeviceProviderInstrumentTestLibraryTask :
                                 DeviceProviderInstrumentTestTask,
@@ -1056,10 +1058,10 @@ public abstract class BasePlugin {
                 for (TestServer testServer : servers) {
                     DefaultTask serverTask = project.tasks.create(
                             hasFlavors ?
-                                "${testServer.name}${"upload".capitalize()}${baseVariantData.name}" :
+                                "${testServer.name}${"upload".capitalize()}${baseVariantData.variantConfiguration.fullName}" :
                                 "${testServer.name}${"upload".capitalize()}",
                             TestServerTask)
-                    serverTask.description = "Uploads APKs for Build '${baseVariantData.name}' to Test Server '${testServer.name.capitalize()}'."
+                    serverTask.description = "Uploads APKs for Build '${baseVariantData.variantConfiguration.fullName}' to Test Server '${testServer.name.capitalize()}'."
                     serverTask.group = JavaBasePlugin.VERIFICATION_GROUP
                     serverTask.dependsOn testVariantData.assembleTask, baseVariantData.assembleTask
 
@@ -1070,7 +1072,7 @@ public abstract class BasePlugin {
                         serverTask.conventionMapping.testedApk = { baseVariantData.outputFile }
                     }
 
-                    serverTask.conventionMapping.variantName = { baseVariantData.name }
+                    serverTask.conventionMapping.variantName = { baseVariantData.variantConfiguration.fullName }
 
                     deviceCheck.dependsOn serverTask
 
@@ -1116,7 +1118,7 @@ public abstract class BasePlugin {
 
         testTask.plugin = this
         testTask.variant = variantData
-        testTask.flavorName = variantData.flavorName
+        testTask.flavorName = variantData.variantConfiguration.flavorName.capitalize()
         testTask.deviceProvider = deviceProvider
 
         testTask.conventionMapping.testApp = { variantData.outputFile }
@@ -1129,7 +1131,7 @@ public abstract class BasePlugin {
                 extension.testOptions.resultsDir :
                 "$project.buildDir/$FD_INSTRUMENT_RESULTS"
 
-            String flavorFolder = variantData.flavorDirName
+            String flavorFolder = variantData.variantConfiguration.flavorName
             if (!flavorFolder.isEmpty()) {
                 flavorFolder = "$FD_FLAVORS/" + flavorFolder
             }
@@ -1141,7 +1143,7 @@ public abstract class BasePlugin {
                 extension.testOptions.reportDir :
                 "$project.buildDir/$FD_REPORTS/$FD_INSTRUMENT_TESTS"
 
-            String flavorFolder = variantData.flavorDirName
+            String flavorFolder = variantData.variantConfiguration.flavorName
             if (!flavorFolder.isEmpty()) {
                 flavorFolder = "$FD_FLAVORS/" + flavorFolder
             }
@@ -1168,7 +1170,7 @@ public abstract class BasePlugin {
                                 variantConfig.testedConfig.type != VariantConfiguration.Type.LIBRARY))
 
         // common dex task configuration
-        String dexTaskName = "dex${variantData.name}"
+        String dexTaskName = "dex${variantData.variantConfiguration.fullName.capitalize()}"
         Dex dexTask = project.tasks.create(dexTaskName, Dex)
         variantData.dexTask = dexTask
 
@@ -1177,7 +1179,7 @@ public abstract class BasePlugin {
 
         dexTask.conventionMapping.outputFile = {
             project.file(
-                    "${project.buildDir}/libs/${project.archivesBaseName}-${variantData.baseName}.dex")
+                    "${project.buildDir}/libs/${project.archivesBaseName}-${variantData.variantConfiguration.baseName}.dex")
         }
         dexTask.dexOptions = extension.dexOptions
 
@@ -1198,7 +1200,7 @@ public abstract class BasePlugin {
             PreDex preDexTask = null;
             boolean runPreDex = extension.dexOptions.preDexLibraries
             if (runPreDex) {
-                def preDexTaskName = "preDex${variantData.name}"
+                def preDexTaskName = "preDex${variantData.variantConfiguration.fullName.capitalize()}"
                 preDexTask = project.tasks.create(preDexTaskName, PreDex)
 
                 preDexTask.dependsOn variantData.javaCompileTask
@@ -1210,7 +1212,7 @@ public abstract class BasePlugin {
                 }
                 preDexTask.conventionMapping.outputFolder = {
                     project.file(
-                            "${project.buildDir}/pre-dexed/${variantData.dirName}")
+                            "${project.buildDir}/pre-dexed/${variantData.variantConfiguration.dirName}")
                 }
             }
 
@@ -1233,7 +1235,9 @@ public abstract class BasePlugin {
         }
 
         // Add a task to generate application package
-        def packageApp = project.tasks.create("package${variantData.name}", PackageApplication)
+        def packageApp = project.tasks.create(
+                "package${variantData.variantConfiguration.fullName.capitalize()}",
+                PackageApplication)
         variantData.packageApplicationTask = packageApp
         packageApp.dependsOn variantData.processResourcesTask, dexTask, variantData.processJavaResourcesTask, variantData.ndkCompileTask
 
@@ -1285,8 +1289,8 @@ public abstract class BasePlugin {
 
         def signedApk = variantData.isSigned()
         def apkName = signedApk ?
-            "${project.archivesBaseName}-${variantData.baseName}-unaligned.apk" :
-            "${project.archivesBaseName}-${variantData.baseName}-unsigned.apk"
+            "${project.archivesBaseName}-${variantData.variantConfiguration.baseName}-unaligned.apk" :
+            "${project.archivesBaseName}-${variantData.variantConfiguration.baseName}-unsigned.apk"
 
         packageApp.conventionMapping.outputFile = {
             project.file("$project.buildDir/apk/${apkName}")
@@ -1298,25 +1302,29 @@ public abstract class BasePlugin {
         if (signedApk) {
             if (variantData.zipAlign) {
                 // Add a task to zip align application package
-                def zipAlignTask = project.tasks.create("zipalign${variantData.name}", ZipAlign)
+                def zipAlignTask = project.tasks.create(
+                        "zipalign${variantData.variantConfiguration.fullName.capitalize()}",
+                        ZipAlign)
                 variantData.zipAlignTask = zipAlignTask
 
                 zipAlignTask.dependsOn packageApp
                 zipAlignTask.conventionMapping.inputFile = { packageApp.outputFile }
                 zipAlignTask.conventionMapping.outputFile = {
                     project.file(
-                            "$project.buildDir/apk/${project.archivesBaseName}-${variantData.baseName}.apk")
+                            "$project.buildDir/apk/${project.archivesBaseName}-${variantData.variantConfiguration.baseName}.apk")
                 }
                 zipAlignTask.conventionMapping.zipAlignExe = { getSdkParser().zipAlign }
 
                 appTask = zipAlignTask
                 outputFileTask = zipAlignTask
                 variantData.outputFile = project.file(
-                        "$project.buildDir/apk/${project.archivesBaseName}-${variantData.baseName}.apk")
+                        "$project.buildDir/apk/${project.archivesBaseName}-${variantData.variantConfiguration.baseName}.apk")
             }
 
             // Add a task to install the application package
-            def installTask = project.tasks.create("install${variantData.name}", InstallTask)
+            def installTask = project.tasks.create(
+                    "install${variantData.variantConfiguration.fullName.capitalize()}",
+                    InstallTask)
             installTask.description = "Installs the " + variantData.description
             installTask.group = INSTALL_GROUP
             installTask.dependsOn appTask
@@ -1328,7 +1336,7 @@ public abstract class BasePlugin {
 
         // Add an assemble task
         if (assembleTask == null) {
-            assembleTask = project.tasks.create("assemble${variantData.name}")
+            assembleTask = project.tasks.create("assemble${variantData.variantConfiguration.fullName.capitalize()}")
             assembleTask.description = "Assembles the " + variantData.description
             assembleTask.group = org.gradle.api.plugins.BasePlugin.BUILD_GROUP
         }
@@ -1338,7 +1346,9 @@ public abstract class BasePlugin {
         variantData.outputFile = { outputFileTask.outputFile }
 
         // add an uninstall task
-        def uninstallTask = project.tasks.create("uninstall${variantData.name}", UninstallTask)
+        def uninstallTask = project.tasks.create(
+                "uninstall${variantData.variantConfiguration.fullName.capitalize()}",
+                UninstallTask)
         uninstallTask.description = "Uninstalls the " + variantData.description
         uninstallTask.group = INSTALL_GROUP
         uninstallTask.variant = variantData
@@ -1360,7 +1370,9 @@ public abstract class BasePlugin {
                                        @Nullable BaseVariantData testedVariantData) {
         VariantConfiguration variantConfig = variantData.variantConfiguration
 
-        def proguardTask = project.tasks.create("proguard${variantData.name}", ProGuardTask)
+        def proguardTask = project.tasks.create(
+                "proguard${variantData.variantConfiguration.fullName.capitalize()}",
+                ProGuardTask)
         proguardTask.dependsOn variantData.javaCompileTask
         if (testedVariantData != null) {
             proguardTask.dependsOn testedVariantData.proguardTask
@@ -1373,10 +1385,10 @@ public abstract class BasePlugin {
         File outFile;
         if (variantData instanceof LibraryVariantData) {
             outFile = project.file(
-                    "${project.buildDir}/$DIR_BUNDLES/${variantData.dirName}/classes.jar")
+                    "${project.buildDir}/$DIR_BUNDLES/${variantData.variantConfiguration.dirName}/classes.jar")
         } else {
             outFile = project.file(
-                    "${project.buildDir}/classes-proguard/${variantData.dirName}/classes.jar")
+                    "${project.buildDir}/classes-proguard/${variantData.variantConfiguration.dirName}/classes.jar")
         }
 
         // --- Proguard Config ---
@@ -1390,7 +1402,7 @@ public abstract class BasePlugin {
                     "}")
 
             // input the mapping from the tested app so that we can deal with obfuscated code
-            proguardTask.applymapping("${project.buildDir}/proguard/${testedVariantData.dirName}/mapping.txt")
+            proguardTask.applymapping("${project.buildDir}/proguard/${testedVariantData.variantConfiguration.dirName}/mapping.txt")
 
             // for tested app, we only care about their aapt config since the base
             // configs are the same files anyway.
@@ -1475,13 +1487,13 @@ public abstract class BasePlugin {
 
         proguardTask.outjars(outFile)
 
-        proguardTask.dump("${project.buildDir}/proguard/${variantData.dirName}/dump.txt")
+        proguardTask.dump("${project.buildDir}/proguard/${variantData.variantConfiguration.dirName}/dump.txt")
         proguardTask.printseeds(
-                "${project.buildDir}/proguard/${variantData.dirName}/seeds.txt")
+                "${project.buildDir}/proguard/${variantData.variantConfiguration.dirName}/seeds.txt")
         proguardTask.printusage(
-                "${project.buildDir}/proguard/${variantData.dirName}/usage.txt")
+                "${project.buildDir}/proguard/${variantData.variantConfiguration.dirName}/usage.txt")
         proguardTask.printmapping(
-                "${project.buildDir}/proguard/${variantData.dirName}/mapping.txt")
+                "${project.buildDir}/proguard/${variantData.variantConfiguration.dirName}/mapping.txt")
 
         return outFile
     }
@@ -1499,10 +1511,12 @@ public abstract class BasePlugin {
     }
 
     protected void createAnchorTasks(@NonNull BaseVariantData variantData) {
-        variantData.preBuildTask = project.tasks.create("pre${variantData.name}Build")
+        variantData.preBuildTask = project.tasks.create(
+                "pre${variantData.variantConfiguration.fullName.capitalize()}Build")
         variantData.preBuildTask.dependsOn mainPreBuild
 
-        def prepareDependenciesTask = project.tasks.create("prepare${variantData.name}Dependencies",
+        def prepareDependenciesTask = project.tasks.create(
+                "prepare${variantData.variantConfiguration.fullName.capitalize()}Dependencies",
                 PrepareDependenciesTask)
 
         variantData.prepareDependenciesTask = prepareDependenciesTask
@@ -1521,7 +1535,8 @@ public abstract class BasePlugin {
         }
 
         // also create sourceGenTask
-        variantData.sourceGenTask = project.tasks.create("generate${variantData.name}Sources")
+        variantData.sourceGenTask = project.tasks.create(
+                "generate${variantData.variantConfiguration.fullName.capitalize()}Sources")
     }
 
     //----------------------------------------------------------------------------------------------

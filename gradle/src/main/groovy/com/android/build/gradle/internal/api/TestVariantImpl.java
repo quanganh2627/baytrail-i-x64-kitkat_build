@@ -19,24 +19,14 @@ package com.android.build.gradle.internal.api;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.TestVariant;
+import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
-import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.Dex;
-import com.android.build.gradle.tasks.GenerateBuildConfig;
-import com.android.build.gradle.tasks.MergeAssets;
-import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.PackageApplication;
-import com.android.build.gradle.tasks.ProcessAndroidResources;
-import com.android.build.gradle.tasks.ProcessManifest;
-import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ZipAlign;
-import com.android.builder.DefaultBuildType;
 import com.android.builder.DefaultProductFlavor;
 import com.android.builder.model.SigningConfig;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.Task;
-import org.gradle.api.tasks.Copy;
-import org.gradle.api.tasks.compile.JavaCompile;
 
 import java.io.File;
 import java.util.List;
@@ -44,7 +34,7 @@ import java.util.List;
 /**
  * implementation of the {@link TestVariant} interface around an {@link TestVariantData} object.
  */
-public class TestVariantImpl implements TestVariant {
+public class TestVariantImpl extends BaseVariantImpl implements TestVariant {
 
     @NonNull
     private final TestVariantData variantData;
@@ -56,33 +46,8 @@ public class TestVariantImpl implements TestVariant {
     }
 
     @Override
-    @NonNull
-    public String getName() {
-        return variantData.getName();
-    }
-
-    @Override
-    @NonNull
-    public String getDescription() {
-        return variantData.getDescription();
-    }
-
-    @Override
-    @NonNull
-    public String getDirName() {
-        return variantData.getDirName();
-    }
-
-    @Override
-    @NonNull
-    public String getBaseName() {
-        return variantData.getBaseName();
-    }
-
-    @Override
-    @NonNull
-    public DefaultBuildType getBuildType() {
-        return variantData.getVariantConfiguration().getBuildType();
+    protected BaseVariantData getVariantData() {
+        return variantData;
     }
 
     @Override
@@ -95,12 +60,6 @@ public class TestVariantImpl implements TestVariant {
     @NonNull
     public DefaultProductFlavor getMergedFlavor() {
         return variantData.getVariantConfiguration().getMergedFlavor();
-    }
-
-    @Override
-    @NonNull
-    public File getOutputFile() {
-        return variantData.getOutputFile();
     }
 
     @Override
@@ -123,57 +82,6 @@ public class TestVariantImpl implements TestVariant {
     }
 
     @Override
-    @NonNull
-    public ProcessManifest getProcessManifest() {
-        return variantData.processManifestTask;
-    }
-
-    @Override
-    @NonNull
-    public AidlCompile getAidlCompile() {
-        return variantData.aidlCompileTask;
-    }
-
-    @Override
-    @NonNull
-    public RenderscriptCompile getRenderscriptCompile() {
-        return variantData.renderscriptCompileTask;
-    }
-
-    @Override
-    public MergeResources getMergeResources() {
-        return variantData.mergeResourcesTask;
-    }
-
-    @Override
-    public MergeAssets getMergeAssets() {
-        return variantData.mergeAssetsTask;
-    }
-
-    @Override
-    @NonNull
-    public ProcessAndroidResources getProcessResources() {
-        return variantData.processResourcesTask;
-    }
-
-    @Override
-    public GenerateBuildConfig getGenerateBuildConfig() {
-        return variantData.generateBuildConfigTask;
-    }
-
-    @Override
-    @NonNull
-    public JavaCompile getJavaCompile() {
-        return variantData.javaCompileTask;
-    }
-
-    @Override
-    @NonNull
-    public Copy getProcessJavaResources() {
-        return variantData.processJavaResourcesTask;
-    }
-
-    @Override
     public Dex getDex() {
         return variantData.dexTask;
     }
@@ -186,11 +94,6 @@ public class TestVariantImpl implements TestVariant {
     @Override
     public ZipAlign getZipAlign() {
         return variantData.zipAlignTask;
-    }
-
-    @Override
-    public Task getAssemble() {
-        return variantData.assembleTask;
     }
 
     @Override

@@ -183,8 +183,8 @@ public abstract class BaseTest extends TestCase {
      * @param name the name of the item to return
      * @return the found item or null
      */
-    protected static <T> T findNamedItem(@NonNull Collection<T> items,
-                                         @NonNull String name) {
+    protected static <T> T findNamedItemMaybe(@NonNull Collection<T> items,
+                                              @NonNull String name) {
         for (T item : items) {
             if (name.equals(item.name)) {
                 return item
@@ -192,5 +192,19 @@ public abstract class BaseTest extends TestCase {
         }
 
         return null
+    }
+
+    /**
+     * Returns the name item from the collection of items. The items *must* have a "name" property.
+     * @param items the item collection to search for a match
+     * @param name the name of the item to return
+     * @return the found item or null
+     */
+    protected static <T> T findNamedItem(@NonNull Collection<T> items,
+                                         @NonNull String name,
+                                         @NonNull String typeName) {
+        T foundItem = findNamedItemMaybe(items, name);
+        assertNotNull("$name $typeName null-check", foundItem)
+        return foundItem
     }
 }

@@ -36,33 +36,14 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
 
     @Override
     @NonNull
-    protected String computeName() {
-        return getVariantConfiguration().hasFlavors() ?
-                String.format("%s%s",
-                        getFlavoredName(true), getCapitalizedBuildTypeName()) :
-                getCapitalizedBuildTypeName();
-    }
-
-    @Override
-    @NonNull
     public String getDescription() {
         if (getVariantConfiguration().hasFlavors()) {
-            return "Test build for the ${getFlavoredName(true)}${config.buildType.name.capitalize()} build";
+            return String.format("%s build for flavor %s",
+                    getCapitalizedBuildTypeName(),
+                    getCapitalizedFlavorName());
         } else {
-            return "Test for the ${config.buildType.name.capitalize()} build";
+            return String.format("%s build", getCapitalizedBuildTypeName());
         }
-    }
-
-    @Override
-    @NonNull
-    public String getDirName() {
-        return getVariantConfiguration().getBuildType().getName();
-    }
-
-    @Override
-    @NonNull
-    public String getBaseName() {
-        return getVariantConfiguration().getBuildType().getName();
     }
 
     @Override

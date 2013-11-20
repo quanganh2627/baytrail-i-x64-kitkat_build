@@ -25,6 +25,8 @@ import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ProcessManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
+import com.android.builder.DefaultBuildType;
+import com.android.builder.DefaultProductFlavor;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -66,6 +68,19 @@ public interface BaseVariant {
      */
     @NonNull
     String getBaseName();
+
+    /**
+     * Returns the {@link com.android.builder.DefaultBuildType} for this build variant.
+     */
+    @NonNull
+    DefaultBuildType getBuildType();
+
+    /**
+     * Returns a {@link com.android.builder.DefaultProductFlavor} that represents the merging
+     * of the default config and the flavors of this build variant.
+     */
+    @NonNull
+    DefaultProductFlavor getConfig();
 
     /**
      * Returns the output file for this build variants. Depending on the configuration, this could

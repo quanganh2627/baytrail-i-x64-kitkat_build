@@ -266,19 +266,17 @@ public class AppPluginDslTest extends BaseTest {
                                            @NonNull String testedVariantName,
                                            @NonNull Set<ApplicationVariant> variants,
                                            @NonNull Set<TestVariant> testVariants) {
-        ApplicationVariant variant = findNamedItem(variants, variantName)
-        assertNotNull(variant)
+        ApplicationVariant variant = findNamedItem(variants, variantName, "variantData")
         assertNotNull(variant.testVariant)
         assertEquals(testedVariantName, variant.testVariant.name)
-        assertEquals(variant.testVariant, findNamedItem(testVariants, testedVariantName))
+        assertEquals(variant.testVariant, findNamedItemMaybe(testVariants, testedVariantName))
         checkTasks(variant)
         checkTasks(variant.testVariant)
     }
 
     private static void checkNonTestedVariant(@NonNull String variantName,
                                               @NonNull Set<ApplicationVariant> variants) {
-        ApplicationVariant variant = findNamedItem(variants, variantName)
-        assertNotNull(variant)
+        ApplicationVariant variant = findNamedItem(variants, variantName, "variantData")
         assertNull(variant.testVariant)
         checkTasks(variant)
     }

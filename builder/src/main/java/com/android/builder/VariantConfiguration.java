@@ -23,6 +23,8 @@ import com.android.builder.dependency.DependencyContainer;
 import com.android.builder.dependency.JarDependency;
 import com.android.builder.dependency.LibraryDependency;
 import com.android.builder.internal.NdkConfigImpl;
+import com.android.builder.internal.StringHelper;
+import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.testing.TestData;
@@ -46,20 +48,52 @@ public class VariantConfiguration implements TestData {
 
     private static final ManifestParser sManifestParser = new DefaultManifestParser();
 
+    /**
+     * Full, unique name of the variant in camel case, including BuildType and Flavors (and Test)
+     */
+    private String mFullName;
+    /**
+     * Flavor Name of the variant, including all flavors in camel case (starting with a lower
+     * case).
+     */
+    private String mFlavorName;
+    /**
+     * Full, unique name of the variant, including BuildType, flavors and test, dash separated.
+     * (similar to full name but with dashes)
+     */
+    private String mBaseName;
+    /**
+     * Unique directory name (can include multiple folders) for the variant, based on build type,
+     * flavor and test.
+     * This always uses forward slashes ('/') as separator on all platform.
+     *
+     */
+    private String mDirName;
+
+    @NonNull
     private final DefaultProductFlavor mDefaultConfig;
+    @NonNull
     private final SourceProvider mDefaultSourceProvider;
 
+    @NonNull
     private final DefaultBuildType mBuildType;
     /** SourceProvider for the BuildType. Can be null */
+    @Nullable
     private final SourceProvider mBuildTypeSourceProvider;
 
     private final List<DefaultProductFlavor> mFlavorConfigs = Lists.newArrayList();
     private final List<SourceProvider> mFlavorSourceProviders = Lists.newArrayList();
 
+    /**
+     * Variant specific source provider, may be null
+     */
+    @Nullable
+    private SourceProvider mVariantSourceProvider;
+
+    @NonNull
     private final Type mType;
     /** Optional tested config in case type is Type#TEST */
     private final VariantConfiguration mTestedConfig;
-    private final String mDebugName;
     /** An optional output that is only valid if the type is Type#LIBRARY so that the test
      * for the library can use the library as if it was a normal dependency. */
     private LibraryDependency mOutput;
@@ -100,18 +134,16 @@ public class VariantConfiguration implements TestData {
      * @param defaultSourceProvider the default source provider. Required
      * @param buildType the build type for this variant. Required.
      * @param buildTypeSourceProvider the source provider for the build type. Required.
-     * @param debugName an optional debug name
      */
     public VariantConfiguration(
             @NonNull DefaultProductFlavor defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
             @NonNull DefaultBuildType buildType,
-            @Nullable SourceProvider buildTypeSourceProvider,
-            @Nullable String debugName) {
-        this(defaultConfig, defaultSourceProvider,
+            @Nullable SourceProvider buildTypeSourceProvider) {
+        this(
+                defaultConfig, defaultSourceProvider,
                 buildType, buildTypeSourceProvider,
-                Type.DEFAULT, null /*testedConfig*/,
-                debugName);
+                Type.DEFAULT, null /*testedConfig*/);
     }
 
     /**
@@ -122,19 +154,17 @@ public class VariantConfiguration implements TestData {
      * @param buildType the build type for this variant. Required.
      * @param buildTypeSourceProvider the source provider for the build type.
      * @param type the type of the project.
-     * @param debugName an optional debug name
      */
     public VariantConfiguration(
             @NonNull DefaultProductFlavor defaultConfig,
             @NonNull SourceProvider defaultSourceProvider,
             @NonNull DefaultBuildType buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
-            @NonNull Type type,
-            @Nullable String debugName) {
-        this(defaultConfig, defaultSourceProvider,
+            @NonNull Type type) {
+        this(
+                defaultConfig, defaultSourceProvider,
                 buildType, buildTypeSourceProvider,
-                type, null /*testedConfig*/,
-                debugName);
+                type, null /*testedConfig*/);
     }
 
     /**
@@ -146,7 +176,6 @@ public class VariantConfiguration implements TestData {
      * @param buildTypeSourceProvider the source provider for the build type.
      * @param type the type of the project.
      * @param testedConfig the reference to the tested project. Required if type is Type.TEST
-     * @param debugName an optional debug name
      */
     public VariantConfiguration(
             @NonNull DefaultProductFlavor defaultConfig,
@@ -154,15 +183,13 @@ public class VariantConfiguration implements TestData {
             @NonNull DefaultBuildType buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull Type type,
-            @Nullable VariantConfiguration testedConfig,
-            @Nullable String debugName) {
+            @Nullable VariantConfiguration testedConfig) {
         mDefaultConfig = checkNotNull(defaultConfig);
         mDefaultSourceProvider = checkNotNull(defaultSourceProvider);
         mBuildType = checkNotNull(buildType);
         mBuildTypeSourceProvider = buildTypeSourceProvider;
         mType = checkNotNull(type);
         mTestedConfig = testedConfig;
-        mDebugName = debugName;
         checkState(mType != Type.TEST || mTestedConfig != null);
 
         mMergedFlavor = mDefaultConfig;
@@ -178,6 +205,124 @@ public class VariantConfiguration implements TestData {
     }
 
     /**
+     * Returns the full, unique name of the variant in camel case (starting with a lower case),
+     * including BuildType, Flavors and Test (if applicable).
+     *
+     * @return the name of the variant
+     */
+    @NonNull
+    public String getFullName() {
+        if (mFullName == null) {
+            StringBuilder sb = new StringBuilder();
+            String flavorName = getFlavorName();
+            if (!flavorName.isEmpty()) {
+                sb.append(flavorName);
+                sb.append(StringHelper.capitalize(mBuildType.getName()));
+            } else {
+                sb.append(mBuildType.getName());
+            }
+
+            if (mType == Type.TEST) {
+                sb.append("Test");
+            }
+
+            mFullName = sb.toString();
+        }
+
+        return mFullName;
+    }
+
+
+    /**
+     * Returns the flavor name of the variant, including all flavors in camel case (starting
+     * with a lower case). If the variant has no flavor, then an empty string is returned.
+     *
+     * @return the flavor name or an empty string.
+     */
+    @NonNull
+    public String getFlavorName() {
+        if (mFlavorName == null) {
+            if (mFlavorConfigs.isEmpty()) {
+                mFlavorName = "";
+            } else {
+                StringBuilder sb = new StringBuilder();
+                boolean first = true;
+                for (DefaultProductFlavor flavor : mFlavorConfigs) {
+                    sb.append(first ? flavor.getName() : StringHelper.capitalize(flavor.getName()));
+                    first = false;
+                }
+
+                mFlavorName = sb.toString();
+            }
+        }
+
+        return mFlavorName;
+    }
+
+    /**
+     * Returns the full, unique name of the variant, including BuildType, flavors and test,
+     * dash separated. (similar to full name but with dashes)
+     *
+     * @return the name of the variant
+     */
+    @NonNull
+    public String getBaseName() {
+        if (mBaseName == null) {
+            StringBuilder sb = new StringBuilder();
+
+            if (!mFlavorConfigs.isEmpty()) {
+                for (ProductFlavor pf : mFlavorConfigs) {
+                    sb.append(pf.getName()).append('-');
+                }
+            }
+
+            sb.append(mBuildType.getName());
+
+            if (mType == Type.TEST) {
+                sb.append('-').append("test");
+            }
+
+            mBaseName = sb.toString();
+        }
+
+        return mBaseName;
+    }
+
+    /**
+     * Returns a unique directory name (can include multiple folders) for the variant,
+     * based on build type, flavor and test.
+     * This always uses forward slashes ('/') as separator on all platform.
+     *
+     * @return the directory name for the variant
+     */
+    @NonNull
+    public String getDirName() {
+        if (mDirName == null) {
+            StringBuilder sb = new StringBuilder();
+
+            if (mType == Type.TEST) {
+                sb.append("test/");
+            }
+
+            if (!mFlavorConfigs.isEmpty()) {
+                for (DefaultProductFlavor flavor : mFlavorConfigs) {
+                    sb.append(flavor.getName());
+                }
+
+                sb.append('/').append(mBuildType.getName());
+
+            } else {
+                sb.append(mBuildType.getName());
+            }
+
+            mDirName = sb.toString();
+
+        }
+
+        return mDirName;
+    }
+
+    /**
      * Add a new configured ProductFlavor.
      *
      * If multiple flavors are added, the priority follows the order they are added when it
@@ -185,13 +330,14 @@ public class VariantConfiguration implements TestData {
      * latter added ones).
      *
      * @param productFlavor the configured product flavor
-     * @param sourceProvider
+     * @param sourceProvider the source provider for the product flavor
      *
      * @return the config object
      */
     @NonNull
     public VariantConfiguration addProductFlavor(@NonNull DefaultProductFlavor productFlavor,
                                                  @NonNull SourceProvider sourceProvider) {
+
         mFlavorConfigs.add(productFlavor);
         mFlavorSourceProviders.add(sourceProvider);
 
@@ -199,6 +345,27 @@ public class VariantConfiguration implements TestData {
         computeNdkConfig();
 
         return this;
+    }
+
+    /**
+     * Sets the variant-specific source provider.
+     * @param sourceProvider the source provider for the product flavor
+     *
+     * @return the config object
+     */
+    public VariantConfiguration setVariantSourceProvider(@Nullable SourceProvider sourceProvider) {
+        mVariantSourceProvider = sourceProvider;
+
+        return this;
+    }
+
+    /**
+     * Returns the variant specific source provider
+     * @return the source provider or null if none has been provided.
+     */
+    @Nullable
+    public SourceProvider getVariantSourceProvider() {
+        return mVariantSourceProvider;
     }
 
     private void computeNdkConfig() {
@@ -412,7 +579,7 @@ public class VariantConfiguration implements TestData {
         }
 
         if (packageName == null) {
-            throw new RuntimeException("Failed get query package name for " + mDebugName);
+            throw new RuntimeException("Failed get query package name for " + getFullName());
         }
 
         return packageName;
@@ -612,6 +779,13 @@ public class VariantConfiguration implements TestData {
     public List<File> getManifestOverlays() {
         List<File> inputs = Lists.newArrayList();
 
+        if (mVariantSourceProvider != null) {
+            File variantLocation = mVariantSourceProvider.getManifestFile();
+            if (variantLocation.isFile()) {
+                inputs.add(variantLocation);
+            }
+        }
+
         if (mBuildTypeSourceProvider != null) {
             File typeLocation = mBuildTypeSourceProvider.getManifestFile();
             if (typeLocation.isFile()) {
@@ -682,10 +856,19 @@ public class VariantConfiguration implements TestData {
             resourceSets.add(resourceSet);
         }
 
+        // build type overrides the flavors
         if (mBuildTypeSourceProvider != null) {
             Set<File> typeResDirs = mBuildTypeSourceProvider.getResDirectories();
             resourceSet = new ResourceSet(mBuildType.getName());
             resourceSet.addSources(typeResDirs);
+            resourceSets.add(resourceSet);
+        }
+
+        // variant specific overrides all
+        if (mVariantSourceProvider != null) {
+            Set<File> variantResDirs = mVariantSourceProvider.getResDirectories();
+            resourceSet = new ResourceSet(getFullName());
+            resourceSet.addSources(variantResDirs);
             resourceSets.add(resourceSet);
         }
 
@@ -737,10 +920,19 @@ public class VariantConfiguration implements TestData {
             assetSets.add(assetSet);
         }
 
+        // build type overrides flavors
         if (mBuildTypeSourceProvider != null) {
             Set<File> typeResDirs = mBuildTypeSourceProvider.getAssetsDirectories();
             assetSet = new AssetSet(mBuildType.getName());
             assetSet.addSources(typeResDirs);
+            assetSets.add(assetSet);
+        }
+
+        // variant specific overrides all
+        if (mVariantSourceProvider != null) {
+            Set<File> variantResDirs = mVariantSourceProvider.getAssetsDirectories();
+            assetSet = new AssetSet(getFullName());
+            assetSet.addSources(variantResDirs);
             assetSets.add(assetSet);
         }
 
@@ -799,6 +991,10 @@ public class VariantConfiguration implements TestData {
             }
         }
 
+        if (mVariantSourceProvider != null) {
+            sourceList.addAll(mVariantSourceProvider.getRenderscriptDirectories());
+        }
+
         return sourceList;
     }
 
@@ -831,6 +1027,31 @@ public class VariantConfiguration implements TestData {
             for (SourceProvider flavorSourceSet : mFlavorSourceProviders) {
                 sourceList.addAll(flavorSourceSet.getAidlDirectories());
             }
+        }
+
+        if (mVariantSourceProvider != null) {
+            sourceList.addAll(mVariantSourceProvider.getAidlDirectories());
+        }
+
+        return sourceList;
+    }
+
+    @NonNull
+    public List<File> getJniSourceList() {
+        List<File> sourceList = Lists.newArrayList();
+        sourceList.addAll(mDefaultSourceProvider.getJniDirectories());
+        if (mType != Type.TEST && mBuildTypeSourceProvider != null) {
+            sourceList.addAll(mBuildTypeSourceProvider.getJniDirectories());
+        }
+
+        if (hasFlavors()) {
+            for (SourceProvider flavorSourceSet : mFlavorSourceProviders) {
+                sourceList.addAll(flavorSourceSet.getJniDirectories());
+            }
+        }
+
+        if (mVariantSourceProvider != null) {
+            sourceList.addAll(mVariantSourceProvider.getJniDirectories());
         }
 
         return sourceList;

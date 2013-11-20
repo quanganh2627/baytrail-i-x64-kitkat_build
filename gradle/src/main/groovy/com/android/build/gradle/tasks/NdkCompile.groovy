@@ -37,7 +37,7 @@ import org.gradle.api.tasks.util.PatternSet
  */
 class NdkCompile extends NdkTask {
 
-    Set<File> sourceFolders
+    List<File> sourceFolders
 
     @OutputFile
     File generatedMakefile
@@ -54,7 +54,7 @@ class NdkCompile extends NdkTask {
     @InputFiles
     FileTree getSource() {
         FileTree src = null
-        Set<File> sources = getSourceFolders()
+        List<File> sources = getSourceFolders()
         if (!sources.isEmpty()) {
             src = getProject().files(new ArrayList<Object>(sources)).getAsFileTree()
         }
