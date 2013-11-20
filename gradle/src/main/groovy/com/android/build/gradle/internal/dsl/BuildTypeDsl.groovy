@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dsl
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
+import com.android.annotations.VisibleForTesting
 import com.android.builder.BuilderConstants
 import com.android.builder.DefaultBuildType
 import com.android.builder.NdkConfig
@@ -36,12 +37,20 @@ public class BuildTypeDsl extends DefaultBuildType implements Serializable {
 
     private final NdkConfigDsl ndkConfig
 
-    BuildTypeDsl(@NonNull String name,
+    public BuildTypeDsl(@NonNull String name,
                  @NonNull FileResolver fileResolver,
                  @NonNull Instantiator instantiator) {
         super(name)
         this.fileResolver = fileResolver
         ndkConfig = instantiator.newInstance(NdkConfigDsl.class)
+    }
+
+    @VisibleForTesting
+    BuildTypeDsl(@NonNull String name,
+                 @NonNull FileResolver fileResolver) {
+        super(name)
+        this.fileResolver = fileResolver
+        ndkConfig = null
     }
 
     @Override
