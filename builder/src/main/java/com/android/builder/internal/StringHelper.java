@@ -14,27 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.api;
+package com.android.builder.internal;
 
-import com.android.annotations.Nullable;
-import org.gradle.api.tasks.bundling.Zip;
+import com.android.annotations.NonNull;
+
+import java.util.Locale;
 
 /**
- * A Build variant and all its public data.
  */
-public interface LibraryVariant extends BaseVariant {
+public class StringHelper {
 
-    /**
-     * Returns the build variant that will test this build variant.
-     *
-     * Will return null if this build variant is a test build already.
-     */
-    @Nullable
-    TestVariant getTestVariant();
+    @NonNull
+    public static String capitalize(@NonNull String string) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(string.substring(0, 1).toUpperCase(Locale.US)).append(string.substring(1));
 
-    /**
-     * Returns the Library AAR packaging task.
-     */
-    @Nullable
-    Zip getPackageLibrary();
+        return sb.toString();
+    }
 }

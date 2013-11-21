@@ -43,43 +43,15 @@ public class TestVariantData extends ApkVariantData {
         return testedVariantData;
     }
 
-    @NonNull
-    @Override
-    protected String computeName() {
-        return getVariantConfiguration().hasFlavors() ?
-                String.format("%sTest", getFlavoredName(true)) :
-                "Test";
-    }
-
     @Override
     @NonNull
     public String getDescription() {
         if (getVariantConfiguration().hasFlavors()) {
             return String.format("Test build for the %s%s build",
-                    getFlavoredName(true), getCapitalizedBuildTypeName());
+                    getCapitalizedFlavorName(), getCapitalizedBuildTypeName());
         } else {
             return String.format("Test build for the %s build",
                     getCapitalizedBuildTypeName());
-        }
-    }
-
-    @Override
-    @NonNull
-    public String getDirName() {
-        if (getVariantConfiguration().hasFlavors()) {
-            return String.format("%s/test", getFlavoredName(false));
-        } else {
-            return "test";
-        }
-    }
-
-    @Override
-    @NonNull
-    public String getBaseName() {
-        if (getVariantConfiguration().hasFlavors()) {
-            return String.format("%s-test", getFlavoredName(false));
-        } else {
-            return "test";
         }
     }
 

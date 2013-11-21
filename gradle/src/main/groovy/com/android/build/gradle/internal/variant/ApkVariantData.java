@@ -44,31 +44,9 @@ public abstract class ApkVariantData extends BaseVariantData {
         if (getVariantConfiguration().hasFlavors()) {
             return String.format("%s build for flavor %s",
                     getCapitalizedBuildTypeName(),
-                    getFlavoredName(true));
+                    getCapitalizedFlavorName());
         } else {
             return String.format("%s build", getCapitalizedBuildTypeName());
-        }
-    }
-
-    @Override
-    @NonNull
-    public String getDirName() {
-        if (getVariantConfiguration().hasFlavors()) {
-            return String.format("%s/%s",
-                    getFlavoredName(false), getVariantConfiguration().getBuildType().getName());
-        } else {
-            return getVariantConfiguration().getBuildType().getName();
-        }
-    }
-
-    @Override
-    @NonNull
-    public String getBaseName() {
-        if (getVariantConfiguration().hasFlavors()) {
-            return String.format("%s-%s",
-                    getFlavoredName(false), getVariantConfiguration().getBuildType().getName());
-        } else {
-            return getVariantConfiguration().getBuildType().getName();
         }
     }
 

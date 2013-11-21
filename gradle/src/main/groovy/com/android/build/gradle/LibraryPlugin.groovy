@@ -79,9 +79,9 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
         // create the source sets for the build type.
         // the ones for the main product flavors are handled by the base plugin.
         DefaultAndroidSourceSet debugSourceSet =
-            (DefaultAndroidSourceSet) extension.sourceSetsContainer.create(BuilderConstants.DEBUG)
+            (DefaultAndroidSourceSet) extension.sourceSetsContainer.maybeCreate(BuilderConstants.DEBUG)
         DefaultAndroidSourceSet releaseSourceSet =
-            (DefaultAndroidSourceSet) extension.sourceSetsContainer.create(BuilderConstants.RELEASE)
+            (DefaultAndroidSourceSet) extension.sourceSetsContainer.maybeCreate(BuilderConstants.RELEASE)
 
         debugBuildTypeData = new BuildTypeData(extension.debug, debugSourceSet, project)
         releaseBuildTypeData = new BuildTypeData(extension.release, releaseSourceSet, project)
@@ -140,15 +140,15 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
                 debugBuildTypeData.buildType,
                 null,
                 VariantConfiguration.Type.TEST,
-                debugVariantData.variantConfiguration,
-                project.name)
+                debugVariantData.variantConfiguration)
 
         TestVariantData testVariantData = new TestVariantData(testVariantConfig, debugVariantData)
         // link the testVariant to the tested variant in the other direction
         debugVariantData.setTestVariantData(testVariantData);
 
         // dependencies for the test variant
-        variantDep = VariantDependencies.compute(project, testVariantData.name,
+        variantDep = VariantDependencies.compute(project,
+                testVariantData.variantConfiguration.fullName,
                 defaultConfigData.testProvider, debugVariantData.variantDependency)
         testVariantData.setVariantDependency(variantDep)
 
@@ -173,13 +173,12 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
                 configData.sourceSet,
                 buildTypeData.buildType,
                 buildTypeData.sourceSet,
-                VariantConfiguration.Type.LIBRARY,
-                project.name)
+                VariantConfiguration.Type.LIBRARY)
 
         LibraryVariantData variantData = new LibraryVariantData(variantConfig)
 
         VariantDependencies debugVariantDep = VariantDependencies.compute(
-                project, variantData.name,
+                project, variantData.variantConfiguration.fullName,
                 buildTypeData, configData.mainProvider)
         variantData.setVariantDependency(debugVariantDep)
 
@@ -212,13 +211,13 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
         // the dependencies. This is what gets packaged in the aar.
         MergeResources packageRes = basicCreateMergeResourcesTask(variantData,
                 "package",
-                "$project.buildDir/$DIR_BUNDLES/${variantData.dirName}/res",
+                "$project.buildDir/$DIR_BUNDLES/${variantData.variantConfiguration.dirName}/res",
                 false /*includeDependencies*/,
                 false /*process9Patch*/)
 
         // Add a task to merge the assets folders
         createMergeAssetsTask(variantData,
-                "$project.buildDir/$DIR_BUNDLES/${variantData.dirName}/assets",
+                "$project.buildDir/$DIR_BUNDLES/${variantData.variantConfiguration.dirName}/assets",
                 false /*includeDependencies*/)
 
         // Add a task to create the BuildConfig class
@@ -226,7 +225,8 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
 
         // Add a task to generate resource source files, directing the location
         // of the r.txt file to be directly in the bundle.
-        createProcessResTask(variantData, "$project.buildDir/$DIR_BUNDLES/${variantData.dirName}")
+        createProcessResTask(variantData,
+                "$project.buildDir/$DIR_BUNDLES/${variantData.variantConfiguration.dirName}")
 
         // process java resources
         createProcessJavaResTask(variantData)
@@ -239,40 +239,48 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
         // Add NDK tasks
         createNdkTasks(
                 variantData,
-                { project.file("$project.buildDir/$DIR_BUNDLES/${variantData.dirName}/jni") });
+                { project.file("$project.buildDir/$DIR_BUNDLES/${variantData.variantConfiguration.dirName}/jni") });
 
         // package the aidl files into the bundle folder
-        Sync packageAidl = project.tasks.create("package${variantData.name}Aidl", Sync)
+        Sync packageAidl = project.tasks.create(
+                "package${variantData.variantConfiguration.fullName.capitalize()}Aidl",
+                Sync)
         // packageAidl from 3 sources. the order is important to make sure the override works well.
         packageAidl.from(variantConfig.aidlSourceList).include("**/*.aidl")
         packageAidl.into(project.file(
-                "$project.buildDir/$DIR_BUNDLES/${variantData.dirName}/$SdkConstants.FD_AIDL"))
+                "$project.buildDir/$DIR_BUNDLES/${variantData.variantConfiguration.dirName}/$SdkConstants.FD_AIDL"))
 
         // package the renderscript header files files into the bundle folder
-        Sync packageRenderscript = project.tasks.create("package${variantData.name}Renderscript",
+        Sync packageRenderscript = project.tasks.create(
+                "package${variantData.variantConfiguration.fullName.capitalize()}Renderscript",
                 Sync)
         // package from 3 sources. the order is important to make sure the override works well.
         packageRenderscript.from(variantConfig.renderscriptSourceList).include("**/*.rsh")
         packageRenderscript.into(project.file(
-                "$project.buildDir/$DIR_BUNDLES/${variantData.dirName}/$SdkConstants.FD_RENDERSCRIPT"))
+                "$project.buildDir/$DIR_BUNDLES/${variantData.variantConfiguration.dirName}/$SdkConstants.FD_RENDERSCRIPT"))
 
         // merge consumer proguard files from different build types and flavors
-        MergeFileTask mergeProGuardFileTask = project.tasks.create("merge${variantData.name}ProguardFiles",
+        MergeFileTask mergeProGuardFileTask = project.tasks.create(
+                "merge${variantData.variantConfiguration.fullName.capitalize()}ProguardFiles",
                 MergeFileTask)
         mergeProGuardFileTask.conventionMapping.inputFiles = {
             project.files(variantConfig.getConsumerProguardFiles()).files }
         mergeProGuardFileTask.conventionMapping.outputFile = {
             project.file(
-                    "$project.buildDir/$DIR_BUNDLES/${variantData.dirName}/$LibraryBundle.FN_PROGUARD_TXT")
+                    "$project.buildDir/$DIR_BUNDLES/${variantData.variantConfiguration.dirName}/$LibraryBundle.FN_PROGUARD_TXT")
         }
 
         // copy lint.jar into the bundle folder
-        Copy lintCopy = project.tasks.create("copy${variantData.name}Lint", Copy)
+        Copy lintCopy = project.tasks.create(
+                "copy${variantData.variantConfiguration.fullName.capitalize()}Lint",
+                Copy)
         lintCopy.dependsOn lintCompile
         lintCopy.from("$project.buildDir/lint/lint.jar")
-        lintCopy.into("$project.buildDir/$DIR_BUNDLES/$variantData.dirName")
+        lintCopy.into("$project.buildDir/$DIR_BUNDLES/$variantData.variantConfiguration.dirName")
 
-        Zip bundle = project.tasks.create("bundle${variantData.name}", Zip)
+        Zip bundle = project.tasks.create(
+                "bundle${variantData.variantConfiguration.fullName.capitalize()}",
+                Zip)
 
         if (variantConfig.buildType.runProguard) {
             // run proguard on output of compile task
@@ -283,10 +291,12 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
 
             bundle.dependsOn packageRes, packageAidl, packageRenderscript, mergeProGuardFileTask, lintCopy, variantData.ndkCompileTask
         } else {
-            Sync packageLocalJar = project.tasks.create("package${variantData.name}LocalJar", Sync)
+            Sync packageLocalJar = project.tasks.create(
+                    "package${variantData.variantConfiguration.fullName.capitalize()}LocalJar",
+                    Sync)
             packageLocalJar.from(getLocalJarFileList(variantData.variantDependency))
             packageLocalJar.into(project.file(
-                    "$project.buildDir/$DIR_BUNDLES/${variantData.dirName}/$SdkConstants.LIBS_FOLDER"))
+                    "$project.buildDir/$DIR_BUNDLES/${variantData.variantConfiguration.dirName}/$SdkConstants.LIBS_FOLDER"))
 
             // jar the classes.
             Jar jar = project.tasks.create("package${buildType.name.capitalize()}Jar", Jar);
@@ -294,7 +304,8 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
             jar.from(variantData.javaCompileTask.outputs);
             jar.from(variantData.processJavaResourcesTask.destinationDir)
 
-            jar.destinationDir = project.file("$project.buildDir/$DIR_BUNDLES/${variantData.dirName}")
+            jar.destinationDir = project.file(
+                    "$project.buildDir/$DIR_BUNDLES/${variantData.variantConfiguration.dirName}")
             jar.archiveName = "classes.jar"
 
             String packageName = variantConfig.getPackageFromManifest()
@@ -313,13 +324,13 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
                     mergeProGuardFileTask, lintCopy, variantData.ndkCompileTask
         }
 
-        bundle.setDescription("Assembles a bundle containing the library in ${variantData.name}.");
+        bundle.setDescription("Assembles a bundle containing the library in ${variantData.variantConfiguration.fullName.capitalize()}.");
         bundle.destinationDir = project.file("$project.buildDir/libs")
         bundle.extension = BuilderConstants.EXT_LIB_ARCHIVE
-        if (variantData.baseName != BuilderConstants.RELEASE) {
-            bundle.classifier = variantData.baseName
+        if (variantData.variantConfiguration.baseName != BuilderConstants.RELEASE) {
+            bundle.classifier = variantData.variantConfiguration.baseName
         }
-        bundle.from(project.file("$project.buildDir/$DIR_BUNDLES/${variantData.dirName}"))
+        bundle.from(project.file("$project.buildDir/$DIR_BUNDLES/${variantData.variantConfiguration.dirName}"))
 
         variantData.packageLibTask = bundle
         variantData.outputFile = bundle.archivePath
@@ -337,7 +348,7 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
         // configure the variant to be testable.
         variantConfig.output = new LibraryBundle(
                 bundle.archivePath,
-                project.file("$project.buildDir/$DIR_BUNDLES/${variantData.dirName}"),
+                project.file("$project.buildDir/$DIR_BUNDLES/${variantData.variantConfiguration.dirName}"),
                 variantData.getName()) {
 
             @Nullable

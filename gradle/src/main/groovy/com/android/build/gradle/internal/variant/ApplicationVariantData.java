@@ -31,15 +31,6 @@ public class ApplicationVariantData extends ApkVariantData implements TestedVari
         super(config);
     }
 
-    @NonNull
-    @Override
-    protected String computeName() {
-        return getVariantConfiguration().hasFlavors() ?
-                String.format("%s%s",
-                        getFlavoredName(true), getCapitalizedBuildTypeName()) :
-                getCapitalizedBuildTypeName();
-    }
-
     @Override
     public void setTestVariantData(@Nullable TestVariantData testVariantData) {
         this.testVariantData = testVariantData;

@@ -152,14 +152,20 @@ public class ModelBuilder implements ToolingModelBuilder {
         ArtifactInfo testArtifact = testVariantData != null ?
             createArtifactInfo(testVariantData, gradleProjects) : null
 
+        SourceProvider sp = variantData.variantConfiguration.getVariantSourceProvider();
+        if (sp != null) {
+            sp = SourceProviderImpl.cloneProvider(sp);
+        }
+
         VariantImpl variant = new VariantImpl(
-                variantData.name,
-                variantData.baseName,
+                variantData.variantConfiguration.fullName,
+                variantData.variantConfiguration.baseName,
                 variantData.variantConfiguration.buildType.name,
                 getProductFlavorNames(variantData),
                 ProductFlavorImpl.cloneFlavor(variantData.variantConfiguration.mergedFlavor),
                 mainArtifact,
-                testArtifact)
+                testArtifact,
+                sp)
 
         return variant
     }

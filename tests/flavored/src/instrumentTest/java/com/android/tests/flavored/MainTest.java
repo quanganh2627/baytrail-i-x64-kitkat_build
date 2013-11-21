@@ -34,5 +34,14 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
     public void testPreconditions() {
         assertNotNull(mTextView);
     }
+
+    @MediumTest
+    public void testStagingText() {
+        if ("f1".equals(BuildConfig.FLAVOR)) {
+            assertEquals("F1-Staging text", mTextView.getText());
+        } else {
+            assertEquals("default text", mTextView.getText());
+        }
+    }
 }
 

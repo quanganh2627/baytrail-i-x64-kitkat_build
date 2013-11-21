@@ -69,7 +69,8 @@ public class AndroidAsciiReportRenderer extends TextReportRenderer {
         renderer.visit(new Action<StyledTextOutput>() {
             @Override
             public void execute(StyledTextOutput styledTextOutput) {
-                getTextOutput().withStyle(Identifier).text(variantData.getName());
+                getTextOutput().withStyle(Identifier).text(
+                        variantData.getVariantConfiguration().getFullName());
                 getTextOutput().withStyle(Description).text("");
             }
         }, true);

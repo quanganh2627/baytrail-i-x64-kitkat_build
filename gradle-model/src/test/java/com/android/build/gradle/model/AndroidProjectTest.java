@@ -191,8 +191,8 @@ public class AndroidProjectTest extends TestCase {
         assertEquals("Variant Count", 2 , variants.size());
 
         // debug variant
-        Variant debugVariant = variants.get("Debug");
-        assertNotNull("Debug Variant null-check", debugVariant);
+        Variant debugVariant = variants.get("debug");
+        assertNotNull("debug Variant null-check", debugVariant);
         new ProductFlavorTester(debugVariant.getMergedFlavor(), "Debug Merged Flavor")
                 .setVersionCode(12)
                 .setVersionName("2.0")
@@ -220,12 +220,12 @@ public class AndroidProjectTest extends TestCase {
         assertNotNull("Test output file null-check", debugTestInfo.getOutputFile());
         assertTrue("Test signed check", debugTestInfo.isSigned());
         assertEquals("Test signingConfig name", "myConfig", debugTestInfo.getSigningConfigName());
-        assertEquals("Test sourceGenTask", "generateTestSources", debugTestInfo.getSourceGenTaskName());
-        assertEquals("Test javaCompileTask", "compileTestJava", debugTestInfo.getJavaCompileTaskName());
+        assertEquals("Test sourceGenTask", "generateDebugTestSources", debugTestInfo.getSourceGenTaskName());
+        assertEquals("Test javaCompileTask", "compileDebugTestJava", debugTestInfo.getJavaCompileTaskName());
 
         // release variant, not tested.
-        Variant releaseVariant = variants.get("Release");
-        assertNotNull("Release Variant null-check", releaseVariant);
+        Variant releaseVariant = variants.get("release");
+        assertNotNull("release Variant null-check", releaseVariant);
 
         ArtifactInfo relMainInfo = releaseVariant.getMainArtifactInfo();
         assertNotNull("Release main info null-check", relMainInfo);
@@ -360,11 +360,11 @@ public class AndroidProjectTest extends TestCase {
         Map<String, Variant> variants = model.getVariants();
         assertEquals("Variant Count", 8 , variants.size());
 
-        Variant f1faDebugVariant = variants.get("F1FaDebug");
-        assertNotNull("F1faDebug Variant null-check", f1faDebugVariant);
+        Variant f1faDebugVariant = variants.get("f1FaDebug");
+        assertNotNull("f1faDebug Variant null-check", f1faDebugVariant);
         new ProductFlavorTester(f1faDebugVariant.getMergedFlavor(), "F1faDebug Merged Flavor")
                 .test();
-        new VariantTester(f1faDebugVariant, projectDir, "flavors-f1fa-debug-unaligned.apk").test();
+        new VariantTester(f1faDebugVariant, projectDir, "flavors-f1-fa-debug-unaligned.apk").test();
     }
 
     public void testTicTacToe() throws Exception {
@@ -377,7 +377,7 @@ public class AndroidProjectTest extends TestCase {
         ProjectData appModelData = map.get(":app");
         assertNotNull("app module model null-check", appModelData);
 
-        Dependencies dependencies = appModelData.model.getVariants().get("Debug").getMainArtifactInfo().getDependencies();
+        Dependencies dependencies = appModelData.model.getVariants().get("debug").getMainArtifactInfo().getDependencies();
         assertNotNull(dependencies);
 
         List<AndroidLibrary> libs = dependencies.getLibraries();
@@ -407,7 +407,7 @@ public class AndroidProjectTest extends TestCase {
         ProductFlavorContainer flavor1 = model.getProductFlavors().get("flavor1");
         assertNotNull(flavor1);
 
-        Variant flavor1Debug = variants.get("Flavor1Debug");
+        Variant flavor1Debug = variants.get("flavor1Debug");
         assertNotNull(flavor1Debug);
 
         Dependencies dependencies = flavor1Debug.getMainArtifactInfo().getDependencies();
@@ -423,7 +423,7 @@ public class AndroidProjectTest extends TestCase {
         ProductFlavorContainer flavor2 = model.getProductFlavors().get("flavor2");
         assertNotNull(flavor2);
 
-        Variant flavor2Debug = variants.get("Flavor2Debug");
+        Variant flavor2Debug = variants.get("flavor2Debug");
         assertNotNull(flavor2Debug);
 
         dependencies = flavor2Debug.getMainArtifactInfo().getDependencies();
@@ -447,8 +447,8 @@ public class AndroidProjectTest extends TestCase {
         Map<String, Variant> variants = model.getVariants();
         assertEquals("Variant count", 2, variants.size());
 
-        Variant variant = variants.get("Release");
-        assertNotNull("Release variant null-check", variant);
+        Variant variant = variants.get("release");
+        assertNotNull("release variant null-check", variant);
 
         ArtifactInfo mainInfo = variant.getMainArtifactInfo();
         assertNotNull("Main Artifact null-check", mainInfo);

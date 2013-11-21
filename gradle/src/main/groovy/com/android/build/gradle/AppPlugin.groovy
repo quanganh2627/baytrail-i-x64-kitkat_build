@@ -20,6 +20,7 @@ import com.android.annotations.Nullable
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ConfigurationProvider
+import com.android.build.gradle.internal.ConfigurationProviderImpl
 import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.api.ApplicationVariantImpl
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
@@ -139,7 +140,7 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
             throw new RuntimeException("BuildType names cannot collide with ProductFlavor names")
         }
 
-        def sourceSet = extension.sourceSetsContainer.create(name)
+        def sourceSet = extension.sourceSetsContainer.maybeCreate(name)
 
         BuildTypeData buildTypeData = new BuildTypeData(buildType, sourceSet, project)
         project.tasks.assemble.dependsOn buildTypeData.assembleTask
@@ -161,9 +162,9 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
             throw new RuntimeException("ProductFlavor names cannot collide with BuildType names")
         }
 
-        def mainSourceSet = (DefaultAndroidSourceSet) extension.sourceSetsContainer.create(productFlavor.name)
+        def mainSourceSet = (DefaultAndroidSourceSet) extension.sourceSetsContainer.maybeCreate(productFlavor.name)
         String testName = "${INSTRUMENT_TEST}${productFlavor.name.capitalize()}"
-        def testSourceSet = (DefaultAndroidSourceSet) extension.sourceSetsContainer.create(testName)
+        def testSourceSet = (DefaultAndroidSourceSet) extension.sourceSetsContainer.maybeCreate(testName)
 
         ProductFlavorData<GroupableProductFlavorDsl> productFlavorData =
                 new ProductFlavorData<GroupableProductFlavorDsl>(
@@ -296,12 +297,13 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
                     defaultConfigData.productFlavor,
                     defaultConfigData.sourceSet,
                     buildTypeData.buildType,
-                    buildTypeData.sourceSet, project.name)
+                    buildTypeData.sourceSet)
 
             // create the variant and get its internal storage object.
             ApplicationVariantData appVariantData = new ApplicationVariantData(variantConfig)
             VariantDependencies variantDep = VariantDependencies.compute(
-                    project, appVariantData.name, buildTypeData, defaultConfigData.mainProvider)
+                    project, appVariantData.variantConfiguration.fullName,
+                    buildTypeData, defaultConfigData.mainProvider)
             appVariantData.setVariantDependency(variantDep)
 
             variantDataList.add(appVariantData)
@@ -319,8 +321,7 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
                 defaultConfigData.testSourceSet,
                 testData.buildType,
                 null,
-                VariantConfiguration.Type.TEST, testedVariantData.variantConfiguration,
-                project.name)
+                VariantConfiguration.Type.TEST, testedVariantData.variantConfiguration)
 
         // create the internal storage for this variant.
         def testVariantData = new TestVariantData(testVariantConfig, testedVariantData)
@@ -330,7 +331,8 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
 
         // dependencies for the test variant
         VariantDependencies variantDep = VariantDependencies.compute(
-                project, testVariantData.name, defaultConfigData.testProvider)
+                project, testVariantData.variantConfiguration.fullName,
+                defaultConfigData.testProvider)
         testVariantData.setVariantDependency(variantDep)
 
         // now loop on the VariantDependency and resolve them, and create the tasks
@@ -434,8 +436,7 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
                     extension.defaultConfig,
                     getDefaultConfigData().sourceSet,
                     buildTypeData.buildType,
-                    buildTypeData.sourceSet,
-                    project.name)
+                    buildTypeData.sourceSet)
 
             for (ProductFlavorData data : flavorDataList) {
                 variantConfig.addProductFlavor(
@@ -449,8 +450,13 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
 
             // create the variant and get its internal storage object.
             ApplicationVariantData appVariantData = new ApplicationVariantData(variantConfig)
+
+            DefaultAndroidSourceSet sourceSet = (DefaultAndroidSourceSet) extension.sourceSetsContainer.maybeCreate(variantConfig.fullName)
+            variantConfig.setVariantSourceProvider(sourceSet)
+            variantProviders.add(new ConfigurationProviderImpl(project, sourceSet))
+
             VariantDependencies variantDep = VariantDependencies.compute(
-                    project, appVariantData.name,
+                    project, appVariantData.variantConfiguration.fullName,
                     variantProviders.toArray(new ConfigurationProvider[variantProviders.size()]))
             appVariantData.setVariantDependency(variantDep)
 
@@ -470,7 +476,7 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
                 testData.buildType,
                 null,
                 VariantConfiguration.Type.TEST,
-                testedVariantData.variantConfiguration, project.name)
+                testedVariantData.variantConfiguration)
 
         /// add the container of dependencies
         // the order of the libraries is important. In descending order:
@@ -495,7 +501,7 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
 
         // dependencies for the test variant
         VariantDependencies variantDep = VariantDependencies.compute(
-                project, testVariantData.name,
+                project, testVariantData.variantConfiguration.fullName,
                 testVariantProviders.toArray(new ConfigurationProvider[testVariantProviders.size()]))
         testVariantData.setVariantDependency(variantDep)
 

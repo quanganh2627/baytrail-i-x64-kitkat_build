@@ -20,20 +20,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.LibraryVariant;
 import com.android.build.gradle.api.TestVariant;
+import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
-import com.android.build.gradle.tasks.AidlCompile;
-import com.android.build.gradle.tasks.GenerateBuildConfig;
-import com.android.build.gradle.tasks.MergeAssets;
-import com.android.build.gradle.tasks.MergeResources;
-import com.android.build.gradle.tasks.ProcessAndroidResources;
-import com.android.build.gradle.tasks.ProcessManifest;
-import com.android.build.gradle.tasks.RenderscriptCompile;
-import com.android.builder.DefaultBuildType;
-import com.android.builder.DefaultProductFlavor;
-import org.gradle.api.Task;
-import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.bundling.Zip;
-import org.gradle.api.tasks.compile.JavaCompile;
 
 import java.io.File;
 
@@ -41,7 +30,7 @@ import java.io.File;
  * implementation of the {@link LibraryVariant} interface around a
  * {@link LibraryVariantData} object.
  */
-public class LibraryVariantImpl implements LibraryVariant {
+public class LibraryVariantImpl extends BaseVariantImpl implements LibraryVariant {
 
     @NonNull
     private final LibraryVariantData variantData;
@@ -52,44 +41,13 @@ public class LibraryVariantImpl implements LibraryVariant {
         this.variantData = variantData;
     }
 
+    @Override
+    protected BaseVariantData getVariantData() {
+        return variantData;
+    }
+
     public void setTestVariant(@Nullable TestVariant testVariant) {
         this.testVariant = testVariant;
-    }
-
-    @Override
-    @NonNull
-    public String getName() {
-        return variantData.getName();
-    }
-
-    @Override
-    @NonNull
-    public String getDescription() {
-        return variantData.getDescription();
-    }
-
-    @Override
-    @NonNull
-    public String getDirName() {
-        return variantData.getDirName();
-    }
-
-    @Override
-    @NonNull
-    public String getBaseName() {
-        return variantData.getBaseName();
-    }
-
-    @Override
-    @NonNull
-    public DefaultBuildType getBuildType() {
-        return variantData.getVariantConfiguration().getBuildType();
-    }
-
-    @NonNull
-    @Override
-    public DefaultProductFlavor getConfig() {
-        return variantData.getVariantConfiguration().getDefaultConfig();
     }
 
     @Override
@@ -111,63 +69,7 @@ public class LibraryVariantImpl implements LibraryVariant {
     }
 
     @Override
-    @NonNull
-    public ProcessManifest getProcessManifest() {
-        return variantData.processManifestTask;
-    }
-
-    @Override
-    @NonNull
-    public AidlCompile getAidlCompile() {
-        return variantData.aidlCompileTask;
-    }
-
-    @Override
-    @NonNull
-    public RenderscriptCompile getRenderscriptCompile() {
-        return variantData.renderscriptCompileTask;
-    }
-
-    @Override
-    public MergeResources getMergeResources() {
-        return variantData.mergeResourcesTask;
-    }
-
-    @Override
-    public MergeAssets getMergeAssets() {
-        return variantData.mergeAssetsTask;
-    }
-
-    @Override
-    @NonNull
-    public ProcessAndroidResources getProcessResources() {
-        return variantData.processResourcesTask;
-    }
-
-    @Override
-    public GenerateBuildConfig getGenerateBuildConfig() {
-        return variantData.generateBuildConfigTask;
-    }
-
-    @Override
-    @NonNull
-    public JavaCompile getJavaCompile() {
-        return variantData.javaCompileTask;
-    }
-
-    @Override
-    @NonNull
-    public Copy getProcessJavaResources() {
-        return variantData.processJavaResourcesTask;
-    }
-
-    @Override
     public Zip getPackageLibrary() {
         return variantData.packageLibTask;
-    }
-
-    @Override
-    public Task getAssemble() {
-        return variantData.assembleTask;
     }
 }
