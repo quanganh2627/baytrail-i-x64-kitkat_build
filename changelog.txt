@@ -1,5 +1,12 @@
 0.7.0
 - Requires Gradle 1.9
+- You can now have a variant specific source folder if you have flavors.
+  Only for app (not library or test). Name is src/flavorDebug/... or src/flavor1Flavor2Debug/
+  (note the camelcase naming, with lower case for first letter).
+  Its compoenents (res, manifest, etc...) have higher priority than components from build type
+  or flavors.
+  It also comes with dependency configuration, so you can do 
+     flavorDebugCompile '...'
 - Switch to ProGuard 4.10
    - Added ability to test proguarded (obfuscated) apps.
 - Jar files are now pre-dexed for faster dexing.
