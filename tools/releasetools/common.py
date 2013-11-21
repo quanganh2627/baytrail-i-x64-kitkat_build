@@ -464,18 +464,28 @@ def SignKmodule(input_name, output_name, key, password):
   does not have a password.
   """
 
-  # sign-file wants a PEM formatted key and a DER certificate
+  certdir = tempfile.mkdtemp()
+  cert_fn = os.path.join(certdir, "module.x509")
+  id_fn = os.path.join(certdir, "module.x509.keyid")
+  signer_fn = os.path.join(certdir, "module.x509.signer")
+
   key_data = GetPrivateKeyPEM(ReadPrivateKeyFile(key))
   key_f = tempfile.NamedTemporaryFile()
   key_f.write(key_data)
   key_f.flush()
 
   cert_data = GetCertificateDER(ReadCertificateFile(key))
-  cert_f = tempfile.NamedTemporaryFile()
+  cert_f = open(cert_fn, "w+")
   cert_f.write(cert_data)
-  cert_f.flush()
+  cert_f.close()
 
-  cmd = ["sign-file", "-v", key_f.name, cert_f.name,
+  cmd = ["x509keyid", cert_fn, signer_fn, id_fn]
+  p = Run(cmd, stdout=subprocess.PIPE)
+  p.communicate()
+  if p.returncode != 0:
+    raise ExternalError("x509keyid failed: return code %s" % (p.returncode,))
+
+  cmd = ["sign-file", key_f.name, cert_fn,
           input_name, output_name]
 
   p = Run(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -485,8 +495,8 @@ def SignKmodule(input_name, output_name, key, password):
   if p.returncode != 0:
     raise ExternalError("sign-file failed: return code %s" % (p.returncode,))
 
+  shutil.rmtree(certdir)
   key_f.close()
-  cert_f.close()
 
 
 def BinaryCertReplaceFile(input_name, output_name, key, password):
