@@ -29,7 +29,7 @@ public class NdkConfigImpl implements NdkConfig {
 
     private String moduleName;
     private String cFlags;
-    private String ldLibs;
+    private Set<String> ldLibs;
     private Set<String> abiFilters;
     private String stl;
 
@@ -54,7 +54,7 @@ public class NdkConfigImpl implements NdkConfig {
 
     @Override
     @Nullable
-    public String getLdLibs() {
+    public Set<String> getLdLibs() {
         return ldLibs;
     }
 
@@ -80,6 +80,7 @@ public class NdkConfigImpl implements NdkConfig {
             stl = ndkConfig.getStl();
         }
 
+        // append
         if (ndkConfig.getAbiFilters() != null) {
             if (abiFilters == null) {
                 abiFilters = Sets.newHashSetWithExpectedSize(ndkConfig.getAbiFilters().size());
@@ -89,17 +90,19 @@ public class NdkConfigImpl implements NdkConfig {
             abiFilters.addAll(ndkConfig.getAbiFilters());
         }
 
-        // append
         if (cFlags == null) {
             cFlags = ndkConfig.getcFlags();
         } else if (ndkConfig.getcFlags() != null) {
             cFlags = cFlags + " " + ndkConfig.getcFlags();
         }
 
-        if (ldLibs == null) {
-            ldLibs = ndkConfig.getLdLibs();
-        } else if (ndkConfig.getLdLibs() != null) {
-            ldLibs = ldLibs + " " + ndkConfig.getLdLibs();
+        if (ndkConfig.getLdLibs() != null) {
+            if (ldLibs == null) {
+                ldLibs = Sets.newHashSetWithExpectedSize(ndkConfig.getLdLibs().size());
+            } else {
+                ldLibs.clear();
+            }
+            ldLibs.addAll(ndkConfig.getLdLibs());
         }
     }
 }

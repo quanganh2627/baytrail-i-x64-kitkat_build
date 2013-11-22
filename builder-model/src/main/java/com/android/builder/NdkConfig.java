@@ -41,7 +41,7 @@ public interface NdkConfig {
      * The LD Libs
      */
     @Nullable
-    public String getLdLibs();
+    public Set<String> getLdLibs();
 
     /**
      * The ABI Filters

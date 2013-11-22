@@ -16,7 +16,7 @@ android {
         ndk {
             moduleName "sanangeles"
             cFlags "-DANDROID_NDK -DDISABLE_IMPORTGL"
-            ldLibs "-lGLESv1_CM -ldl -llog"
+            ldLibs "GLESv1_CM", "dl", "log"
             stl "stlport_static"
         }
     }

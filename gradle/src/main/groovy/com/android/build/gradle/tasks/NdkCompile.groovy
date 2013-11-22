@@ -127,7 +127,11 @@ class NdkCompile extends NdkTask {
         }
 
         if (ndk.ldLibs != null) {
-            sb.append("LOCAL_LDLIBS := ").append(ndk.ldLibs).append('\n')
+            sb.append('LOCAL_LDLIBS := \\\n')
+            for (String lib : ndk.ldLibs) {
+                sb.append('\t-l') .append(lib).append(' \\\n')
+            }
+            sb.append('\n')
         }
 
         sb.append("LOCAL_SRC_FILES := \\\n")
@@ -135,6 +139,10 @@ class NdkCompile extends NdkTask {
             sb.append('\t').append(sourceFile.absolutePath).append(" \\\n")
         }
         sb.append('\n')
+
+        for (File sourceFolder : getSourceFolders()) {
+            sb.append("LOCAL_C_INCLUDES += ${sourceFolder.absolutePath}\n")
+        }
 
         sb.append(
                 "\ninclude \$(BUILD_SHARED_LIBRARY)\n")
@@ -159,12 +167,6 @@ class NdkCompile extends NdkTask {
             target = target.parent
         }
         commands.add("APP_PLATFORM=" + target.hashString())
-
-        // include paths
-        for (File sourceFolder : getSourceFolders()) {
-            commands.add("-I")
-            commands.add(sourceFolder.absolutePath)
-        }
 
         // temp out
         commands.add("NDK_OUT=" + getObjFolder().absolutePath)
