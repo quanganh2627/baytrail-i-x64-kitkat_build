@@ -24,6 +24,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
@@ -34,7 +35,7 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
 
     private String moduleName;
     private String cFlags;
-    private String ldLibs;
+    private Set<String> ldLibs;
     private Set<String> abiFilters;
     private String stl;
 
@@ -44,8 +45,8 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
     public NdkConfigDsl(@NonNull NdkConfigDsl ndkConfig) {
         moduleName = ndkConfig.moduleName;
         cFlags = ndkConfig.cFlags;
-        ldLibs = ndkConfig.ldLibs;
-        setSrcDirs(ndkConfig.abiFilters);
+        setLdLibs(ndkConfig.ldLibs);
+        setAbiFilters(ndkConfig.abiFilters);
     }
 
     @Override
@@ -70,13 +71,45 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
 
     @Override
     @Input @Optional
-    public String getLdLibs() {
+    public Set<String> getLdLibs() {
         return ldLibs;
     }
 
-    public void setLdLibs(String ldLibs) {
-        this.ldLibs = ldLibs;
+    @NonNull
+    public NdkConfigDsl ldLibs(String lib) {
+        if (ldLibs == null) {
+            ldLibs = Sets.newHashSet();
+        }
+        ldLibs.add(lib);
+        return this;
     }
+
+    @NonNull
+    public NdkConfigDsl ldLibs(String... libs) {
+        if (ldLibs == null) {
+            ldLibs = Sets.newHashSetWithExpectedSize(libs.length);
+        }
+        Collections.addAll(ldLibs, libs);
+        return this;
+    }
+
+    @NonNull
+    public NdkConfigDsl setLdLibs(Collection<String> libs) {
+        if (libs != null) {
+            if (abiFilters == null) {
+                abiFilters = Sets.newHashSetWithExpectedSize(libs.size());
+            } else {
+                abiFilters.clear();
+            }
+            for (String filter : libs) {
+                abiFilters.add(filter);
+            }
+        } else {
+            abiFilters = null;
+        }
+        return this;
+    }
+
 
     @Override
     @Input @Optional
@@ -103,10 +136,10 @@ public class NdkConfigDsl implements NdkConfig, Serializable {
     }
 
     @NonNull
-    public NdkConfigDsl setSrcDirs(Iterable<String> filters) {
+    public NdkConfigDsl setAbiFilters(Collection<String> filters) {
         if (filters != null) {
             if (abiFilters == null) {
-                abiFilters = Sets.newHashSetWithExpectedSize(2);
+                abiFilters = Sets.newHashSetWithExpectedSize(filters.size());
             } else {
                 abiFilters.clear();
             }

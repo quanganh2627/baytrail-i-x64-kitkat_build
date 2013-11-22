@@ -37,7 +37,7 @@ class NdkTask extends BaseTask {
     }
 
     @Input @Optional
-    String getLdLibs() {
+    Set<String> getLdLibs() {
         return getNdkConfig()?.ldLibs
     }
 
