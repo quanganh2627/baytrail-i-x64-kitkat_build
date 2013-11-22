@@ -1,38 +1,10 @@
-#
-# This file was modified by Dolby Laboratories, Inc. The portions of the
-# code that are surrounded by "DOLBY..." are copyrighted and
-# licensed separately, as follows:
-#
-#  (C) 2012-2013 Dolby Laboratories, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 ####################################
 # Dexpreopt on the boot jars
 #
 ####################################
 
 # TODO: replace it with device's BOOTCLASSPATH
-DEXPREOPT_BOOT_JARS := core:core-junit:bouncycastle:ext:framework:telephony-common:voip-common:mms-common:android.policy:services:apache-xml:com.intel.multidisplay:com.intel.config
-ifeq ($(strip $(INTEL_FEATURE_ASF)),true)
-DEXPREOPT_BOOT_JARS:=$(DEXPREOPT_BOOT_JARS):com.intel.asf
-endif
-ifeq ($(strip $(INTEL_FEATURE_ARKHAM)),true)
-DEXPREOPT_BOOT_JARS:=$(DEXPREOPT_BOOT_JARS):com.intel.arkham.services
-endif
-ifdef DOLBY_DAP
-DEXPREOPT_BOOT_JARS:=$(DEXPREOPT_BOOT_JARS):dolby_ds
-endif
+DEXPREOPT_BOOT_JARS := core:core-junit:bouncycastle:ext:framework:telephony-common:voip-common:mms-common:android.policy:services:apache-xml
 DEXPREOPT_BOOT_JARS_MODULES := $(subst :, ,$(DEXPREOPT_BOOT_JARS))
 
 DEXPREOPT_BUILD_DIR := $(OUT_DIR)

@@ -66,7 +66,7 @@ function check_product()
     # hide successful answers, but allow the errors to show
 }
 
-VARIANT_CHOICES=(user userdebug eng userdebug_gms)
+VARIANT_CHOICES=(user userdebug eng)
 
 # check to see if the supplied variant is valid
 function check_variant()
@@ -511,14 +511,6 @@ function lunch()
     then
         echo
         return 1
-    fi
-
-    if [ "$variant" = "userdebug_gms" ]
-    then
-        variant=userdebug
-        export USE_GMS_ALL=true
-    else
-        export USE_GMS_ALL=false
     fi
 
     export TARGET_PRODUCT=$product
@@ -1278,8 +1270,7 @@ if [ "x$SHELL" != "x/bin/bash" ]; then
 fi
 
 # Execute the contents of any vendorsetup.sh files we can find.
-for f in `test -d device && find device -maxdepth 6 -name 'vendorsetup.sh' 2> /dev/null` \
-         `test -d vendor && find vendor -maxdepth 6 -name 'vendorsetup.sh' 2> /dev/null`
+for f in `/bin/ls vendor/*/vendorsetup.sh vendor/*/*/vendorsetup.sh device/*/*/vendorsetup.sh 2> /dev/null`
 do
     echo "including $f"
     . $f

@@ -30,7 +30,6 @@ pathmap_INCL := \
     bootloader:bootable/bootloader/legacy/include \
     camera:system/media/camera/include \
     corecg:external/skia/include/core \
-    dbus:external/dbus \
     frameworks-base:frameworks/base/include \
     frameworks-native:frameworks/native/include \
     graphics:external/skia/include/core \
@@ -59,33 +58,12 @@ pathmap_INCL := \
 #
 # Returns the path to the requested module's include directory,
 # relative to the root of the source tree.  Does not handle external
-# modules by default. external modules can be supported by using
-# add-path-map macro in device/intel/common/BroadConfig.mk.
+# modules.
 #
 # $(1): a list of modules (or other named entities) to find the includes for
 #
 define include-path-for
 $(foreach n,$(1),$(patsubst $(n):%,%,$(filter $(n):%,$(pathmap_INCL))))
-endef
-
-#
-# Macro to add include directories of modules in pathmap_INCL
-# relative to root of source tree. Usage:
-# $(call add-path-map, project1:path1)
-# OR
-# $(call add-path-map, \
-#        project1:path1 \
-#        project2:path1)
-#
-define add-path-map
-$(eval pathmap_INCL += \
-    $(foreach path, $(1), \
-        $(if $(filter $(firstword $(subst :, ,$(path))):%, $(pathmap_INCL)), \
-            $(error Duplicate AOSP path map $(path)), \
-            $(path) \
-         ) \
-     ) \
- )
 endef
 
 #

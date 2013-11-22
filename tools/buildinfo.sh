@@ -11,11 +11,7 @@ echo "ro.build.version.codename=$PLATFORM_VERSION_CODENAME"
 echo "ro.build.version.release=$PLATFORM_VERSION"
 echo "ro.build.date=`date`"
 echo "ro.build.date.utc=`date +%s`"
-if [ "$USE_GMS_ALL" = "false" ] ; then
-  echo "ro.build.type=$TARGET_BUILD_TYPE"
-else
-  echo "ro.build.type=usedebug_gms"
-fi
+echo "ro.build.type=$TARGET_BUILD_TYPE"
 echo "ro.build.user=$USER"
 echo "ro.build.host=`hostname`"
 echo "ro.build.tags=$BUILD_VERSION_TAGS"

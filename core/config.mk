@@ -143,8 +143,8 @@ include $(BUILD_SYSTEM)/envsetup.mk
 board_config_mk := \
 	$(strip $(wildcard \
 		$(SRC_TARGET_DIR)/board/$(TARGET_DEVICE)/BoardConfig.mk \
-		$(shell test -d device && find device -maxdepth 6 -path '*/$(TARGET_DEVICE)/BoardConfig.mk') \
-		$(shell test -d vendor && find vendor -maxdepth 6 -path '*/$(TARGET_DEVICE)/BoardConfig.mk') \
+		device/*/$(TARGET_DEVICE)/BoardConfig.mk \
+		vendor/*/$(TARGET_DEVICE)/BoardConfig.mk \
 	))
 ifeq ($(board_config_mk),)
   $(error No config file found for TARGET_DEVICE $(TARGET_DEVICE))
@@ -410,9 +410,6 @@ TARGET_GLOBAL_CPPFLAGS += $(TARGET_RELEASE_CPPFLAGS)
 
 # define llvm tools and global flags
 include $(BUILD_SYSTEM)/llvm_config.mk
-
-# define icc tools and global flags
-include $(BUILD_SYSTEM)/icc_config.mk
 
 # ###############################################################
 # Collect a list of the SDK versions that we could compile against

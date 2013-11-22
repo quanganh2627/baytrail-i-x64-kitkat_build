@@ -23,7 +23,6 @@ prebuilt_static_java_libraries := $(LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES)
 prebuilt_is_host := $(LOCAL_IS_HOST_MODULE)
 prebuilt_module_tags := $(LOCAL_MODULE_TAGS)
 prebuilt_strip_module := $(LOCAL_STRIP_MODULE)
-prebuilt_required_modules := $(LOCAL_REQUIRED_MODULES)
 
 
 ifndef multi_prebuilt_once
@@ -33,12 +32,10 @@ multi_prebuilt_once := true
 # $(2): IS_HOST_MODULE
 # $(3): MODULE_CLASS
 # $(4): MODULE_TAGS
-# $(5): LOCAL_REQUIRED_MODULES
-# $(6): OVERRIDE_BUILT_MODULE_PATH
-# $(7): UNINSTALLABLE_MODULE
-# $(8): BUILT_MODULE_STEM
-# $(9): LOCAL_STRIP_MODULE
-
+# $(5): OVERRIDE_BUILT_MODULE_PATH
+# $(6): UNINSTALLABLE_MODULE
+# $(7): BUILT_MODULE_STEM
+# $(8): LOCAL_STRIP_MODULE
 #
 # Elements in the file list may be bare filenames,
 # or of the form "<modulename>:<filename>".
@@ -53,9 +50,8 @@ $(foreach t,$(1), \
   $(eval LOCAL_IS_HOST_MODULE := $(2)) \
   $(eval LOCAL_MODULE_CLASS := $(3)) \
   $(eval LOCAL_MODULE_TAGS := $(4)) \
-  $(eval LOCAL_REQUIRED_MODULES := $(5)) \
-  $(eval OVERRIDE_BUILT_MODULE_PATH := $(6)) \
-  $(eval LOCAL_UNINSTALLABLE_MODULE := $(7)) \
+  $(eval OVERRIDE_BUILT_MODULE_PATH := $(5)) \
+  $(eval LOCAL_UNINSTALLABLE_MODULE := $(6)) \
   $(eval tw := $(subst :, ,$(strip $(t)))) \
   $(if $(word 3,$(tw)),$(error $(LOCAL_PATH): Bad prebuilt filename '$(t)')) \
   $(if $(word 2,$(tw)), \
@@ -65,14 +61,14 @@ $(foreach t,$(1), \
     $(eval LOCAL_MODULE := $(basename $(notdir $(t)))) \
     $(eval LOCAL_SRC_FILES := $(t)) \
    ) \
-  $(if $(8), \
-    $(eval LOCAL_BUILT_MODULE_STEM := $(8)) \
+  $(if $(7), \
+    $(eval LOCAL_BUILT_MODULE_STEM := $(7)) \
    , \
     $(eval LOCAL_BUILT_MODULE_STEM := $(notdir $(LOCAL_SRC_FILES))) \
    ) \
   $(eval LOCAL_MODULE_SUFFIX := $(suffix $(LOCAL_SRC_FILES))) \
   $(if $(filter user,$(TARGET_BUILD_VARIANT)), \
-    $(eval LOCAL_STRIP_MODULE := $(9))) \
+    $(eval LOCAL_STRIP_MODULE := $(8))) \
   $(eval include $(BUILD_PREBUILT)) \
  )
 endef
@@ -85,7 +81,6 @@ $(call auto-prebuilt-boilerplate, \
     $(prebuilt_is_host), \
     STATIC_LIBRARIES, \
     $(prebuilt_module_tags), \
-    $(prebuilt_required_modules), \
     , \
     true)
 
@@ -94,7 +89,6 @@ $(call auto-prebuilt-boilerplate, \
     $(prebuilt_is_host), \
     SHARED_LIBRARIES, \
     $(prebuilt_module_tags), \
-    $(prebuilt_required_modules), \
     $($(if $(prebuilt_is_host),HOST,TARGET)_OUT_INTERMEDIATE_LIBRARIES), \
     , \
     , \
@@ -104,15 +98,13 @@ $(call auto-prebuilt-boilerplate, \
     $(prebuilt_executables), \
     $(prebuilt_is_host), \
     EXECUTABLES, \
-    $(prebuilt_module_tags), \
-    $(prebuilt_required_modules))
+    $(prebuilt_module_tags))
 
 $(call auto-prebuilt-boilerplate, \
     $(prebuilt_java_libraries), \
     $(prebuilt_is_host), \
     JAVA_LIBRARIES, \
     $(prebuilt_module_tags), \
-    $(prebuilt_required_modules), \
     , \
     , \
     javalib.jar)
@@ -122,7 +114,6 @@ $(call auto-prebuilt-boilerplate, \
     $(prebuilt_is_host), \
     JAVA_LIBRARIES, \
     $(prebuilt_module_tags), \
-    $(prebuilt_required_modules), \
     , \
     true, \
     javalib.jar)
@@ -134,4 +125,3 @@ prebuilt_java_libraries :=
 prebuilt_static_java_libraries :=
 prebuilt_is_host :=
 prebuilt_module_tags :=
-prebuilt_required_modules :=
