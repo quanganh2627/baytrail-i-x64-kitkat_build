@@ -30,6 +30,7 @@ import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ProcessManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.VariantConfiguration;
+import com.google.common.collect.Lists;
 import groovy.lang.Closure;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.Copy;
@@ -37,6 +38,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import proguard.gradle.ProGuardTask;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Base data about a variant.
@@ -66,6 +68,8 @@ public abstract class BaseVariantData {
     private Object outputFile;
 
     public Task assembleTask;
+
+    private List<File> extraGeneratedSourceFolders;
 
     public BaseVariantData(@NonNull VariantConfiguration variantConfiguration) {
         this.variantConfiguration = variantConfiguration;
@@ -123,5 +127,36 @@ public abstract class BaseVariantData {
     @NonNull
     String getName() {
         return variantConfiguration.getFullName();
+    }
+
+    @Nullable
+    public List<File> getExtraGeneratedSourceFolders() {
+        return extraGeneratedSourceFolders;
+    }
+
+    public void addGeneratedSourceFolders(@NonNull Task task, @NonNull File... generatedSourceFolders) {
+        if (extraGeneratedSourceFolders == null) {
+            extraGeneratedSourceFolders = Lists.newArrayList();
+        }
+
+        javaCompileTask.dependsOn(task);
+
+        for (File f : generatedSourceFolders) {
+            extraGeneratedSourceFolders.add(f);
+            javaCompileTask.source(f);
+        }
+    }
+
+    public void addGeneratedSourceFolders(@NonNull Task task, @NonNull Iterable<File> generatedSourceFolders) {
+        if (extraGeneratedSourceFolders == null) {
+            extraGeneratedSourceFolders = Lists.newArrayList();
+        }
+
+        javaCompileTask.dependsOn(task);
+
+        for (File f : generatedSourceFolders) {
+            extraGeneratedSourceFolders.add(f);
+            javaCompileTask.source(f);
+        }
     }
 }

@@ -467,6 +467,40 @@ public class AndroidProjectTest extends TestCase {
         assertEquals("jar dep count", 2, jars.size());
     }
 
+    public void testGenFolderApi() throws Exception {
+        // Load the custom model for the project
+        ProjectData projectData = getModelForProject("genFolderApi");
+
+        AndroidProject model = projectData.model;
+        File projectDir = projectData.projectDir;
+
+        File buildDir = new File(projectDir, "build");
+
+        for (Variant variant : model.getVariants().values()) {
+
+            ArtifactInfo mainInfo = variant.getMainArtifactInfo();
+            assertNotNull(
+                    "Null-check on mainArtifactInfo for " + variant.getDisplayName(),
+                    mainInfo);
+
+            // get the generated source folders.
+            List<File> genFolder = mainInfo.getGeneratedSourceFolders();
+
+            // We're looking for a custom folder
+            String folderStart = new File(buildDir, "customCode").getAbsolutePath() + File.separatorChar;
+            boolean found = false;
+            for (File f : genFolder) {
+                if (f.getAbsolutePath().startsWith(folderStart)) {
+                    found = true;
+                    break;
+                }
+            }
+
+            assertTrue("custom generated source folder check", found);
+        }
+    }
+
+
     /**
      * Returns the SDK folder as built from the Android source tree.
      * @return the SDK
