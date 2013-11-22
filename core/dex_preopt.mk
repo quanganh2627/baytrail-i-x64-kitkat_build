@@ -1,11 +1,33 @@
+#
+# This file was modified by Dolby Laboratories, Inc. The portions of the
+# code that are surrounded by "DOLBY..." are copyrighted and
+# licensed separately, as follows:
+#
+#  (C) 2012-2013 Dolby Laboratories, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 ####################################
 # Dexpreopt on the boot jars
 #
 ####################################
 
-# TODO: replace it with device's BOOTCLASSPATH
-DEXPREOPT_BOOT_JARS := core:core-junit:bouncycastle:ext:framework:telephony-common:voip-common:mms-common:android.policy:services:apache-xml
+DEXPREOPT_BOOT_JARS := $(PRODUCT_BOOT_JARS)
+ifdef DOLBY_DAP
+DEXPREOPT_BOOT_JARS:=$(DEXPREOPT_BOOT_JARS):dolby_ds
+endif
 DEXPREOPT_BOOT_JARS_MODULES := $(subst :, ,$(DEXPREOPT_BOOT_JARS))
+PRODUCT_BOOTCLASSPATH := $(subst $(space),:,$(foreach m,$(DEXPREOPT_BOOT_JARS_MODULES),/system/framework/$(m).jar))
 
 DEXPREOPT_BUILD_DIR := $(OUT_DIR)
 DEXPREOPT_PRODUCT_DIR := $(patsubst $(DEXPREOPT_BUILD_DIR)/%,%,$(PRODUCT_OUT))/dex_bootjars
@@ -56,7 +78,9 @@ $(_dbj_odex) : $(_dbj_src_jar) | $(ACP) $(DEXPREOPT) $(DEXOPT)
 
 $(_dbj_jar_no_dex) : $(_dbj_src_jar) | $(ACP) $(AAPT)
 	$$(call copy-file-to-target)
+ifneq ($(DEX_PREOPT_DEFAULT),nostripping)
 	$$(call dexpreopt-remove-classes.dex,$$@)
+endif
 
 $(eval _dbj_jar :=)
 $(eval _dbj_odex :=)

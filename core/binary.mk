@@ -66,6 +66,13 @@ else
   endif
 endif
 
+# Correct icc libraries
+ifeq ($(LOCAL_IS_HOST_MODULE),)
+ifneq ($(strip $(call intel-target-need-intel-libraries)),)
+$(call icc-libs)
+endif
+endif
+
 ifdef LOCAL_SDK_VERSION
   # Get the list of INSTALLED libraries as module names.
   # We cannot compute the full path of the LOCAL_SHARED_LIBRARIES for
@@ -90,12 +97,25 @@ $(my_prefix)DEPENDENCIES_ON_SHARED_LIBRARIES += $(LOCAL_MODULE):$(LOCAL_INSTALLE
 endif
 endif
 
+# Add static HAL libraries
+ifdef LOCAL_HAL_STATIC_LIBRARIES
+$(foreach lib, $(LOCAL_HAL_STATIC_LIBRARIES), \
+    $(eval b_lib := $(filter $(lib).%,$(BOARD_HAL_STATIC_LIBRARIES)))\
+    $(if $(b_lib), $(eval LOCAL_STATIC_LIBRARIES += $(b_lib)),\
+                   $(eval LOCAL_STATIC_LIBRARIES += $(lib).default)))
+b_lib :=
+endif
+
 ifeq ($(strip $(LOCAL_ADDRESS_SANITIZER)),true)
   LOCAL_CLANG := true
   LOCAL_CFLAGS += $(ADDRESS_SANITIZER_CONFIG_EXTRA_CFLAGS)
   LOCAL_LDFLAGS += $(ADDRESS_SANITIZER_CONFIG_EXTRA_LDFLAGS)
   LOCAL_SHARED_LIBRARIES += $(ADDRESS_SANITIZER_CONFIG_EXTRA_SHARED_LIBRARIES)
   LOCAL_STATIC_LIBRARIES += $(ADDRESS_SANITIZER_CONFIG_EXTRA_STATIC_LIBRARIES)
+endif
+
+ifeq ($(strip $(WITHOUT_CLANG)),true)
+  LOCAL_CLANG :=
 endif
 
 # Add in libcompiler_rt for all regular device builds
@@ -129,6 +149,15 @@ ifeq ($(strip $(LOCAL_ENABLE_APROF)),true)
   LOCAL_CPPFLAGS += -fno-omit-frame-pointer -fno-function-sections -pg
 endif
 
+###################################################
+# Configure flags for ICC
+###################################################
+ifeq ($(LOCAL_IS_HOST_MODULE),)
+ifneq ($(strip $(call intel-target-use-icc,$(LOCAL_MODULE))),)
+$(call icc-flags)
+endif
+endif
+
 ###########################################################
 ## Explicitly declare assembly-only __ASSEMBLY__ macro for
 ## assembly source
@@ -138,35 +167,48 @@ LOCAL_ASFLAGS += -D__ASSEMBLY__
 ###########################################################
 ## Define PRIVATE_ variables from global vars
 ###########################################################
+my_target_global_cppflags := $(TARGET_GLOBAL_CPPFLAGS)
 ifdef LOCAL_SDK_VERSION
 my_target_project_includes :=
 my_target_c_includes := $(my_ndk_stl_include_path) $(my_ndk_version_root)/usr/include
-
-# filter out including of AndroidConfig.h in system/core.
-TARGET_GLOBAL_CFLAGS_NO_ANDCONF ?= $(subst $(TARGET_ANDROID_CONFIG_CFLAGS),,\
-    $(TARGET_GLOBAL_CFLAGS))
-my_target_global_cflags := $(TARGET_GLOBAL_CFLAGS_NO_ANDCONF)
 else
 my_target_project_includes := $(TARGET_PROJECT_INCLUDES)
 my_target_c_includes := $(TARGET_C_INCLUDES)
-ifeq ($(strip $(LOCAL_CLANG)),true)
-my_target_c_includes += $(CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES)
+endif # LOCAL_SDK_VERSION
+
+ifeq ($(LOCAL_CLANG),true)
 my_target_global_cflags := $(TARGET_GLOBAL_CLANG_FLAGS)
+my_target_c_includes += $(CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES)
+else
+ifneq ($(strip $(call intel-target-use-icc,$(LOCAL_MODULE))),)
+my_target_global_cflags   := $(TARGET_GLOBAL_ICC_CFLAGS)
+my_target_global_cppflags := $(TARGET_GLOBAL_ICC_CPPFLAGS)
 else
 my_target_global_cflags := $(TARGET_GLOBAL_CFLAGS)
+endif
 endif # LOCAL_CLANG
-endif # LOCAL_SDK_VERSION
 
 $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_TARGET_PROJECT_INCLUDES := $(my_target_project_includes)
 $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_TARGET_C_INCLUDES := $(my_target_c_includes)
 $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_TARGET_GLOBAL_CFLAGS := $(my_target_global_cflags)
-$(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_TARGET_GLOBAL_CPPFLAGS := $(TARGET_GLOBAL_CPPFLAGS)
+$(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_TARGET_GLOBAL_CPPFLAGS := $(my_target_global_cppflags)
 
 ###########################################################
 ## Define PRIVATE_ variables used by multiple module types
 ###########################################################
 $(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_NO_DEFAULT_COMPILER_FLAGS := \
     $(strip $(LOCAL_NO_DEFAULT_COMPILER_FLAGS))
+
+ifeq ($(LOCAL_IS_HOST_MODULE),)
+  ifneq ($(strip $(call intel-target-use-icc,$(LOCAL_MODULE))),)
+    ifeq ($(strip $(LOCAL_CC)),)
+      LOCAL_CC := $(TARGET_ICC)
+    endif
+    ifeq ($(strip $(LOCAL_CXX)),)
+      LOCAL_CXX:= $(TARGET_ICPC)
+    endif
+  endif
+endif
 
 ifeq ($(strip $(LOCAL_CC)),)
   ifeq ($(strip $(LOCAL_CLANG)),true)
@@ -575,7 +617,11 @@ import_includes_deps := $(strip \
     $(foreach l, $(installed_shared_library_module_names), \
       $(call intermediates-dir-for,SHARED_LIBRARIES,$(l),$(LOCAL_IS_HOST_MODULE))/export_includes) \
     $(foreach l, $(LOCAL_STATIC_LIBRARIES) $(LOCAL_WHOLE_STATIC_LIBRARIES), \
-      $(call intermediates-dir-for,STATIC_LIBRARIES,$(l),$(LOCAL_IS_HOST_MODULE))/export_includes))
+      $(call intermediates-dir-for,STATIC_LIBRARIES,$(l),$(LOCAL_IS_HOST_MODULE))/export_includes) \
+    $(foreach l, $(LOCAL_IMPORT_C_INCLUDE_DIRS_FROM_STATIC_LIBRARIES), \
+      $(call intermediates-dir-for,STATIC_LIBRARIES,$(l),$(LOCAL_IS_HOST_MODULE))/export_includes) \
+    $(foreach l, $(LOCAL_IMPORT_C_INCLUDE_DIRS_FROM_SHARED_LIBRARIES), \
+      $(call intermediates-dir-for,SHARED_LIBRARIES,$(l),$(LOCAL_IS_HOST_MODULE))/export_includes))
 $(import_includes) : $(import_includes_deps)
 	@echo Import includes file: $@
 	$(hide) mkdir -p $(dir $@) && rm -f $@
@@ -593,7 +639,7 @@ endif
 
 # some rules depend on asm_objects being first.  If your code depends on
 # being first, it's reasonable to require it to be assembly
-all_objects := \
+normal_objects := \
     $(asm_objects) \
     $(cpp_objects) \
     $(gen_cpp_objects) \
@@ -604,8 +650,9 @@ all_objects := \
     $(yacc_objects) \
     $(lex_objects) \
     $(proto_generated_objects) \
-    $(addprefix $(TOPDIR)$(LOCAL_PATH)/,$(LOCAL_PREBUILT_OBJ_FILES)) \
-    $(gen_o_objects)
+    $(addprefix $(TOPDIR)$(LOCAL_PATH)/,$(LOCAL_PREBUILT_OBJ_FILES))
+
+all_objects := $(normal_objects) $(gen_o_objects)
 
 LOCAL_C_INCLUDES += $(TOPDIR)$(LOCAL_PATH) $(intermediates)
 
@@ -613,9 +660,12 @@ ifndef LOCAL_SDK_VERSION
   LOCAL_C_INCLUDES += $(JNI_H_INCLUDE)
 endif
 
-# .o files need to be filtered out of LOCAL_GENERATED_SOURCES
-# to avoid creating circular dependencies.
-$(all_objects) : | $(filter-out %.o,$(LOCAL_GENERATED_SOURCES)) $(import_includes)
+# all_objects includes gen_o_objects which were part of LOCAL_GENERATED_SOURCES;
+# use normal_objects here to avoid creating circular dependencies. This assumes
+# that custom build rules which generate .o files don't consume other generated
+# sources as input (or if they do they take care of that dependency themselves).
+$(normal_objects) : | $(LOCAL_GENERATED_SOURCES)
+$(all_objects) : | $(import_includes)
 ALL_C_CPP_ETC_OBJECTS += $(all_objects)
 
 ###########################################################

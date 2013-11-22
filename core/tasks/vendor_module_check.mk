@@ -13,6 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+#
+# This file was modified by Dolby Laboratories, Inc. The portions of the
+# code that are surrounded by "DOLBY..." are copyrighted and
+# licensed separately, as follows:
+#
+# (C) 2011 - 2013 Dolby Laboratories, Inc.
+# All rights reserved.
+#
+# This program is protected under international and U.S. Copyright laws as
+# an unpublished work. This program is confidential and proprietary to the
+# copyright owners. Reproduction or disclosure, in whole or in part, or the
+# production of derivative works therefrom without the express permission of
+# the copyright owners is prohibited.
+#
 
 # Restrict the vendor module owners here.
 _vendor_owner_whitelist := \
@@ -34,7 +48,13 @@ _vendor_owner_whitelist := \
         trusted_logic \
         widevine
 
-
+ifdef DOLBY_DAP
+        _vendor_owner_whitelist += dolby
+else
+    ifdef DOLBY_UDC
+        _vendor_owner_whitelist += dolby
+    endif
+endif # DOLBY_END
 ifneq (,$(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_RESTRICT_VENDOR_FILES))
 
 _vendor_check_modules := $(sort $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_PACKAGES))
@@ -85,10 +105,12 @@ ifneq (,$(filter path all, $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_RESTRICT_VENDO
 
 $(foreach m, $(_vendor_check_modules), \
   $(if $(filter vendor/%, $(ALL_MODULES.$(m).PATH)),\
-    $(if $(filter $(TARGET_OUT_VENDOR)/%, $(ALL_MODULES.$(m).INSTALLED)),,\
-      $(error Error: vendor module "$(m)" in $(ALL_MODULES.$(m).PATH) \
-        in product "$(TARGET_PRODUCT)" being installed to \
-        $(ALL_MODULES.$(m).INSTALLED) which is not in the vendor tree))))
+    $(if $(filter-out FAKE, $(ALL_MODULES.$(m).CLASS)),\
+      $(if $(filter-out ,$(ALL_MODULES.$(m).INSTALLED)),\
+        $(if $(filter $(TARGET_OUT_VENDOR)/% $(HOST_OUT)/%, $(ALL_MODULES.$(m).INSTALLED)),,\
+          $(error Error: vendor module "$(m)" in $(ALL_MODULES.$(m).PATH) \
+            in product "$(TARGET_PRODUCT)" being installed to \
+            $(ALL_MODULES.$(m).INSTALLED) which is not in the vendor tree))))))
 
 endif
 

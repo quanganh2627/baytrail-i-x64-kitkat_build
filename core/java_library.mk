@@ -18,10 +18,9 @@ ifneq (true,$(LOCAL_IS_STATIC_JAVA_LIBRARY))
 ifneq (,$(LOCAL_RESOURCE_DIR))
 $(error $(LOCAL_PATH): Target java libraries may not set LOCAL_RESOURCE_DIR)
 endif
-endif
-
-#xxx base_rules.mk looks at this
+# base_rules.mk looks at this
 all_res_assets :=
+endif
 
 LOCAL_BUILT_MODULE_STEM := javalib.jar
 
@@ -41,7 +40,7 @@ else
 ifeq (,$(TARGET_BUILD_APPS))
 ifeq (,$(LOCAL_APK_LIBRARIES))
 ifndef LOCAL_DEX_PREOPT
-LOCAL_DEX_PREOPT := true
+LOCAL_DEX_PREOPT := $(DEX_PREOPT_DEFAULT)
 endif
 endif
 endif
@@ -119,9 +118,14 @@ $(built_odex) : $(common_javalib.jar) | $(DEXPREOPT) $(DEXOPT)
 
 $(LOCAL_BUILT_MODULE) : $(common_javalib.jar) | $(ACP)
 	$(call copy-file-to-target)
+	$(hide) $(ACP) $@ $(patsubst %.jar,%.jar.dex,$@)
 ifneq (nostripping,$(LOCAL_DEX_PREOPT))
 	$(call dexpreopt-remove-classes.dex,$@)
 endif
+
+# non odex jar is saved .jar.dex for external releases
+built_dexjar := $(basename $(LOCAL_BUILT_MODULE)).jar.dex
+$(built_dexjar): $(LOCAL_BUILT_MODULE)
 
 endif # dexpreopt_boot_jar_module
 

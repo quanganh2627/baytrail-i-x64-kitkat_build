@@ -26,6 +26,7 @@ PRODUCT_PACKAGES += \
     bmgr \
     bugreport \
     content \
+    dbus-daemon \
     dhcpcd \
     dhcpcd-run-hooks \
     dnsmasq \
@@ -42,20 +43,22 @@ PRODUCT_PACKAGES += \
     libbundlewrapper \
     libcamera_client \
     libcameraservice \
-    libchromium_net \
+    libdbus \
     libdl \
-    libdrm1 \
-    libdrm1_jni \
+    libeffectproxy \
     libeffects \
+    libinput \
     libiprouteutil \
     libjni_latinime \
     libjnigraphics \
+    libldnhncr \
     libmedia \
     libmedia_jni \
     libmediaplayerservice \
     libmtp \
     libnetlink \
     libnetutils \
+    libpac \
     libreference-ril \
     libreverbwrapper \
     libril \
@@ -72,7 +75,6 @@ PRODUCT_PACKAGES += \
     libstagefright_foundation \
     libstagefright_omx \
     libstagefright_yuv \
-    libsystem_server \
     libusbhost \
     libutils \
     libvisualizer \
@@ -87,6 +89,7 @@ PRODUCT_PACKAGES += \
     netcfg \
     netd \
     ping \
+    ping6 \
     platform.xml \
     pppd \
     pm \
@@ -98,7 +101,6 @@ PRODUCT_PACKAGES += \
     services \
     settings \
     svc \
-    system_server \
     tc \
     vdc \
     vold \
