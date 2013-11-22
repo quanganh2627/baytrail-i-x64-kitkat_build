@@ -220,6 +220,11 @@ public class ModelBuilder implements ToolingModelBuilder {
         folders.add(variantData.renderscriptCompileTask.sourceOutputDir)
         folders.add(variantData.generateBuildConfigTask.sourceOutputDir)
 
+        List<File> extraFolders = variantData.extraGeneratedSourceFolders
+        if (extraFolders != null) {
+            folders.addAll(extraFolders)
+        }
+
         return folders
     }
 

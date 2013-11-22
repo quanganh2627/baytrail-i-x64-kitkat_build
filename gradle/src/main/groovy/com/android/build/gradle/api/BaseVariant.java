@@ -152,4 +152,26 @@ public interface BaseVariant {
      */
     @Nullable
     Task getAssemble();
+
+    /**
+     * Adds to the variant a task that generates Java source Code.
+     *
+     * This will make the compileJava task depend on this task and add the
+     * new source folders as compilation inputs.
+     *
+     * @param task the task
+     * @param sourceFolders the source folders where the generated source code is.
+     */
+    void addGeneratedSourceFolders(@NonNull Task task, @NonNull File... sourceFolders);
+
+    /**
+     * Adds to the variant a task that generates Java source Code.
+     *
+     * This will make the compileJava task depend on this task and add the
+     * new source folders as compilation inputs.
+     *
+     * @param task the task
+     * @param sourceFolders the source folders where the generated source code is.
+     */
+    void addGeneratedSourceFolders(@NonNull Task task, @NonNull Iterable<File> sourceFolders);
 }

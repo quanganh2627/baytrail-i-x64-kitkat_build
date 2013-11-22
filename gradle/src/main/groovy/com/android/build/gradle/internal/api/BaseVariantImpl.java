@@ -137,4 +137,14 @@ abstract class BaseVariantImpl implements BaseVariant {
     public Task getAssemble() {
         return getVariantData().assembleTask;
     }
+
+    @Override
+    public void addGeneratedSourceFolders(@NonNull Task task, @NonNull File... sourceFolders) {
+        getVariantData().addGeneratedSourceFolders(task, sourceFolders);
+    }
+
+    @Override
+    public void addGeneratedSourceFolders(@NonNull Task task, @NonNull Iterable<File> sourceFolders) {
+        getVariantData().addGeneratedSourceFolders(task, sourceFolders);
+    }
 }
