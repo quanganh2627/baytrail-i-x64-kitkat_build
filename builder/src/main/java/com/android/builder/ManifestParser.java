@@ -21,14 +21,56 @@ import com.android.annotations.Nullable;
 
 import java.io.File;
 
+/**
+ * A Manifest parser
+ */
 public interface ManifestParser {
 
+    /**
+     * Returns the package name parsed from the given manifest file.
+     *
+     * @param manifestFile the manifest file to parse
+     *
+     * @return the package name or null if not found.
+     */
     @Nullable
     String getPackage(@NonNull File manifestFile);
 
+    /**
+     * Returns the minSdkVersion parsed from the given manifest file.
+     *
+     * @param manifestFile the manifest file to parse
+     *
+     * @return the minSdkVersion or 1 if not found.
+     */
     int getMinSdkVersion(@NonNull File manifestFile);
+
+    /**
+     * Returns the targetSdkVersion parsed from the given manifest file.
+     *
+     * @param manifestFile the manifest file to parse
+     *
+     * @return the targetSdkVersion or -1 if not found.
+     */
     int getTargetSdkVersion(@NonNull File manifestFile);
 
+    /**
+     * Returns the version name parsed from the given manifest file.
+     *
+     * @param manifestFile the manifest file to parse
+     *
+     * @return the version name or null if not found.
+     */
     @Nullable
     String getVersionName(@NonNull File manifestFile);
+
+    /**
+     * Returns the version code parsed from the given manifest file.
+     *
+     * @param manifestFile the manifest file to parse
+     *
+     * @return the version code or -1 if not found.
+     */
+    int getVersionCode(@NonNull File manifestFile);
+
 }

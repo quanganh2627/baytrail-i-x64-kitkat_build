@@ -22,7 +22,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.builder.compiling.DependencyFileProcessor;
 import com.android.builder.dependency.ManifestDependency;
 import com.android.builder.dependency.SymbolFileProvider;
-import com.android.builder.internal.BuildConfigGenerator;
+import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.internal.SymbolLoader;
 import com.android.builder.internal.SymbolWriter;
 import com.android.builder.internal.TestManifestGenerator;
@@ -33,6 +33,7 @@ import com.android.builder.internal.compiler.SourceSearcher;
 import com.android.builder.internal.packaging.JavaResourceProcessor;
 import com.android.builder.internal.packaging.Packager;
 import com.android.builder.model.AaptOptions;
+import com.android.builder.model.ClassField;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.DuplicateFileException;
@@ -80,7 +81,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * create a builder with {@link #AndroidBuilder(SdkParser, String, ILogger, boolean)}
  *
  * then build steps can be done with
- * {@link #generateBuildConfig(String, boolean, java.util.List, String)}
  * {@link #processManifest(java.io.File, java.util.List, java.util.List, String, int, String, int, int, String)}
  * {@link #processTestManifest(String, int, int, String, String, Boolean, Boolean, java.util.List, String)}
  * {@link #processResources(java.io.File, java.io.File, java.io.File, java.util.List, String, String, String, String, String, com.android.builder.VariantConfiguration.Type, boolean, com.android.builder.model.AaptOptions)}
@@ -265,24 +265,9 @@ public class AndroidBuilder {
         return mCmdLineRunner;
     }
 
-    /**
-     * Generate the BuildConfig class for the project.
-     * @param packageName the package in which to generate the class
-     * @param debuggable whether the app is considered debuggable
-     * @param javaLines additional java lines to put in the class. These must be valid Java lines.
-     * @param sourceOutputDir directory where to put this. This is the source folder, not the
-     *                        package folder.
-     * @throws IOException
-     */
-    public void generateBuildConfig(
-            @NonNull String packageName,
-                     boolean debuggable,
-            @NonNull List<String> javaLines,
-            @NonNull String sourceOutputDir) throws IOException {
-
-        BuildConfigGenerator generator = new BuildConfigGenerator(
-                sourceOutputDir, packageName, debuggable);
-        generator.generate(javaLines);
+    @NonNull
+    public static ClassField createClassField(@NonNull String type, @NonNull String name, @NonNull String value) {
+        return new ClassFieldImpl(type, name, value);
     }
 
     /**

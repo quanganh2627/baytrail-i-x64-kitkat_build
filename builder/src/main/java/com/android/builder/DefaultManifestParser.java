@@ -67,6 +67,27 @@ public class DefaultManifestParser implements ManifestParser {
     }
 
     @Override
+    public int getVersionCode(@NonNull File manifestFile) {
+        XPath xpath = AndroidXPathFactory.newXPath();
+
+        try {
+            String value= xpath.evaluate("/manifest/@android:versionCode",
+                    new InputSource(new FileInputStream(manifestFile)));
+            if (value != null) {
+                return Integer.parseInt(value);
+            }
+        } catch (XPathExpressionException e) {
+            // won't happen.
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (NumberFormatException e) {
+            // return -1 below.
+        }
+
+        return -1;
+    }
+
+    @Override
     public int getMinSdkVersion(@NonNull File manifestFile) {
         try {
             Object value = AndroidManifest.getMinSdkVersion(new FileWrapper(manifestFile));

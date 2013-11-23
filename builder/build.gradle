@@ -15,6 +15,7 @@ dependencies {
     compile "com.android.tools.build:manifest-merger:$project.ext.baseAndroidVersion"
     compile "com.android.tools.ddms:ddmlib:$project.ext.baseAndroidVersion"
 
+    compile 'com.squareup:javawriter:2.2.1'
     compile 'org.bouncycastle:bcpkix-jdk15on:1.48'
 
     testCompile 'junit:junit:3.8.1'

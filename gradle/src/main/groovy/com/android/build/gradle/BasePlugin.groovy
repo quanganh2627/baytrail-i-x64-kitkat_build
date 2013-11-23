@@ -374,7 +374,7 @@ public abstract class BasePlugin {
             getManifestDependencies(config.directLibraries)
         }
         processManifestTask.conventionMapping.versionCode = {
-            mergedFlavor.versionCode
+            config.versionCode
         }
         processManifestTask.conventionMapping.minSdkVersion = {
             mergedFlavor.minSdkVersion
@@ -549,16 +549,40 @@ public abstract class BasePlugin {
         generateBuildConfigTask.plugin = this
         generateBuildConfigTask.variant = variantData
 
-        generateBuildConfigTask.conventionMapping.packageName = {
+        generateBuildConfigTask.conventionMapping.buildConfigPackageName = {
             variantConfiguration.originalPackageName
+        }
+
+        generateBuildConfigTask.conventionMapping.appPackageName = {
+            variantConfiguration.packageName
+        }
+
+        generateBuildConfigTask.conventionMapping.versionName = {
+            variantConfiguration.versionName
+        }
+
+        generateBuildConfigTask.conventionMapping.versionCode = {
+            variantConfiguration.versionCode
         }
 
         generateBuildConfigTask.conventionMapping.debuggable = {
             variantConfiguration.buildType.isDebuggable()
         }
 
-        generateBuildConfigTask.conventionMapping.javaLines = {
-            variantConfiguration.buildConfigLines
+        generateBuildConfigTask.conventionMapping.buildTypeName = {
+            variantConfiguration.buildType.name
+        }
+
+        generateBuildConfigTask.conventionMapping.flavorName = {
+            variantConfiguration.flavorName
+        }
+
+        generateBuildConfigTask.conventionMapping.flavorNames = {
+            variantConfiguration.flavorNames
+        }
+
+        generateBuildConfigTask.conventionMapping.items = {
+            variantConfiguration.buildConfigItems
         }
 
         generateBuildConfigTask.conventionMapping.sourceOutputDir = {

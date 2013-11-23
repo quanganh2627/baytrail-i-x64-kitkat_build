@@ -18,11 +18,13 @@ package com.android.builder.internal;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.BaseConfig;
+import com.android.builder.model.ClassField;
 import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -31,24 +33,28 @@ import java.util.List;
 public class BaseConfigImpl implements Serializable, BaseConfig {
     private static final long serialVersionUID = 1L;
 
-    private final List<String> mBuildConfigLines = Lists.newArrayList();
+    private final List<ClassField> mBuildConfigFields = Lists.newArrayList();
     private final List<File> mProguardFiles = Lists.newArrayList();
     private final List<File> mConsumerProguardFiles = Lists.newArrayList();
 
-    public void setBuildConfig(String... lines) {
-        mBuildConfigLines.clear();
-        mBuildConfigLines.addAll(Arrays.asList(lines));
+    public void setBuildConfigFields(@NonNull ClassField... fields) {
+        mBuildConfigFields.clear();
+        mBuildConfigFields.addAll(Arrays.asList(fields));
     }
 
-    public void setBuildConfig(String line) {
-        mBuildConfigLines.clear();
-        mBuildConfigLines.add(line);
+    public void setBuildConfigFields(@NonNull Collection<ClassField> fields) {
+        mBuildConfigFields.clear();
+        mBuildConfigFields.addAll(fields);
+    }
+
+    public void addBuildConfigField(@NonNull ClassField field) {
+        mBuildConfigFields.add(field);
     }
 
     @Override
     @NonNull
-    public List<String> getBuildConfig() {
-        return mBuildConfigLines;
+    public List<ClassField> getBuildConfigFields() {
+        return mBuildConfigFields;
     }
 
     @Override
@@ -64,8 +70,7 @@ public class BaseConfigImpl implements Serializable, BaseConfig {
     }
 
     protected void _initWith(BaseConfig that) {
-        mBuildConfigLines.clear();
-        mBuildConfigLines.addAll(that.getBuildConfig());
+        setBuildConfigFields(that.getBuildConfigFields());
 
         mProguardFiles.clear();
         mProguardFiles.addAll(that.getProguardFiles());
@@ -81,7 +86,7 @@ public class BaseConfigImpl implements Serializable, BaseConfig {
 
         BaseConfigImpl that = (BaseConfigImpl) o;
 
-        if (!mBuildConfigLines.equals(that.mBuildConfigLines)) return false;
+        if (!mBuildConfigFields.equals(that.mBuildConfigFields)) return false;
         if (!mProguardFiles.equals(that.mProguardFiles)) return false;
         if (!mConsumerProguardFiles.equals(that.mConsumerProguardFiles)) return false;
 
@@ -90,7 +95,7 @@ public class BaseConfigImpl implements Serializable, BaseConfig {
 
     @Override
     public int hashCode() {
-        int result = mBuildConfigLines.hashCode();
+        int result = mBuildConfigFields.hashCode();
         result = 31 * result + mProguardFiles.hashCode();
         result = 31 * result + mConsumerProguardFiles.hashCode();
         return result;

@@ -3,10 +3,18 @@
 - You can now have a variant specific source folder if you have flavors.
   Only for app (not library or test). Name is src/flavorDebug/... or src/flavor1Flavor2Debug/
   (note the camelcase naming, with lower case for first letter).
-  Its compoenents (res, manifest, etc...) have higher priority than components from build type
+  Its components (res, manifest, etc...) have higher priority than components from build type
   or flavors.
   It also comes with dependency configuration, so you can do 
      flavorDebugCompile '...'
+- Build config improvements and DSL changes.
+  The previous DSL proprety:
+    buildConfigLine "<value>"
+  has changed to
+    buildConfigField "<type>", "<name>", "<value>"
+  This allows override a field (see 'basic' sample)
+  Also, BuildConfig now automatically contains constants for
+  PACKAGE_NAME, VERSION_CODE, VERSION_NAME, BUILD_TYPE, FLAVOR s well as FLAVOR1, FLAVOR2, etc... if there are several flavor dimensions.
 - Switch to ProGuard 4.10
    - Added ability to test proguarded (obfuscated) apps.
 - Jar files are now pre-dexed for faster dexing.

@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.NdkConfig;
 import com.android.builder.model.BuildType;
+import com.android.builder.model.ClassField;
 
 import java.io.File;
 import java.io.Serializable;
@@ -112,7 +113,7 @@ class BuildTypeImpl implements BuildType, Serializable {
 
     @NonNull
     @Override
-    public List<String> getBuildConfig() {
+    public List<ClassField> getBuildConfigFields() {
         return Collections.emptyList();
     }
 

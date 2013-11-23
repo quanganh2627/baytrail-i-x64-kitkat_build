@@ -16,7 +16,9 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.tasks.IncrementalTask
+import com.android.builder.compiling.BuildConfigGenerator
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 
 public class GenerateBuildConfig extends IncrementalTask {
@@ -29,13 +31,31 @@ public class GenerateBuildConfig extends IncrementalTask {
     // ----- PRIVATE TASK API -----
 
     @Input
-    String packageName
+    String buildConfigPackageName
+
+    @Input
+    String appPackageName
 
     @Input
     boolean debuggable
 
     @Input
-    List<String> javaLines;
+    String flavorName
+
+    @Input
+    List<String> flavorNames
+
+    @Input
+    String buildTypeName
+
+    @Input @Optional
+    String versionName
+
+    @Input
+    int versionCode
+
+    @Input
+    List<Object> items;
 
     @Override
     protected void doFullTaskAction() {
@@ -44,10 +64,33 @@ public class GenerateBuildConfig extends IncrementalTask {
         File destinationDir = getSourceOutputDir()
         emptyFolder(destinationDir)
 
-        getBuilder().generateBuildConfig(
-                getPackageName(),
-                isDebuggable(),
-                getJavaLines(),
-                getSourceOutputDir().absolutePath);
+        BuildConfigGenerator generator = new BuildConfigGenerator(
+                getSourceOutputDir().absolutePath,
+                getBuildConfigPackageName());
+
+        // Hack (see IDEA-100046): We want to avoid reporting "condition is always true"
+        // from the data flow inspection, so use a non-constant value. However, that defeats
+        // the purpose of this flag (when not in debug mode, if (BuildConfig.DEBUG && ...) will
+        // be completely removed by the compiler), so as a hack we do it only for the case
+        // where debug is true, which is the most likely scenario while the user is looking
+        // at source code.
+        //map.put(PH_DEBUG, Boolean.toString(mDebug));
+        generator.addField("boolean", "DEBUG", getDebuggable() ? "Boolean.parseBoolean(\"true\")" : "false")
+            .addField("String", "PACKAGE_NAME", "\"${getAppPackageName()}\"")
+            .addField("String", "BUILD_TYPE", "\"${getBuildTypeName()}\"")
+            .addField("String", "FLAVOR", "\"${getFlavorName()}\"")
+            .addField("int", "VERSION_CODE", Integer.toString(getVersionCode()))
+            .addItems(getItems());
+
+        if (getVersionName() != null) {
+            generator.addField("String", "VERSION_NAME", "\"${getVersionName()}\"")
+        }
+
+        int i = 1;
+        for (String name : getFlavorNames()) {
+            generator.addField("String", "FLAVOR${i++}", "\"$name\"")
+        }
+
+        generator.generate();
     }
 }
