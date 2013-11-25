@@ -41,5 +41,5 @@ android.applicationVariants.all { variant ->
         outputFile file("${sourceFolder.absolutePath}/com/custom/Foo.java")
     }
 
-    variant.addGeneratedSourceFolders(javaGenerationTask, sourceFolder)
+    variant.registerJavaGeneratingTask(javaGenerationTask, sourceFolder)
 }

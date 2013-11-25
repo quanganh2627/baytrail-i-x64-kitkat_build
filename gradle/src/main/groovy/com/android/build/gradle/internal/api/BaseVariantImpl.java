@@ -34,6 +34,7 @@ import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 import java.io.File;
+import java.util.Collection;
 
 abstract class BaseVariantImpl implements BaseVariant {
 
@@ -139,12 +140,22 @@ abstract class BaseVariantImpl implements BaseVariant {
     }
 
     @Override
-    public void addGeneratedSourceFolders(@NonNull Task task, @NonNull File... sourceFolders) {
-        getVariantData().addGeneratedSourceFolders(task, sourceFolders);
+    public void addJavaSourceFoldersToModel(@NonNull File... generatedSourceFolders) {
+        getVariantData().addJavaSourceFoldersToModel(generatedSourceFolders);
     }
 
     @Override
-    public void addGeneratedSourceFolders(@NonNull Task task, @NonNull Iterable<File> sourceFolders) {
-        getVariantData().addGeneratedSourceFolders(task, sourceFolders);
+    public void addJavaSourceFoldersToModel(@NonNull Collection<File> generatedSourceFolders) {
+        getVariantData().addJavaSourceFoldersToModel(generatedSourceFolders);
+    }
+
+    @Override
+    public void registerJavaGeneratingTask(@NonNull Task task, @NonNull File... sourceFolders) {
+        getVariantData().registerJavaGeneratingTask(task, sourceFolders);
+    }
+
+    @Override
+    public void registerJavaGeneratingTask(@NonNull Task task, @NonNull Collection<File> sourceFolders) {
+        getVariantData().registerJavaGeneratingTask(task, sourceFolders);
     }
 }

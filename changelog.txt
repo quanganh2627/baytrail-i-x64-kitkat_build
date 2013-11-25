@@ -14,13 +14,16 @@
     buildConfigField "<type>", "<name>", "<value>"
   This allows override a field (see 'basic' sample)
   Also, BuildConfig now automatically contains constants for
-  PACKAGE_NAME, VERSION_CODE, VERSION_NAME, BUILD_TYPE, FLAVOR s well as FLAVOR1, FLAVOR2, etc... if there are several flavor dimensions.
+  PACKAGE_NAME, VERSION_CODE, VERSION_NAME, BUILD_TYPE, FLAVOR as well as FLAVOR1, FLAVOR2, etc... if there are several flavor dimensions.
 - Switch to ProGuard 4.10
    - Added ability to test proguarded (obfuscated) apps.
 - Jar files are now pre-dexed for faster dexing.
 - First pass at NDK integration
 - API to add new generated source folders:
-  variant.addGeneratedSourceFolders(generatingTask, sourceFolder1, sourceFolders2,...)
+     variant.addJavaSourceFoldersToModel(sourceFolder1, sourceFolders2,...)
+  This adds the source folder to the model (for IDE support).
+  Another API:
+     variant.registerJavaGeneratingTask(task, sourceFolder1, sourceFolders2,...)
   This automatically adds the dependency on the task, sets up the JavaCompile task inputs and propagates
   the folders to the model for IDE integration.
 

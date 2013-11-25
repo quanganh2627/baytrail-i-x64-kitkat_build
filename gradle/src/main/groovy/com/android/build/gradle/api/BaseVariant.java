@@ -32,6 +32,7 @@ import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 import java.io.File;
+import java.util.Collection;
 
 /**
  * A Build variant and all its public data. This is the base class for items common to apps,
@@ -154,24 +155,50 @@ public interface BaseVariant {
     Task getAssemble();
 
     /**
-     * Adds to the variant a task that generates Java source Code.
+     * Adds new Java source folders to the model.
      *
-     * This will make the compileJava task depend on this task and add the
-     * new source folders as compilation inputs.
+     * These source folders will not be used for the default build
+     * system, but will be passed along the default Java source folders
+     * to whoever queries the model.
      *
-     * @param task the task
      * @param sourceFolders the source folders where the generated source code is.
      */
-    void addGeneratedSourceFolders(@NonNull Task task, @NonNull File... sourceFolders);
+    void addJavaSourceFoldersToModel(@NonNull File... sourceFolders);
 
     /**
-     * Adds to the variant a task that generates Java source Code.
+     * Adds new Java source folders to the model.
+     *
+     * These source folders will not be used for the default build
+     * system, but will be passed along the default Java source folders
+     * to whoever queries the model.
+     *
+     * @param sourceFolders the source folders where the generated source code is.
+     */
+    void addJavaSourceFoldersToModel(@NonNull Collection<File> sourceFolders);
+
+    /**
+     * Adds to the variant a task that generates Java source code.
      *
      * This will make the compileJava task depend on this task and add the
      * new source folders as compilation inputs.
      *
+     * The new source folders are also added to the model.
+     *
      * @param task the task
      * @param sourceFolders the source folders where the generated source code is.
      */
-    void addGeneratedSourceFolders(@NonNull Task task, @NonNull Iterable<File> sourceFolders);
+    void registerJavaGeneratingTask(@NonNull Task task, @NonNull File... sourceFolders);
+
+    /**
+     * Adds to the variant a task that generates Java source code.
+     *
+     * This will make the compileJava task depend on this task and add the
+     * new source folders as compilation inputs.
+     *
+     * The new source folders are also added to the model.
+     *
+     * @param task the task
+     * @param sourceFolders the source folders where the generated source code is.
+     */
+    void registerJavaGeneratingTask(@NonNull Task task, @NonNull Collection<File> sourceFolders);
 }
