@@ -14,10 +14,10 @@ public class MainActivity extends Activity {
         TextView tv;
 
         tv = (TextView) findViewById(R.id.buildconfig1);
-        tv.setText(BuildConfig.GROUP1);
+        tv.setText(BuildConfig.FLAVOR1);
 
         tv = (TextView) findViewById(R.id.buildconfig2);
-        tv.setText(BuildConfig.GROUP2);
+        tv.setText(BuildConfig.FLAVOR2);
 
         tv = (TextView) findViewById(R.id.codeoverlay1);
         tv.setText(com.android.tests.flavors.group1.SomeClass.getString());

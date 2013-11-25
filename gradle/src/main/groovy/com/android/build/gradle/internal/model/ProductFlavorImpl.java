@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.NdkConfig;
+import com.android.builder.model.ClassField;
 import com.android.builder.model.ProductFlavor;
 
 import java.io.File;
@@ -142,7 +143,7 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
 
     @NonNull
     @Override
-    public List<String> getBuildConfig() {
+    public List<ClassField> getBuildConfigFields() {
         return Collections.emptyList();
     }
 

@@ -57,6 +57,11 @@ public class VariantConfigurationTest extends TestCase {
         public String getVersionName(@NonNull File manifestFile) {
             return "1.0";
         }
+
+        @Override
+        public int getVersionCode(@NonNull File manifestFile) {
+            return 1;
+        }
     }
 
     @Override

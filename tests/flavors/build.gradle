@@ -17,21 +17,16 @@ android {
     productFlavors {
         f1 {
             flavorGroup   "group1"
-
-            buildConfig   "public final static String GROUP1 = \"F1\";"
         }
         f2 {
             flavorGroup   "group1"
-            buildConfig   "public final static String GROUP1 = \"F2\";"
         }
 
         fa {
             flavorGroup   "group2"
-            buildConfig   "public final static String GROUP2 = \"FA\";"
         }
         fb {
             flavorGroup   "group2"
-            buildConfig   "public final static String GROUP2 = \"FB\";"
         }
     }
 }

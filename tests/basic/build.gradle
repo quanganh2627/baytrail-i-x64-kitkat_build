@@ -43,8 +43,8 @@ android {
         testInstrumentationRunner "android.test.InstrumentationTestRunner"
         testHandleProfiling false
 
-        buildConfig "private final static boolean DEFAULT = true;", \
-                    "private final static String FOO = \"foo\";"
+        buildConfigField "boolean", "DEFAULT", "true"
+        buildConfigField "String", "FOO", "\"foo\""
     }
 
     buildTypes {
@@ -52,7 +52,7 @@ android {
             packageNameSuffix ".debug"
             signingConfig signingConfigs.myConfig
 
-            buildConfig "private final static boolean DEBUG2 = false;"
+            buildConfigField "String", "FOO", "\"bar\""
         }
     }
 

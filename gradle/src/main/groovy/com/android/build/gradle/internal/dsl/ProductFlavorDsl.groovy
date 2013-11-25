@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dsl
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
+import com.android.builder.AndroidBuilder
 import com.android.builder.DefaultProductFlavor
 import com.android.builder.NdkConfig
 import org.gradle.api.Action
@@ -50,12 +51,11 @@ class ProductFlavorDsl extends DefaultProductFlavor {
 
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
 
-    public void buildConfig(String... lines) {
-        setBuildConfig(lines)
-    }
-
-    public void buildConfig(String line) {
-        setBuildConfig(line)
+    public void buildConfigField(
+            @NonNull String type,
+            @NonNull String name,
+            @NonNull String value) {
+        addBuildConfigField(AndroidBuilder.createClassField(type, name, value));
     }
 
     @NonNull

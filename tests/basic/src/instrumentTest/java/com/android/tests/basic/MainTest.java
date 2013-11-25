@@ -34,5 +34,10 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
     public void testPreconditions() {
         assertNotNull(mTextView);
     }
+
+    @MediumTest
+    public void testBuildConfig() {
+        assertEquals("bar", BuildConfig.FOO);
+    }
 }
 

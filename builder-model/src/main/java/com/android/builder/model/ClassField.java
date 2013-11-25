@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2013 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,34 +18,16 @@ package com.android.builder.model;
 
 import com.android.annotations.NonNull;
 
-import java.io.File;
-import java.util.List;
-
 /**
- * Base config object for Build Type and Product flavor.
+ * A Simple class field with name, type and value, all as strings.
  */
-public interface BaseConfig {
-
-    /**
-     * List of Build Config Fields
-     * @return a non-null list of class fields (possibly empty)
-     */
+public interface ClassField {
     @NonNull
-    List<ClassField> getBuildConfigFields();
+    String getType();
 
-    /**
-     * Returns the list of proguard rule files.
-     *
-     * @return a non-null list of files.
-     */
     @NonNull
-    List<File> getProguardFiles();
+    String getName();
 
-    /**
-     * Returns the list of proguard rule files for consumers of the library to use.
-     *
-     * @return a non-null list of files.
-     */
     @NonNull
-    List<File> getConsumerProguardFiles();
+    String getValue();
 }

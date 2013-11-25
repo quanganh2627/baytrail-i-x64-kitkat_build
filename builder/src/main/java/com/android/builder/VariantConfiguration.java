@@ -24,6 +24,7 @@ import com.android.builder.dependency.JarDependency;
 import com.android.builder.dependency.LibraryDependency;
 import com.android.builder.internal.NdkConfigImpl;
 import com.android.builder.internal.StringHelper;
+import com.android.builder.model.ClassField;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
@@ -35,6 +36,7 @@ import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -321,6 +323,26 @@ public class VariantConfiguration implements TestData {
 
         return mDirName;
     }
+
+    /**
+     * Return the names of the applied flavors.
+     *
+     * @return the list, possibly empty if there are no flavors.
+     */
+    @NonNull
+    public List<String> getFlavorNames() {
+        if (mFlavorConfigs.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<String> names = Lists.newArrayListWithCapacity(mFlavorConfigs.size());
+        for (DefaultProductFlavor flavor : mFlavorConfigs) {
+            names.add(flavor.getName());
+        }
+
+        return names;
+    }
+
 
     /**
      * Add a new configured ProductFlavor.
@@ -640,13 +662,35 @@ public class VariantConfiguration implements TestData {
 
         if (versionSuffix != null && versionSuffix.length() > 0) {
             if (versionName == null) {
-                versionName = getVersionNameFromManifest();
+                if (mType != Type.TEST) {
+                    versionName = getVersionNameFromManifest();
+                } else {
+                    versionName = "";
+                }
             }
 
             versionName = versionName + versionSuffix;
         }
 
         return versionName;
+    }
+
+    /**
+     * Returns the version code for this variant. This could be coming from the manifest or
+     * could be overridden through the product flavors, and can have a suffix specified by
+     * the build type.
+     *
+     * @return the version code or -1 if there was non defined.
+     */
+    public int getVersionCode() {
+        int versionCode = mMergedFlavor.getVersionCode();
+
+        if (versionCode == -1 && mType != Type.TEST) {
+
+            versionCode = getVersionCodeFromManifest();
+        }
+
+        return versionCode;
     }
 
     private final static String DEFAULT_TEST_RUNNER = "android.test.InstrumentationTestRunner";
@@ -718,6 +762,14 @@ public class VariantConfiguration implements TestData {
     public String getVersionNameFromManifest() {
         File manifestLocation = mDefaultSourceProvider.getManifestFile();
         return sManifestParser.getVersionName(manifestLocation);
+    }
+
+    /**
+     * Reads the version code from the manifest.
+     */
+    public int getVersionCodeFromManifest() {
+        File manifestLocation = mDefaultSourceProvider.getManifestFile();
+        return sManifestParser.getVersionCode(manifestLocation);
     }
 
     /**
@@ -1115,27 +1167,52 @@ public class VariantConfiguration implements TestData {
         return Lists.newArrayList(jars);
     }
 
+    /**
+     * Returns a list of items for the BuildConfig class.
+     *
+     * Items can be either fields (instance of {@link com.android.builder.model.ClassField})
+     * or comments (instance of String).
+     *
+     * @return a list of items.
+     */
     @NonNull
-    public List<String> getBuildConfigLines() {
-        List<String> fullList = Lists.newArrayList();
+    public List<Object> getBuildConfigItems() {
+        List<Object> fullList = Lists.newArrayList();
 
-        List<String> list = mDefaultConfig.getBuildConfig();
-        if (!list.isEmpty()) {
-            fullList.add("// lines from default config.");
-            fullList.addAll(list);
-        }
+        Set<String> usedFieldNames = Sets.newHashSet();
 
-        list = mBuildType.getBuildConfig();
+        List<ClassField> list = mBuildType.getBuildConfigFields();
         if (!list.isEmpty()) {
-            fullList.add("// lines from build type: " + mBuildType.getName());
-            fullList.addAll(list);
+            fullList.add("Fields from build type: " + mBuildType.getName());
+            for (ClassField f : list) {
+                usedFieldNames.add(f.getName());
+                fullList.add(f);
+            }
         }
 
         for (DefaultProductFlavor flavor : mFlavorConfigs) {
-            list = flavor.getBuildConfig();
+            list = flavor.getBuildConfigFields();
             if (!list.isEmpty()) {
-                fullList.add("// lines from product flavor: " + flavor.getName());
-                fullList.addAll(list);
+                fullList.add("Fields from product flavor: " + flavor.getName());
+                for (ClassField f : list) {
+                    String name = f.getName();
+                    if (!usedFieldNames.contains(name)) {
+                        usedFieldNames.add(f.getName());
+                        fullList.add(f);
+                    }
+                }
+            }
+        }
+
+        list = mDefaultConfig.getBuildConfigFields();
+        if (!list.isEmpty()) {
+            fullList.add("Fields from default config.");
+            for (ClassField f : list) {
+                String name = f.getName();
+                if (!usedFieldNames.contains(name)) {
+                    usedFieldNames.add(f.getName());
+                    fullList.add(f);
+                }
             }
         }
 
