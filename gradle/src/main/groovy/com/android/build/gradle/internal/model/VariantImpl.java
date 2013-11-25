@@ -17,13 +17,13 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.model.ArtifactInfo;
-import com.android.builder.model.SourceProvider;
-import com.android.builder.model.Variant;
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.ProductFlavor;
+import com.android.builder.model.Variant;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -44,28 +44,28 @@ class VariantImpl implements Variant, Serializable {
     @NonNull
     private final ProductFlavor mergedFlavor;
     @NonNull
-    private final ArtifactInfo mainArtifactInfo;
-    @Nullable
-    private final ArtifactInfo testArtifactInfo;
-    @Nullable
-    private final SourceProvider variantSourceProvider;
+    private final AndroidArtifact mainArtifactInfo;
+    @NonNull
+    private final Collection<AndroidArtifact> extraAndroidArtifacts;
+    @NonNull
+    private final Collection<JavaArtifact> extraJavaArtifacts;
 
-    VariantImpl(@NonNull  String name,
-                @NonNull  String displayName,
-                @NonNull  String buildTypeName,
-                @NonNull  List<String> productFlavorNames,
-                @NonNull  ProductFlavorImpl mergedFlavor,
-                @NonNull  ArtifactInfo mainArtifactInfo,
-                @Nullable ArtifactInfo testArtifactInfo,
-                @Nullable SourceProvider variantSourceProvider) {
+    VariantImpl(@NonNull String name,
+                @NonNull String displayName,
+                @NonNull String buildTypeName,
+                @NonNull List<String> productFlavorNames,
+                @NonNull ProductFlavorImpl mergedFlavor,
+                @NonNull AndroidArtifact mainArtifactInfo,
+                @NonNull Collection<AndroidArtifact> extraAndroidArtifacts,
+                @NonNull Collection<JavaArtifact> extraJavaArtifacts) {
         this.name = name;
         this.displayName = displayName;
         this.buildTypeName = buildTypeName;
         this.productFlavorNames = productFlavorNames;
         this.mergedFlavor = mergedFlavor;
         this.mainArtifactInfo = mainArtifactInfo;
-        this.testArtifactInfo = testArtifactInfo;
-        this.variantSourceProvider = variantSourceProvider;
+        this.extraAndroidArtifacts = extraAndroidArtifacts;
+        this.extraJavaArtifacts = extraJavaArtifacts;
     }
 
     @Override
@@ -100,25 +100,25 @@ class VariantImpl implements Variant, Serializable {
 
     @NonNull
     @Override
-    public ArtifactInfo getMainArtifactInfo() {
+    public AndroidArtifact getMainArtifact() {
         return mainArtifactInfo;
     }
 
-    @Nullable
+    @NonNull
     @Override
-    public ArtifactInfo getTestArtifactInfo() {
-        return testArtifactInfo;
+    public Collection<AndroidArtifact> getExtraAndroidArtifacts() {
+        return extraAndroidArtifacts;
+    }
+
+    @NonNull
+    @Override
+    public Collection<JavaArtifact> getExtraJavaArtifacts() {
+        return extraJavaArtifacts;
     }
 
     @Override
     @NonNull
     public List<String> getResourceConfigurations() {
         return Collections.emptyList();
-    }
-
-    @Override
-    @Nullable
-    public SourceProvider getSourceProvider() {
-        return variantSourceProvider;
     }
 }

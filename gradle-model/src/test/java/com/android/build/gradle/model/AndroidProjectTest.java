@@ -17,16 +17,21 @@
 package com.android.build.gradle.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.builder.internal.StringHelper;
+import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ArtifactInfo;
+import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.Dependencies;
+import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
+import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
 import com.android.builder.signing.KeystoreHelper;
 import com.android.prefs.AndroidLocation;
@@ -42,10 +47,11 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.CodeSource;
 import java.security.KeyStore;
-import java.util.List;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
+
+import static com.android.builder.model.AndroidProject.ARTIFACT_INSTRUMENT_TEST;
 
 public class AndroidProjectTest extends TestCase {
 
@@ -168,17 +174,90 @@ public class AndroidProjectTest extends TestCase {
         AndroidProject model = projectData.model;
         File projectDir = projectData.projectDir;
 
+        testDefaultSourceSets(model, projectDir);
+
+        // test the source provider for the artifacts
+        for (Variant variant : model.getVariants()) {
+            AndroidArtifact artifact = variant.getMainArtifact();
+            assertNull(artifact.getVariantSourceProvider());
+            assertNull(artifact.getMultiFlavorSourceProvider());
+        }
+    }
+
+    public void testBasicMultiFlavorsSourceProviders() throws Exception {
+        // Load the custom model for the project
+        ProjectData projectData = getModelForProject("basicMultiFlavors");
+
+        AndroidProject model = projectData.model;
+        File projectDir = projectData.projectDir;
+
+        testDefaultSourceSets(model, projectDir);
+
+        // test the source provider for the flavor
+        Collection<ProductFlavorContainer> productFlavors = model.getProductFlavors();
+        assertEquals("Product Flavor Count", 4, productFlavors.size());
+
+        for (ProductFlavorContainer pfContainer : productFlavors) {
+            String name = pfContainer.getProductFlavor().getName();
+            new SourceProviderTester(
+                    model.getName(),
+                    projectDir,
+                    name,
+                    pfContainer.getSourceProvider())
+                .test();
+
+            assertEquals(1, pfContainer.getExtraSourceProviders().size());
+            SourceProviderContainer container = getSourceProviderContainer(
+                    pfContainer.getExtraSourceProviders(), ARTIFACT_INSTRUMENT_TEST);
+            assertNotNull(container);
+
+            new SourceProviderTester(
+                    model.getName(),
+                    projectDir,
+                    "instrumentTest" + StringHelper.capitalize(name),
+                    container.getSourceProvider())
+                .test();
+        }
+
+        // test the source provider for the artifacts
+        for (Variant variant : model.getVariants()) {
+            AndroidArtifact artifact = variant.getMainArtifact();
+            assertNotNull(artifact.getVariantSourceProvider());
+            assertNotNull(artifact.getMultiFlavorSourceProvider());
+        }
+    }
+
+    private void testDefaultSourceSets(@NonNull AndroidProject model, @NonNull File projectDir) {
         ProductFlavorContainer defaultConfig = model.getDefaultConfig();
 
+        // test the main source provider
         new SourceProviderTester(model.getName(), projectDir,
                 "main", defaultConfig.getSourceProvider())
                 .test();
+
+        // test the main instrumentTest source provider
+        SourceProviderContainer testSourceProviders = getSourceProviderContainer(
+                defaultConfig.getExtraSourceProviders(), ARTIFACT_INSTRUMENT_TEST);
+        assertNotNull("InstrumentTest source Providers null-check", testSourceProviders);
+
         new SourceProviderTester(model.getName(), projectDir,
-                "instrumentTest", defaultConfig.getTestSourceProvider())
+                "instrumentTest", testSourceProviders.getSourceProvider())
+            .test();
+
+        // test the source provider for the build types
+        Collection<BuildTypeContainer> buildTypes = model.getBuildTypes();
+        assertEquals("Build Type Count", 2, buildTypes.size());
+
+        for (BuildTypeContainer btContainer : model.getBuildTypes()) {
+            new SourceProviderTester(
+                    model.getName(),
+                    projectDir,
+                    btContainer.getBuildType().getName(),
+                    btContainer.getSourceProvider())
                 .test();
 
-        Map<String, BuildTypeContainer> buildTypes = model.getBuildTypes();
-        assertEquals("Build Type Count", 2, buildTypes.size());
+            assertEquals(0, btContainer.getExtraSourceProviders().size());
+        }
     }
 
     public void testBasicVariantDetails() throws Exception {
@@ -187,11 +266,11 @@ public class AndroidProjectTest extends TestCase {
 
         AndroidProject model = projectData.model;
 
-        Map<String, Variant> variants = model.getVariants();
+        Collection<Variant> variants = model.getVariants();
         assertEquals("Variant Count", 2 , variants.size());
 
         // debug variant
-        Variant debugVariant = variants.get("debug");
+        Variant debugVariant = getVariant(variants, "debug");
         assertNotNull("debug Variant null-check", debugVariant);
         new ProductFlavorTester(debugVariant.getMergedFlavor(), "Debug Merged Flavor")
                 .setVersionCode(12)
@@ -201,9 +280,9 @@ public class AndroidProjectTest extends TestCase {
                 .setTestInstrumentationRunner("android.test.InstrumentationTestRunner")
                 .setTestHandleProfiling(Boolean.FALSE)
                 .setTestFunctionalTest(null)
-                .test();
+            .test();
 
-        ArtifactInfo debugMainInfo = debugVariant.getMainArtifactInfo();
+        AndroidArtifact debugMainInfo = debugVariant.getMainArtifact();
         assertNotNull("Debug main info null-check", debugMainInfo);
         assertEquals("Debug package name", "com.android.tests.basic.debug",
                 debugMainInfo.getPackageName());
@@ -212,8 +291,12 @@ public class AndroidProjectTest extends TestCase {
         assertEquals("Debug sourceGenTask", "generateDebugSources", debugMainInfo.getSourceGenTaskName());
         assertEquals("Debug javaCompileTask", "compileDebugJava", debugMainInfo.getJavaCompileTaskName());
 
+        Collection<AndroidArtifact> debugExtraAndroidArtifacts = debugVariant.getExtraAndroidArtifacts();
+
+
         // this variant is tested.
-        ArtifactInfo debugTestInfo = debugVariant.getTestArtifactInfo();
+        AndroidArtifact debugTestInfo = getAndroidArtifact(debugExtraAndroidArtifacts,
+                ARTIFACT_INSTRUMENT_TEST);
         assertNotNull("Test info null-check", debugTestInfo);
         assertEquals("Test package name", "com.android.tests.basic.debug.test",
                 debugTestInfo.getPackageName());
@@ -224,10 +307,10 @@ public class AndroidProjectTest extends TestCase {
         assertEquals("Test javaCompileTask", "compileDebugTestJava", debugTestInfo.getJavaCompileTaskName());
 
         // release variant, not tested.
-        Variant releaseVariant = variants.get("release");
+        Variant releaseVariant = getVariant(variants, "release");
         assertNotNull("release Variant null-check", releaseVariant);
 
-        ArtifactInfo relMainInfo = releaseVariant.getMainArtifactInfo();
+        AndroidArtifact relMainInfo = releaseVariant.getMainArtifact();
         assertNotNull("Release main info null-check", relMainInfo);
         assertEquals("Release package name", "com.android.tests.basic",
                 relMainInfo.getPackageName());
@@ -236,7 +319,8 @@ public class AndroidProjectTest extends TestCase {
         assertEquals("Release sourceGenTask", "generateReleaseSources", relMainInfo.getSourceGenTaskName());
         assertEquals("Release javaCompileTask", "compileReleaseJava", relMainInfo.getJavaCompileTaskName());
 
-        ArtifactInfo relTestInfo = releaseVariant.getTestArtifactInfo();
+        Collection<AndroidArtifact> releaseExtraAndroidArtifacts = releaseVariant.getExtraAndroidArtifacts();
+        AndroidArtifact relTestInfo = getAndroidArtifact(releaseExtraAndroidArtifacts, ARTIFACT_INSTRUMENT_TEST);
         assertNull("Release test info null-check", relTestInfo);
 
         // check debug dependencies
@@ -245,7 +329,7 @@ public class AndroidProjectTest extends TestCase {
         assertEquals(2, dependencies.getJars().size());
         assertEquals(1, dependencies.getLibraries().size());
 
-        AndroidLibrary lib = dependencies.getLibraries().get(0);
+        AndroidLibrary lib = dependencies.getLibraries().iterator().next();
         assertNotNull(lib);
         assertNotNull(lib.getBundle());
         assertNotNull(lib.getFolder());
@@ -259,12 +343,16 @@ public class AndroidProjectTest extends TestCase {
 
         AndroidProject model = projectData.model;
 
-        assertEquals("Number of signingConfig", 2, model.getSigningConfigs().size());
+        Collection<SigningConfig> signingConfigs = model.getSigningConfigs();
+        assertNotNull("SigningConfigs null-check", signingConfigs);
+        assertEquals("Number of signingConfig", 2, signingConfigs.size());
 
-        SigningConfig debugSigningConfig = model.getSigningConfigs().get("debug");
+        SigningConfig debugSigningConfig = getSigningConfig(signingConfigs, "debug");
+        assertNotNull("debug signing config null-check", debugSigningConfig);
         new SigningConfigTester(debugSigningConfig, "debug", true).test();
 
-        SigningConfig mySigningConfig = model.getSigningConfigs().get("myConfig");
+        SigningConfig mySigningConfig = getSigningConfig(signingConfigs, "myConfig");
+        assertNotNull("myConfig signing config null-check", mySigningConfig);
         new SigningConfigTester(mySigningConfig, "myConfig", true)
                 .setStoreFile(new File(projectData.projectDir, "debug.keystore"))
                 .test();
@@ -294,8 +382,12 @@ public class AndroidProjectTest extends TestCase {
                 .setManifestFile("AndroidManifest.xml")
                 .test();
 
+        SourceProviderContainer testSourceProviderContainer = getSourceProviderContainer(
+                defaultConfig.getExtraSourceProviders(), ARTIFACT_INSTRUMENT_TEST);
+        assertNotNull("InstrumentTest source Providers null-check", testSourceProviderContainer);
+
         new SourceProviderTester(model.getName(), projectDir,
-                "instrumentTest", defaultConfig.getTestSourceProvider())
+                "instrumentTest", testSourceProviderContainer.getSourceProvider())
                 .setJavaDir("tests/java")
                 .setResourcesDir("tests/resources")
                 .setAidlDir("tests/aidl")
@@ -317,13 +409,13 @@ public class AndroidProjectTest extends TestCase {
         assertNotNull("Model Object null-check", model);
         assertEquals("Model Name", "renamedApk", model.getName());
 
-        Map<String, Variant> variants = model.getVariants();
+        Collection<Variant> variants = model.getVariants();
         assertEquals("Variant Count", 2 , variants.size());
 
         File buildDir = new File(projectDir, "build");
 
-        for (Variant variant : variants.values()) {
-            ArtifactInfo mainInfo = variant.getMainArtifactInfo();
+        for (Variant variant : variants) {
+            AndroidArtifact mainInfo = variant.getMainArtifact();
             assertNotNull(
                     "Null-check on mainArtifactInfo for " + variant.getDisplayName(),
                     mainInfo);
@@ -350,17 +442,22 @@ public class AndroidProjectTest extends TestCase {
         new SourceProviderTester(model.getName(), projectDir,
                 "main", defaultConfig.getSourceProvider())
                 .test();
+
+        SourceProviderContainer testSourceProviderContainer = getSourceProviderContainer(
+                defaultConfig.getExtraSourceProviders(), ARTIFACT_INSTRUMENT_TEST);
+        assertNotNull("InstrumentTest source Providers null-check", testSourceProviderContainer);
+
         new SourceProviderTester(model.getName(), projectDir,
-                "instrumentTest", defaultConfig.getTestSourceProvider())
+                "instrumentTest", testSourceProviderContainer.getSourceProvider())
                 .test();
 
-        Map<String, BuildTypeContainer> buildTypes = model.getBuildTypes();
+        Collection<BuildTypeContainer> buildTypes = model.getBuildTypes();
         assertEquals("Build Type Count", 2, buildTypes.size());
 
-        Map<String, Variant> variants = model.getVariants();
-        assertEquals("Variant Count", 8 , variants.size());
+        Collection<Variant> variants = model.getVariants();
+        assertEquals("Variant Count", 8, variants.size());
 
-        Variant f1faDebugVariant = variants.get("f1FaDebug");
+        Variant f1faDebugVariant = getVariant(variants, "f1FaDebug");
         assertNotNull("f1faDebug Variant null-check", f1faDebugVariant);
         new ProductFlavorTester(f1faDebugVariant.getMergedFlavor(), "F1faDebug Merged Flavor")
                 .test();
@@ -377,14 +474,18 @@ public class AndroidProjectTest extends TestCase {
         ProjectData appModelData = map.get(":app");
         assertNotNull("app module model null-check", appModelData);
 
-        Dependencies dependencies = appModelData.model.getVariants().get("debug").getMainArtifactInfo().getDependencies();
+        Collection<Variant> variants = appModelData.model.getVariants();
+        Variant debugVariant = getVariant(variants, "debug");
+        assertNotNull("debug variant null-check", debugVariant);
+
+        Dependencies dependencies = debugVariant.getMainArtifact().getDependencies();
         assertNotNull(dependencies);
 
-        List<AndroidLibrary> libs = dependencies.getLibraries();
+        Collection<AndroidLibrary> libs = dependencies.getLibraries();
         assertNotNull(libs);
         assertEquals(1, libs.size());
 
-        AndroidLibrary androidLibrary = libs.get(0);
+        AndroidLibrary androidLibrary = libs.iterator().next();
         assertNotNull(androidLibrary);
 
         assertEquals("Dependency project path", ":lib", androidLibrary.getProject());
@@ -402,36 +503,37 @@ public class AndroidProjectTest extends TestCase {
 
         assertFalse("Library Project", model.isLibrary());
 
-        Map<String, Variant> variants = model.getVariants();
+        Collection<Variant> variants = model.getVariants();
+        Collection<ProductFlavorContainer> productFlavors = model.getProductFlavors();
 
-        ProductFlavorContainer flavor1 = model.getProductFlavors().get("flavor1");
+        ProductFlavorContainer flavor1 = getProductFlavor(productFlavors, "flavor1");
         assertNotNull(flavor1);
 
-        Variant flavor1Debug = variants.get("flavor1Debug");
+        Variant flavor1Debug = getVariant(variants, "flavor1Debug");
         assertNotNull(flavor1Debug);
 
-        Dependencies dependencies = flavor1Debug.getMainArtifactInfo().getDependencies();
+        Dependencies dependencies = flavor1Debug.getMainArtifact().getDependencies();
         assertNotNull(dependencies);
-        List<AndroidLibrary> libs = dependencies.getLibraries();
+        Collection<AndroidLibrary> libs = dependencies.getLibraries();
         assertNotNull(libs);
         assertEquals(1, libs.size());
-        AndroidLibrary androidLibrary = libs.get(0);
+        AndroidLibrary androidLibrary = libs.iterator().next();
         assertNotNull(androidLibrary);
         // TODO: right now we can only test the folder name efficiently
         assertEquals("FlavorlibLib1Unspecified.aar", androidLibrary.getFolder().getName());
 
-        ProductFlavorContainer flavor2 = model.getProductFlavors().get("flavor2");
+        ProductFlavorContainer flavor2 = getProductFlavor(productFlavors, "flavor2");
         assertNotNull(flavor2);
 
-        Variant flavor2Debug = variants.get("flavor2Debug");
+        Variant flavor2Debug = getVariant(variants, "flavor2Debug");
         assertNotNull(flavor2Debug);
 
-        dependencies = flavor2Debug.getMainArtifactInfo().getDependencies();
+        dependencies = flavor2Debug.getMainArtifact().getDependencies();
         assertNotNull(dependencies);
         libs = dependencies.getLibraries();
         assertNotNull(libs);
         assertEquals(1, libs.size());
-        androidLibrary = libs.get(0);
+        androidLibrary = libs.iterator().next();
         assertNotNull(androidLibrary);
         // TODO: right now we can only test the folder name efficiently
         assertEquals("FlavorlibLib2Unspecified.aar", androidLibrary.getFolder().getName());
@@ -444,24 +546,24 @@ public class AndroidProjectTest extends TestCase {
         assertNotNull("Module app null-check", baseLibModelData);
         AndroidProject model = baseLibModelData.model;
 
-        Map<String, Variant> variants = model.getVariants();
+        Collection<Variant> variants = model.getVariants();
         assertEquals("Variant count", 2, variants.size());
 
-        Variant variant = variants.get("release");
+        Variant variant = getVariant(variants, "release");
         assertNotNull("release variant null-check", variant);
 
-        ArtifactInfo mainInfo = variant.getMainArtifactInfo();
+        AndroidArtifact mainInfo = variant.getMainArtifact();
         assertNotNull("Main Artifact null-check", mainInfo);
 
         Dependencies dependencies = mainInfo.getDependencies();
         assertNotNull("Dependencies null-check", dependencies);
 
-        List<String> projects = dependencies.getProjects();
+        Collection<String> projects = dependencies.getProjects();
         assertNotNull("project dep list null-check", projects);
         assertEquals("project dep count", 1, projects.size());
-        assertEquals("dep on :util check", ":util", projects.get(0));
+        assertEquals("dep on :util check", ":util", projects.iterator().next());
 
-        List<File> jars = dependencies.getJars();
+        Collection<File> jars = dependencies.getJars();
         assertNotNull("jar dep list null-check", jars);
         // TODO these are jars coming from ':util' They shouldn't be there.
         assertEquals("jar dep count", 2, jars.size());
@@ -476,15 +578,15 @@ public class AndroidProjectTest extends TestCase {
 
         File buildDir = new File(projectDir, "build");
 
-        for (Variant variant : model.getVariants().values()) {
+        for (Variant variant : model.getVariants()) {
 
-            ArtifactInfo mainInfo = variant.getMainArtifactInfo();
+            AndroidArtifact mainInfo = variant.getMainArtifact();
             assertNotNull(
                     "Null-check on mainArtifactInfo for " + variant.getDisplayName(),
                     mainInfo);
 
             // get the generated source folders.
-            List<File> genFolder = mainInfo.getGeneratedSourceFolders();
+            Collection<File> genFolder = mainInfo.getGeneratedSourceFolders();
 
             // We're looking for a custom folder
             String folderStart = new File(buildDir, "customCode").getAbsolutePath() + File.separatorChar;
@@ -500,6 +602,104 @@ public class AndroidProjectTest extends TestCase {
         }
     }
 
+    public void testArtifactApi() throws Exception {
+        // Load the custom model for the project
+        ProjectData projectData = getModelForProject("artifactApi");
+
+        AndroidProject model = projectData.model;
+
+        // check the Artifact Meta Data
+        Collection<ArtifactMetaData> extraArtifacts = model.getExtraArtifacts();
+        assertNotNull("Extra artifact collection null-check", extraArtifacts);
+        assertEquals("Extra artifact size check", 2, extraArtifacts.size());
+
+        assertNotNull("instrument test metadata null-check",
+                getArtifactMetaData(extraArtifacts, ARTIFACT_INSTRUMENT_TEST));
+
+        // get the custom one.
+        ArtifactMetaData extraArtifactMetaData = getArtifactMetaData(extraArtifacts, "__test__");
+        assertNotNull("custom extra metadata null-check", extraArtifactMetaData);
+        assertFalse("custom extra meta data is Test check", extraArtifactMetaData.isTest());
+        assertEquals("custom extra meta data type check", ArtifactMetaData.TYPE_JAVA, extraArtifactMetaData.getType());
+
+        // check the extra source provider on the build Types.
+        for (BuildTypeContainer btContainer : model.getBuildTypes()) {
+            String name = btContainer.getBuildType().getName();
+            Collection<SourceProviderContainer> extraSourceProviderContainers = btContainer.getExtraSourceProviders();
+            assertNotNull(
+                    "Extra source provider containers for build type '" + name + "' null-check",
+                    extraSourceProviderContainers);
+            assertEquals(
+                    "Extra source provider containers for build type size '" + name + "' check",
+                    1,
+                    extraSourceProviderContainers.size());
+
+            SourceProviderContainer sourceProviderContainer = extraSourceProviderContainers.iterator().next();
+            assertNotNull(
+                    "Extra artifact source provider for " + name + " null check",
+                    sourceProviderContainer);
+
+            assertEquals(
+                    "Extra artifact source provider for " + name + " name check",
+                    "__test__",
+                    sourceProviderContainer.getArtifactName());
+
+            assertEquals(
+                    "Extra artifact source provider for " + name + " value check",
+                    "buildType:" + name,
+                    sourceProviderContainer.getSourceProvider().getManifestFile().getPath());
+        }
+
+        // check the extra source provider on the product flavors.
+        for (ProductFlavorContainer pfContainer : model.getProductFlavors()) {
+            String name = pfContainer.getProductFlavor().getName();
+            Collection<SourceProviderContainer> extraSourceProviderContainers = pfContainer.getExtraSourceProviders();
+            assertNotNull(
+                    "Extra source provider container for product flavor '" + name + "' null-check",
+                    extraSourceProviderContainers);
+            assertEquals(
+                    "Extra artifact source provider container for product flavor size '" + name + "' check",
+                    2,
+                    extraSourceProviderContainers.size());
+
+            assertNotNull(
+                    "Extra source provider container for product flavor '" + name + "': instTest check",
+                    getSourceProviderContainer(extraSourceProviderContainers, ARTIFACT_INSTRUMENT_TEST));
+
+
+            SourceProviderContainer sourceProviderContainer = getSourceProviderContainer(
+                    extraSourceProviderContainers, "__test__");
+            assertNotNull(
+                    "Custom source provider container for " + name + " null check",
+                    sourceProviderContainer);
+
+            assertEquals(
+                    "Custom artifact source provider for " + name + " name check",
+                    "__test__",
+                    sourceProviderContainer.getArtifactName());
+
+            assertEquals(
+                    "Extra artifact source provider for " + name + " value check",
+                    "productFlavor:" + name,
+                    sourceProviderContainer.getSourceProvider().getManifestFile().getPath());
+        }
+
+        // check the extra artifacts on the variants
+        for (Variant variant : model.getVariants()) {
+            String name = variant.getName();
+            Collection<JavaArtifact> javaArtifacts = variant.getExtraJavaArtifacts();
+            assertEquals(1, javaArtifacts.size());
+            JavaArtifact javaArtifact = javaArtifacts.iterator().next();
+            assertEquals("__test__", javaArtifact.getName());
+            assertEquals("assemble:" + name, javaArtifact.getAssembleTaskName());
+            assertEquals("compile:" + name, javaArtifact.getJavaCompileTaskName());
+            assertEquals(new File("classesFolder:" + name), javaArtifact.getClassesFolder());
+
+            SourceProvider variantSourceProvider = javaArtifact.getVariantSourceProvider();
+            assertNotNull(variantSourceProvider);
+            assertEquals("provider:" + name, variantSourceProvider.getManifestFile().getPath());
+        }
+    }
 
     /**
      * Returns the SDK folder as built from the Android source tree.
@@ -551,6 +751,95 @@ public class AndroidProjectTest extends TestCase {
     private File getTestDir() {
         File rootDir = getRootDir();
         return new File(rootDir, "tests");
+    }
+
+    @Nullable
+    private static Variant getVariant(
+            @NonNull Collection<Variant> items,
+            @NonNull String name) {
+        for (Variant item : items) {
+            if (name.equals(item.getName())) {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private static ProductFlavorContainer getProductFlavor(
+            @NonNull Collection<ProductFlavorContainer> items,
+            @NonNull String name) {
+        for (ProductFlavorContainer item : items) {
+            assertNotNull("ProductFlavorContainer list item null-check:" + name, item);
+            assertNotNull("ProductFlavorContainer.getProductFlavor() list item null-check: " + name, item.getProductFlavor());
+            assertNotNull("ProductFlavorContainer.getProductFlavor().getName() list item null-check: " + name, item.getProductFlavor().getName());
+            if (name.equals(item.getProductFlavor().getName())) {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private static ArtifactMetaData getArtifactMetaData(
+            @NonNull Collection<ArtifactMetaData> items,
+            @NonNull String name) {
+        for (ArtifactMetaData item : items) {
+            assertNotNull("ArtifactMetaData list item null-check:" + name, item);
+            assertNotNull("ArtifactMetaData.getName() list item null-check: " + name, item.getName());
+            if (name.equals(item.getName())) {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private static AndroidArtifact getAndroidArtifact(
+            @NonNull Collection<AndroidArtifact> items,
+            @NonNull String name) {
+        for (AndroidArtifact item : items) {
+            assertNotNull("AndroidArtifact list item null-check:" + name, item);
+            assertNotNull("AndroidArtifact.getName() list item null-check: " + name, item.getName());
+            if (name.equals(item.getName())) {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private static SigningConfig getSigningConfig(
+            @NonNull Collection<SigningConfig> items,
+            @NonNull String name) {
+        for (SigningConfig item : items) {
+            assertNotNull("SigningConfig list item null-check:" + name, item);
+            assertNotNull("SigningConfig.getName() list item null-check: " + name, item.getName());
+            if (name.equals(item.getName())) {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private static SourceProviderContainer getSourceProviderContainer(
+            @NonNull Collection<SourceProviderContainer> items,
+            @NonNull String name) {
+        for (SourceProviderContainer item : items) {
+            assertNotNull("SourceProviderContainer list item null-check:" + name, item);
+            assertNotNull("SourceProviderContainer.getName() list item null-check: " + name, item.getArtifactName());
+            if (name.equals(item.getArtifactName())) {
+                return item;
+            }
+        }
+
+        return null;
     }
 
     private static final class ProductFlavorTester {
@@ -716,20 +1005,23 @@ public class AndroidProjectTest extends TestCase {
         }
 
         void test() {
-            testSinglePathSet("java", javaDir, sourceProvider.getJavaDirectories());
-            testSinglePathSet("resources", resourcesDir, sourceProvider.getResourcesDirectories());
-            testSinglePathSet("res", resDir, sourceProvider.getResDirectories());
-            testSinglePathSet("assets", assetsDir, sourceProvider.getAssetsDirectories());
-            testSinglePathSet("aidl", aidlDir, sourceProvider.getAidlDirectories());
-            testSinglePathSet("rs", renderscriptDir, sourceProvider.getRenderscriptDirectories());
-            testSinglePathSet("jni", jniDir, sourceProvider.getJniDirectories());
+            testSinglePathCollection("java", javaDir, sourceProvider.getJavaDirectories());
+            testSinglePathCollection("resources", resourcesDir, sourceProvider.getResourcesDirectories());
+            testSinglePathCollection("res", resDir, sourceProvider.getResDirectories());
+            testSinglePathCollection("assets", assetsDir, sourceProvider.getAssetsDirectories());
+            testSinglePathCollection("aidl", aidlDir, sourceProvider.getAidlDirectories());
+            testSinglePathCollection("rs", renderscriptDir, sourceProvider.getRenderscriptDirectories());
+            testSinglePathCollection("jni", jniDir, sourceProvider.getJniDirectories());
 
             assertEquals("AndroidManifest",
                     new File(projectDir, manifestFile).getAbsolutePath(),
                     sourceProvider.getManifestFile().getAbsolutePath());
         }
 
-        private void testSinglePathSet(String setName, String referencePath, Set<File> pathSet) {
+        private void testSinglePathCollection(
+                @NonNull String setName,
+                @NonNull String referencePath,
+                @NonNull Collection<File> pathSet) {
             assertEquals(1, pathSet.size());
             assertEquals(projectName + ": " + configName + "/" + setName,
                     new File(projectDir, referencePath).getAbsolutePath(),
@@ -751,7 +1043,7 @@ public class AndroidProjectTest extends TestCase {
         }
 
         void test() {
-            ArtifactInfo artifact = variant.getMainArtifactInfo();
+            AndroidArtifact artifact = variant.getMainArtifact();
             assertNotNull("Main Artifact null-check", artifact);
 
             String variantName = variant.getName();
@@ -759,7 +1051,7 @@ public class AndroidProjectTest extends TestCase {
             File apk = new File(build, "apk/" + outputFileName);
             assertEquals(variantName + " output", apk, artifact.getOutputFile());
 
-            List<File> sourceFolders = artifact.getGeneratedSourceFolders();
+            Collection<File> sourceFolders = artifact.getGeneratedSourceFolders();
             assertEquals("Gen src Folder count", 4, sourceFolders.size());
 
             File manifest = artifact.getGeneratedManifest();

@@ -19,7 +19,7 @@ package com.android.builder.model;
 import com.android.annotations.NonNull;
 
 import java.io.File;
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Base config object for Build Type and Product flavor.
@@ -31,7 +31,7 @@ public interface BaseConfig {
      * @return a non-null list of class fields (possibly empty)
      */
     @NonNull
-    List<ClassField> getBuildConfigFields();
+    Collection<ClassField> getBuildConfigFields();
 
     /**
      * Returns the list of proguard rule files.
@@ -39,7 +39,7 @@ public interface BaseConfig {
      * @return a non-null list of files.
      */
     @NonNull
-    List<File> getProguardFiles();
+    Collection<File> getProguardFiles();
 
     /**
      * Returns the list of proguard rule files for consumers of the library to use.
@@ -47,5 +47,5 @@ public interface BaseConfig {
      * @return a non-null list of files.
      */
     @NonNull
-    List<File> getConsumerProguardFiles();
+    Collection<File> getConsumerProguardFiles();
 }

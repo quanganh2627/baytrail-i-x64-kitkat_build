@@ -32,23 +32,55 @@ import java.io.IOException;
  */
 public class ManualBuildTest extends BuildTest {
 
+    private final static int RED = 0xFFFF0000;
+    private final static int GREEN = 0xFF00FF00;
+    private final static int BLUE = 0xFF0000FF;
+
 
     public void testOverlay1Content() throws Exception {
         File project = buildProject("overlay1", BasePlugin.GRADLE_MIN_VERSION);
         File drawableOutput = new File(project, "build/res/all/debug/drawable");
 
-        checkImageColor(drawableOutput, "no_overlay.png", (int) 0xFF00FF00);
-        checkImageColor(drawableOutput, "type_overlay.png", (int) 0xFF00FF00);
+        checkImageColor(drawableOutput, "no_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "type_overlay.png", GREEN);
     }
 
     public void testOverlay2Content() throws Exception {
         File project = buildProject("overlay2", BasePlugin.GRADLE_MIN_VERSION);
         File drawableOutput = new File(project, "build/res/all/one/debug/drawable");
 
-        checkImageColor(drawableOutput, "no_overlay.png", (int) 0xFF00FF00);
-        checkImageColor(drawableOutput, "type_overlay.png", (int) 0xFF00FF00);
-        checkImageColor(drawableOutput, "flavor_overlay.png", (int) 0xFF00FF00);
-        checkImageColor(drawableOutput, "type_flavor_overlay.png", (int) 0xFF00FF00);
+        checkImageColor(drawableOutput, "no_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "type_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "flavor_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "type_flavor_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "variant_type_flavor_overlay.png", GREEN);
+    }
+
+    public void testOverlay3Content() throws Exception {
+        File project = buildProject("overlay3", BasePlugin.GRADLE_MIN_VERSION);
+        File drawableOutput = new File(project, "build/res/all/freebeta/debug/drawable");
+
+        checkImageColor(drawableOutput, "no_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "debug_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "beta_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "free_beta_debug_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "free_normal_overlay.png", RED);
+
+        drawableOutput = new File(project, "build/res/all/freenormal/debug/drawable");
+
+        checkImageColor(drawableOutput, "no_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "debug_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "beta_overlay.png", RED);
+        checkImageColor(drawableOutput, "free_beta_debug_overlay.png", RED);
+        checkImageColor(drawableOutput, "free_normal_overlay.png", GREEN);
+
+        drawableOutput = new File(project, "build/res/all/paidbeta/debug/drawable");
+
+        checkImageColor(drawableOutput, "no_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "debug_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "beta_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "free_beta_debug_overlay.png", RED);
+        checkImageColor(drawableOutput, "free_normal_overlay.png", RED);
     }
 
     public void testRepo() {

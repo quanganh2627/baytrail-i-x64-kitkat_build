@@ -23,6 +23,7 @@ import com.android.builder.model.AndroidLibrary;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 
 public class AndroidLibraryImpl implements AndroidLibrary, Serializable {
@@ -39,7 +40,7 @@ public class AndroidLibraryImpl implements AndroidLibrary, Serializable {
     @NonNull
     private final File jarFile;
     @NonNull
-    private final List<File> localJars;
+    private final Collection<File> localJars;
     @NonNull
     private final File resFolder;
     @NonNull
@@ -115,7 +116,7 @@ public class AndroidLibraryImpl implements AndroidLibrary, Serializable {
 
     @NonNull
     @Override
-    public List<File> getLocalJars() {
+    public Collection<File> getLocalJars() {
         return localJars;
     }
 

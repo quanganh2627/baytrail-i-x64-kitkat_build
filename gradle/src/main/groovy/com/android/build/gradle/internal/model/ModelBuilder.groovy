@@ -26,23 +26,27 @@ import com.android.build.gradle.internal.variant.ApplicationVariantData
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.LibraryVariantData
 import com.android.build.gradle.internal.variant.TestVariantData
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.ArtifactInfo
-import com.android.builder.model.BuildTypeContainer
-import com.android.builder.model.ProductFlavorContainer
 import com.android.builder.DefaultProductFlavor
 import com.android.builder.SdkParser
 import com.android.builder.VariantConfiguration
+import com.android.builder.model.AndroidArtifact
+import com.android.builder.model.AndroidProject
+import com.android.builder.model.ArtifactMetaData
+import com.android.builder.model.JavaArtifact
 import com.android.builder.model.SigningConfig
 import com.android.builder.model.SourceProvider
+import com.android.builder.model.SourceProviderContainer
 import com.google.common.collect.Lists
-import com.google.common.collect.Maps
 import org.gradle.api.Project
 import org.gradle.api.plugins.UnknownPluginException
 import org.gradle.tooling.provider.model.ToolingModelBuilder
 
 import java.util.jar.Attributes
 import java.util.jar.Manifest
+
+import static com.android.builder.model.AndroidProject.ARTIFACT_INSTRUMENT_TEST
+import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN
+
 /**
  * Builder for the custom Android model.
  */
@@ -81,6 +85,15 @@ public class ModelBuilder implements ToolingModelBuilder {
         List<File> frameworkSource = Collections.emptyList();
         String compileTarget = sdkParser.target.hashString()
 
+        // list of extra artifacts
+        List<ArtifactMetaData> artifactMetaDataList = Lists.newArrayList(basePlugin.extraArtifacts)
+        // plus the instrumentation test one.
+        artifactMetaDataList.add(
+                new ArtifactMetaDataImpl(
+                        ARTIFACT_INSTRUMENT_TEST,
+                        true /*isTest*/,
+                        ArtifactMetaData.TYPE_ANDROID));
+
         //noinspection GroovyVariableNotAssigned
         DefaultAndroidProject androidProject = new DefaultAndroidProject(
                 getModelVersion(),
@@ -89,29 +102,40 @@ public class ModelBuilder implements ToolingModelBuilder {
                 bootClasspath,
                 frameworkSource,
                 cloneSigningConfigs(signingConfigs),
+                artifactMetaDataList,
                 basePlugin.unresolvedDependencies,
                 basePlugin.extension.compileOptions,
                 libPlugin != null)
-                    .setDefaultConfig(createPFC(basePlugin.defaultConfigData))
+                    .setDefaultConfig(ProductFlavorContainerImpl.createPFC(
+                        basePlugin.defaultConfigData,
+                        basePlugin.getExtraFlavorSourceProviders(basePlugin.defaultConfigData.productFlavor.name)))
 
         if (appPlugin != null) {
             for (BuildTypeData btData : appPlugin.buildTypes.values()) {
-                androidProject.addBuildType(createBTC(btData))
+                androidProject.addBuildType(BuildTypeContainerImpl.createBTC(
+                        btData,
+                        basePlugin.getExtraBuildTypeSourceProviders(btData.buildType.name)))
             }
             for (ProductFlavorData pfData : appPlugin.productFlavors.values()) {
-                androidProject.addProductFlavors(createPFC(pfData))
+                androidProject.addProductFlavors(ProductFlavorContainerImpl.createPFC(
+                        pfData,
+                        basePlugin.getExtraFlavorSourceProviders(pfData.productFlavor.name)))
             }
 
         } else if (libPlugin != null) {
-            androidProject.addBuildType(createBTC(libPlugin.debugBuildTypeData))
-                          .addBuildType(createBTC(libPlugin.releaseBuildTypeData))
+            androidProject.addBuildType(BuildTypeContainerImpl.createBTC(
+                        libPlugin.debugBuildTypeData,
+                        basePlugin.getExtraBuildTypeSourceProviders(libPlugin.debugBuildTypeData.buildType.name)))
+                 .addBuildType(BuildTypeContainerImpl.createBTC(
+                        libPlugin.releaseBuildTypeData,
+                        basePlugin.getExtraBuildTypeSourceProviders(libPlugin.releaseBuildTypeData.buildType.name)))
         }
 
         Set<Project> gradleProjects = project.getRootProject().getAllprojects();
 
         for (BaseVariantData variantData : basePlugin.variantDataList) {
             if (!(variantData instanceof TestVariantData)) {
-                androidProject.addVariant(createVariant(variantData, gradleProjects))
+                androidProject.addVariant(createVariant(variantData, basePlugin, gradleProjects))
             }
         }
 
@@ -141,6 +165,7 @@ public class ModelBuilder implements ToolingModelBuilder {
 
     @NonNull
     private static VariantImpl createVariant(@NonNull BaseVariantData variantData,
+                                             @NonNull BasePlugin basePlugin,
                                              @NonNull Set<Project> gradleProjects) {
         TestVariantData testVariantData = null
         if (variantData instanceof ApplicationVariantData ||
@@ -148,30 +173,43 @@ public class ModelBuilder implements ToolingModelBuilder {
             testVariantData = variantData.testVariantData
         }
 
-        ArtifactInfo mainArtifact = createArtifactInfo(variantData, gradleProjects)
-        ArtifactInfo testArtifact = testVariantData != null ?
-            createArtifactInfo(testVariantData, gradleProjects) : null
+        AndroidArtifact mainArtifact = createArtifactInfo(
+                ARTIFACT_MAIN, variantData, basePlugin, gradleProjects)
 
-        SourceProvider sp = variantData.variantConfiguration.getVariantSourceProvider();
-        if (sp != null) {
-            sp = SourceProviderImpl.cloneProvider(sp);
+        String variantName = variantData.variantConfiguration.fullName
+
+        // extra Android Artifacts
+        AndroidArtifact testArtifact = testVariantData != null ?
+                createArtifactInfo(ARTIFACT_INSTRUMENT_TEST, testVariantData, basePlugin, gradleProjects) : null
+
+        List<AndroidArtifact> extraAndroidArtifacts = Lists.newArrayList(
+                basePlugin.getExtraAndroidArtifacts(variantName))
+        if (testArtifact != null) {
+            extraAndroidArtifacts.add(testArtifact)
         }
 
+        // extra Java Artifacts
+        List<JavaArtifact> extraJavaArtifacts = Lists.newArrayList(
+                basePlugin.getExtraJavaArtifacts(variantName))
+
         VariantImpl variant = new VariantImpl(
-                variantData.variantConfiguration.fullName,
+                variantName,
                 variantData.variantConfiguration.baseName,
                 variantData.variantConfiguration.buildType.name,
                 getProductFlavorNames(variantData),
                 ProductFlavorImpl.cloneFlavor(variantData.variantConfiguration.mergedFlavor),
                 mainArtifact,
-                testArtifact,
-                sp)
+                extraAndroidArtifacts,
+                extraJavaArtifacts)
 
         return variant
     }
 
-    private static ArtifactInfo createArtifactInfo(@NonNull BaseVariantData variantData,
-                                                   @NonNull Set<Project> gradleProjects) {
+    private static AndroidArtifact createArtifactInfo(
+            @NonNull String name,
+            @NonNull BaseVariantData variantData,
+            @NonNull BasePlugin basePlugin,
+            @NonNull Set<Project> gradleProjects) {
         VariantConfiguration vC = variantData.variantConfiguration
 
         SigningConfig signingConfig = vC.signingConfig
@@ -180,7 +218,26 @@ public class ModelBuilder implements ToolingModelBuilder {
             signingConfigName = signingConfig.name
         }
 
-        return new ArtifactInfoImpl(
+        SourceProvider variantSourceProvider = null;
+        SourceProvider multiFlavorSourceProvider = null;
+
+        if (ARTIFACT_MAIN.equals(name)) {
+            variantSourceProvider = variantData.variantConfiguration.variantSourceProvider
+            multiFlavorSourceProvider = variantData.variantConfiguration.multiFlavorSourceProvider
+        } else {
+            SourceProviderContainer container = getSourceProviderContainer(
+                    basePlugin.getExtraVariantSourceProviders(variantData.getVariantConfiguration().getFullName()),
+                    name)
+            if (container != null) {
+                variantSourceProvider = container.sourceProvider
+            }
+        }
+
+        variantSourceProvider = variantSourceProvider != null ? SourceProviderImpl.cloneProvider(variantSourceProvider) : null
+        multiFlavorSourceProvider = multiFlavorSourceProvider != null ? SourceProviderImpl.cloneProvider(multiFlavorSourceProvider) : null
+
+        return new AndroidArtifactImpl(
+                name,
                 variantData.assembleTask.name,
                 variantData.outputFile,
                 vC.isSigningReady(),
@@ -192,8 +249,9 @@ public class ModelBuilder implements ToolingModelBuilder {
                 getGeneratedSourceFolders(variantData),
                 getGeneratedResourceFolders(variantData),
                 variantData.javaCompileTask.destinationDir,
-                DependenciesImpl.cloneDependencies(variantData.variantDependency, gradleProjects)
-        )
+                DependenciesImpl.cloneDependencies(variantData.variantDependency, gradleProjects),
+                variantSourceProvider,
+                multiFlavorSourceProvider)
     }
 
     @NonNull
@@ -237,54 +295,29 @@ public class ModelBuilder implements ToolingModelBuilder {
         return Collections.singletonList(variantData.renderscriptCompileTask.resOutputDir)
     }
 
-    /**
-     * Create a ProductFlavorContainer from a ProductFlavorData
-     * @param productFlavorData the product flavor data
-     * @return a non-null ProductFlavorContainer
-     */
     @NonNull
-    private static ProductFlavorContainer createPFC(@NonNull ProductFlavorData productFlavorData) {
-        return new ProductFlavorContainerImpl(
-                ProductFlavorImpl.cloneFlavor(productFlavorData.productFlavor),
-                SourceProviderImpl.cloneProvider((SourceProvider) productFlavorData.sourceSet),
-                SourceProviderImpl.cloneProvider((SourceProvider) productFlavorData.testSourceSet))
-    }
-
-    /**
-     * Create a BuildTypeContainer from a BuildTypeData
-     * @param buildTypeData the build type data
-     * @return a non-null BuildTypeContainer
-     */
-    @NonNull
-    private static BuildTypeContainer createBTC(@NonNull BuildTypeData buildTypeData) {
-        return new BuildTypeContainerImpl(
-                BuildTypeImpl.cloneBuildType(buildTypeData.buildType),
-                SourceProviderImpl.cloneProvider((SourceProvider) buildTypeData.sourceSet))
-    }
-
-    @NonNull
-    private static Map<String, SigningConfig> cloneSigningConfigs(
+    private static Collection<SigningConfig> cloneSigningConfigs(
             @NonNull Collection<SigningConfig> signingConfigs) {
-        Map<String, SigningConfig> results = Maps.newHashMapWithExpectedSize(signingConfigs.size())
+        Collection<SigningConfig> results = Lists.newArrayListWithCapacity(signingConfigs.size())
 
         for (SigningConfig signingConfig : signingConfigs) {
-            SigningConfig clonedSigningConfig = createSigningConfig(signingConfig)
-            results.put(clonedSigningConfig.name, clonedSigningConfig)
+            results.add(SigningConfigImpl.createSigningConfig(signingConfig))
         }
 
         return results
     }
 
-    @NonNull
-    private static SigningConfig createSigningConfig(@NonNull SigningConfig signingConfig) {
-        return new SigningConfigImpl(
-                signingConfig.getName(),
-                signingConfig.getStoreFile(),
-                signingConfig.getStorePassword(),
-                signingConfig.getKeyAlias(),
-                signingConfig.getKeyPassword(),
-                signingConfig.getStoreType(),
-                signingConfig.isSigningReady())
+    @Nullable
+    private static SourceProviderContainer getSourceProviderContainer(
+            @NonNull Collection<SourceProviderContainer> items,
+            @NonNull String name) {
+        for (SourceProviderContainer item : items) {
+            if (name.equals(item.getArtifactName())) {
+                return item;
+            }
+        }
+
+        return null;
     }
 
     /**

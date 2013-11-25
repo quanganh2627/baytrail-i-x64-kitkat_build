@@ -18,17 +18,19 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.ArtifactInfo;
+import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.Dependencies;
+import com.android.builder.model.SourceProvider;
 
 import java.io.File;
 import java.io.Serializable;
 import java.util.List;
 
 /**
- * Implementation of ArtifactInfo that is serializable
+ * Implementation of AndroidArtifact that is serializable
  */
-public class ArtifactInfoImpl implements ArtifactInfo, Serializable {
+public class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtifact, Serializable {
+    private static final long serialVersionUID = 1L;
 
     @NonNull
     private final File outputFile;
@@ -36,49 +38,42 @@ public class ArtifactInfoImpl implements ArtifactInfo, Serializable {
     @Nullable
     private final String signingConfigName;
     @NonNull
-    private final String assembleTaskName;
-    @NonNull
     private final String packageName;
     @NonNull
     private final String sourceGenTaskName;
-    @NonNull
-    private final String javaCompileTaskName;
     @NonNull
     private final File generatedManifest;
     @NonNull
     private final List<File> generatedSourceFolders;
     @NonNull
     private final List<File> generatedResourceFolders;
-    @NonNull
-    private final File classesFolder;
-    @NonNull
-    private final Dependencies dependencies;
 
+    AndroidArtifactImpl(@NonNull String name,
+                        @NonNull String assembleTaskName,
+                        @NonNull File outputFile,
+                        boolean isSigned,
+                        @Nullable String signingConfigName,
+                        @NonNull String packageName,
+                        @NonNull String sourceGenTaskName,
+                        @NonNull String javaCompileTaskName,
+                        @NonNull File generatedManifest,
+                        @NonNull List<File> generatedSourceFolders,
+                        @NonNull List<File> generatedResourceFolders,
+                        @NonNull File classesFolder,
+                        @NonNull Dependencies dependencies,
+                        @Nullable SourceProvider variantSourceProvider,
+                        @Nullable SourceProvider multiFlavorSourceProviders) {
+        super(name, assembleTaskName, javaCompileTaskName, classesFolder, dependencies,
+                variantSourceProvider, multiFlavorSourceProviders);
 
-    ArtifactInfoImpl(@NonNull  String assembleTaskName,
-                     @NonNull  File outputFile,
-                               boolean isSigned,
-                     @Nullable String signingConfigName,
-                     @NonNull  String packageName,
-                     @NonNull  String sourceGenTaskName,
-                     @NonNull  String javaCompileTaskName,
-                     @NonNull  File generatedManifest,
-                     @NonNull  List<File> generatedSourceFolders,
-                     @NonNull  List<File> generatedResourceFolders,
-                     @NonNull  File classesFolder,
-                     @NonNull  Dependencies dependencies) {
-        this.assembleTaskName = assembleTaskName;
         this.outputFile = outputFile;
         this.isSigned = isSigned;
         this.signingConfigName = signingConfigName;
         this.packageName = packageName;
         this.sourceGenTaskName = sourceGenTaskName;
-        this.javaCompileTaskName = javaCompileTaskName;
         this.generatedManifest = generatedManifest;
         this.generatedSourceFolders = generatedSourceFolders;
         this.generatedResourceFolders = generatedResourceFolders;
-        this.classesFolder = classesFolder;
-        this.dependencies = dependencies;
     }
 
     @NonNull
@@ -112,18 +107,6 @@ public class ArtifactInfoImpl implements ArtifactInfo, Serializable {
 
     @NonNull
     @Override
-    public String getJavaCompileTaskName() {
-        return javaCompileTaskName;
-    }
-
-    @NonNull
-    @Override
-    public String getAssembleTaskName() {
-        return assembleTaskName;
-    }
-
-    @NonNull
-    @Override
     public File getGeneratedManifest() {
         return generatedManifest;
     }
@@ -138,17 +121,5 @@ public class ArtifactInfoImpl implements ArtifactInfo, Serializable {
     @Override
     public List<File> getGeneratedResourceFolders() {
         return generatedResourceFolders;
-    }
-
-    @NonNull
-    @Override
-    public File getClassesFolder() {
-        return classesFolder;
-    }
-
-    @NonNull
-    @Override
-    public Dependencies getDependencies() {
-        return dependencies;
     }
 }

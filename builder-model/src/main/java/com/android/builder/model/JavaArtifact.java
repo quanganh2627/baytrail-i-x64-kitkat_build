@@ -14,41 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.builder;
-
-import com.android.annotations.Nullable;
-
-import java.util.Set;
+package com.android.builder.model;
 
 /**
- * Base class for NDK config file.
+ * The information for a generated Java artifact.
  */
-public interface NdkConfig {
+public interface JavaArtifact extends BaseArtifact {
 
-    /**
-     * The module name
-     */
-    @Nullable
-    public String getModuleName();
-
-    /**
-     * The C Flags
-     */
-    @Nullable
-    public String getcFlags();
-
-    /**
-     * The LD Libs
-     */
-    @Nullable
-    public Set<String> getLdLibs();
-
-    /**
-     * The ABI Filters
-     */
-    @Nullable
-    public Set<String> getAbiFilters();
-
-    @Nullable
-    public String getStl();
 }

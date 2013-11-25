@@ -508,7 +508,7 @@ public class AndroidBuilder {
 
         List<File> manifests = Lists.newArrayList();
         for (ManifestDependency library : directLibraries) {
-            List<? extends ManifestDependency> subLibraries = library.getManifestDependencies();
+            Collection<? extends ManifestDependency> subLibraries = library.getManifestDependencies();
             if (subLibraries.isEmpty()) {
                 manifests.add(library.getManifest());
             } else {
@@ -665,7 +665,7 @@ public class AndroidBuilder {
             command.add(ignoreAssets);
         }
 
-        List<String> noCompressList = options.getNoCompress();
+        Collection<String> noCompressList = options.getNoCompress();
         if (noCompressList != null) {
             for (String noCompress : noCompressList) {
                 command.add("-0");

@@ -5,8 +5,10 @@
   (note the camelcase naming, with lower case for first letter).
   Its components (res, manifest, etc...) have higher priority than components from build type
   or flavors.
-  It also comes with dependency configuration, so you can do 
-     flavorDebugCompile '...'
+  There is also a "flavor combination" source folder available when more than one
+  flavor dimension is used.
+  For instance src/flavor1Flavor2/
+  Note that this is for all combinations of *all* dimensions.
 - Build config improvements and DSL changes.
   The previous DSL proprety:
     buildConfigLine "<value>"
@@ -26,6 +28,8 @@
      variant.registerJavaGeneratingTask(task, sourceFolder1, sourceFolders2,...)
   This automatically adds the dependency on the task, sets up the JavaCompile task inputs and propagates
   the folders to the model for IDE integration.
+- API to add extra artifacts on variants. This will allow to register Java or Android artifacts, for instance
+  for alternative test artifacts.
 
 0.6.3
 - Fixed ClassNotFoundException:MergingException introduced in 0.6.2

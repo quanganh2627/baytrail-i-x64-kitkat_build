@@ -20,12 +20,12 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
 import java.io.File;
-import java.util.List;
+import java.util.Collection;
 
 /**
- * The information for a generated artifact.
+ * The information for a generated Android artifact.
  */
-public interface ArtifactInfo {
+public interface AndroidArtifact extends BaseArtifact {
 
     /**
      * Returns the output file for this artifact. Depending on whether the project is an app
@@ -73,20 +73,6 @@ public interface ArtifactInfo {
     String getSourceGenTaskName();
 
     /**
-     * @return the name of the task used to compile Java code.
-     */
-    @NonNull
-    String getJavaCompileTaskName();
-
-    /**
-     * Returns the name of the task used to generate the artifact.
-     *
-     * @return the name of the task.
-     */
-    @NonNull
-    String getAssembleTaskName();
-
-    /**
      * The generated manifest for this variant's artifact.
      */
     @NonNull
@@ -99,7 +85,7 @@ public interface ArtifactInfo {
      * @return a list of folders.
      */
     @NonNull
-    List<File> getGeneratedSourceFolders();
+    Collection<File> getGeneratedSourceFolders();
 
     /**
      * Returns all the resource folders that are generated. This is typically the renderscript
@@ -108,22 +94,5 @@ public interface ArtifactInfo {
      * @return a list of folder.
      */
     @NonNull
-    List<File> getGeneratedResourceFolders();
-
-    /**
-     * Returns the folder containing the class files. This is the output of the java compilation.
-     *
-     * @return a folder.
-     */
-    @NonNull
-    File getClassesFolder();
-
-    /**
-     * Returns the resolved dependencies for this artifact. This is a composite of all the
-     * dependencies for that artifact: default config + build type + flavor(s).s
-     *
-     * @return The dependencies.
-     */
-    @NonNull
-    Dependencies getDependencies();
+    Collection<File> getGeneratedResourceFolders();
 }

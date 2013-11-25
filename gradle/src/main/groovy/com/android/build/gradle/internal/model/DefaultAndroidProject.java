@@ -18,20 +18,19 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.CompileOptions;
+import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.Variant;
-import com.android.builder.model.AaptOptions;
 import com.android.builder.model.SigningConfig;
-import com.google.common.collect.Maps;
+import com.android.builder.model.Variant;
+import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Implementation of the AndroidProject model object.
@@ -46,28 +45,32 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
     @NonNull
     private final String compileTarget;
     @NonNull
-    private final List<String> bootClasspath;
+    private final Collection<String> bootClasspath;
     @NonNull
-    private final List<File> frameworkSource;
+    private final Collection<File> frameworkSource;
     @NonNull
-    private final Map<String, SigningConfig> signingConfigs;
+    private final Collection<SigningConfig> signingConfigs;
+    @NonNull
+    private final Collection<ArtifactMetaData> extraArtifacts;
     @NonNull
     private final Collection<String> unresolvedDependencies;
     @NonNull
     private final JavaCompileOptions javaCompileOptions;
     private final boolean isLibrary;
 
-    private final Map<String, BuildTypeContainer> buildTypes = Maps.newHashMap();
-    private final Map<String, ProductFlavorContainer> productFlavors = Maps.newHashMap();
-    private final Map<String, Variant> variants = Maps.newHashMap();
+    private final Collection<BuildTypeContainer> buildTypes = Lists.newArrayList();
+    private final Collection<ProductFlavorContainer> productFlavors = Lists.newArrayList();
+    private final Collection<Variant> variants = Lists.newArrayList();
 
     private ProductFlavorContainer defaultConfig;
 
     DefaultAndroidProject(@NonNull String modelVersion,
-                          @NonNull String name, @NonNull String compileTarget,
-                          @NonNull List<String> bootClasspath,
-                          @NonNull List<File> frameworkSource,
-                          @NonNull Map<String, SigningConfig> signingConfigs,
+                          @NonNull String name,
+                          @NonNull String compileTarget,
+                          @NonNull Collection<String> bootClasspath,
+                          @NonNull Collection<File> frameworkSource,
+                          @NonNull Collection<SigningConfig> signingConfigs,
+                          @NonNull Collection<ArtifactMetaData> extraArtifacts,
                           @NonNull Collection<String> unresolvedDependencies,
                           @NonNull CompileOptions compileOptions,
                           boolean isLibrary) {
@@ -77,6 +80,7 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
         this.bootClasspath = bootClasspath;
         this.frameworkSource = frameworkSource;
         this.signingConfigs = signingConfigs;
+        this.extraArtifacts = extraArtifacts;
         this.unresolvedDependencies = unresolvedDependencies;
         javaCompileOptions = new DefaultJavaCompileOptions(compileOptions);
         this.isLibrary = isLibrary;
@@ -90,26 +94,25 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
 
     @NonNull
     DefaultAndroidProject addBuildType(@NonNull BuildTypeContainer buildTypeContainer) {
-        buildTypes.put(buildTypeContainer.getBuildType().getName(), buildTypeContainer);
+        buildTypes.add(buildTypeContainer);
         return this;
     }
 
     @NonNull
     DefaultAndroidProject addProductFlavors(
             @NonNull ProductFlavorContainer productFlavorContainer) {
-        productFlavors.put(productFlavorContainer.getProductFlavor().getName(),
-                productFlavorContainer);
+        productFlavors.add(productFlavorContainer);
         return this;
     }
 
     @NonNull
     DefaultAndroidProject addVariant(@NonNull VariantImpl variant) {
-        variants.put(variant.getName(), variant);
+        variants.add(variant);
         return this;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public String getModelVersion() {
         return modelVersion;
     }
@@ -120,28 +123,34 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
         return name;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public ProductFlavorContainer getDefaultConfig() {
         return defaultConfig;
     }
 
-    @NonNull
     @Override
-    public Map<String, BuildTypeContainer> getBuildTypes() {
+    @NonNull
+    public Collection<BuildTypeContainer> getBuildTypes() {
         return buildTypes;
     }
 
-    @NonNull
     @Override
-    public Map<String, ProductFlavorContainer> getProductFlavors() {
+    @NonNull
+    public Collection<ProductFlavorContainer> getProductFlavors() {
         return productFlavors;
+    }
+
+    @Override
+    @NonNull
+    public Collection<Variant> getVariants() {
+        return variants;
     }
 
     @NonNull
     @Override
-    public Map<String, Variant> getVariants() {
-        return variants;
+    public Collection<ArtifactMetaData> getExtraArtifacts() {
+        return extraArtifacts;
     }
 
     @Override
@@ -149,43 +158,44 @@ class DefaultAndroidProject implements AndroidProject, Serializable {
         return isLibrary;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public String getCompileTarget() {
         return compileTarget;
     }
 
-    @NonNull
     @Override
-    public List<String> getBootClasspath() {
+    @NonNull
+    public Collection<String> getBootClasspath() {
         return bootClasspath;
     }
 
     @Override
-    public List<File> getFrameworkSource() {
+    @NonNull
+    public Collection<File> getFrameworkSources() {
         return frameworkSource;
     }
 
-    @NonNull
     @Override
-    public Map<String,SigningConfig> getSigningConfigs() {
+    @NonNull
+    public Collection<SigningConfig> getSigningConfigs() {
         return signingConfigs;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public AaptOptions getAaptOptions() {
         return null;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public Collection<String> getUnresolvedDependencies() {
         return unresolvedDependencies;
     }
 
-    @NonNull
     @Override
+    @NonNull
     public JavaCompileOptions getJavaCompileOptions() {
         return javaCompileOptions;
     }

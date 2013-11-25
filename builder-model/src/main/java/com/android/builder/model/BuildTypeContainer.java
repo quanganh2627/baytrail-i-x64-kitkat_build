@@ -18,6 +18,8 @@ package com.android.builder.model;
 
 import com.android.annotations.NonNull;
 
+import java.util.Collection;
+
 /**
  * A Container of all the data related to {@link BuildType}.
  */
@@ -38,4 +40,12 @@ public interface BuildTypeContainer {
      */
     @NonNull
     SourceProvider getSourceProvider();
+
+    /**
+     * Returns a list of ArtifactMetaData/SourceProvider association.
+     *
+     * @return a list of ArtifactMetaData/SourceProvider association.
+     */
+    @NonNull
+    Collection<SourceProviderContainer> getExtraSourceProviders();
 }

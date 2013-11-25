@@ -17,9 +17,12 @@ package com.android.build.gradle
 
 import com.android.SdkConstants
 import com.android.annotations.NonNull
+import com.android.annotations.Nullable
 import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.internal.CompileOptions
+import com.android.build.gradle.internal.SourceSetSourceProviderWrapper
 import com.android.build.gradle.internal.dsl.AaptOptionsImpl
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory
 import com.android.build.gradle.internal.dsl.DexOptionsImpl
@@ -27,6 +30,9 @@ import com.android.build.gradle.internal.dsl.ProductFlavorDsl
 import com.android.build.gradle.internal.test.TestOptions
 import com.android.builder.BuilderConstants
 import com.android.builder.DefaultProductFlavor
+import com.android.builder.model.BuildType
+import com.android.builder.model.ProductFlavor
+import com.android.builder.model.SourceProvider
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
 import com.android.sdklib.repository.FullRevision
@@ -38,8 +44,8 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.internal.DefaultDomainObjectSet
 import org.gradle.api.internal.project.ProjectInternal
+import org.gradle.api.tasks.SourceSet
 import org.gradle.internal.reflect.Instantiator
-
 /**
  * Base android extension for all android plugins.
  */
@@ -199,6 +205,49 @@ public abstract class BaseExtension {
 
     void addTestVariant(TestVariant testVariant) {
         testVariantList.add(testVariant)
+    }
+
+    public void registerArtifactType(@NonNull String name,
+                                     boolean isTest,
+                                     int artifactType) {
+        plugin.registerArtifactType(name, isTest, artifactType)
+    }
+
+    public void registerBuildTypeSourceProvider(
+            @NonNull String name,
+            @NonNull BuildType buildType,
+            @NonNull SourceProvider sourceProvider) {
+        plugin.registerBuildTypeSourceProvider(name, buildType, sourceProvider)
+    }
+
+    public void registerProductFlavorSourceProvider(
+            @NonNull String name,
+            @NonNull ProductFlavor productFlavor,
+            @NonNull SourceProvider sourceProvider) {
+        plugin.registerProductFlavorSourceProvider(name, productFlavor, sourceProvider)
+    }
+
+    public void registerJavaArtifact(
+            @NonNull String name,
+            @NonNull BaseVariant variant,
+            @NonNull String assembleTaskName,
+            @NonNull String javaCompileTaskName,
+            @NonNull File classesFolder,
+            @Nullable SourceProvider sourceProvider) {
+        plugin.registerJavaArtifact(name, variant, assembleTaskName, javaCompileTaskName,
+                classesFolder, sourceProvider)
+    }
+
+    public void registerMultiFlavorSourceProvider(
+            @NonNull String name,
+            @NonNull String flavorName,
+            @NonNull SourceProvider sourceProvider) {
+        plugin.registerMultiFlavorSourceProvider(name, flavorName, sourceProvider)
+    }
+
+    @NonNull
+    public SourceProvider wrapJavaSourceSet(@NonNull SourceSet sourceSet) {
+        return new SourceSetSourceProviderWrapper(sourceSet)
     }
 
     public String getCompileSdkVersion() {

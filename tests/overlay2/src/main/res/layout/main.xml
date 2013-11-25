@@ -24,5 +24,10 @@
         android:layout_height="wrap_content"
         android:src="@drawable/type_flavor_overlay"
         android:id="@+id/type_flavor_overlay" />
+    <ImageView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:src="@drawable/variant_type_flavor_overlay"
+        android:id="@+id/variant_type_flavor_overlay" />
 </LinearLayout>
 

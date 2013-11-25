@@ -44,7 +44,19 @@ class SigningConfigImpl implements SigningConfig, Serializable {
     private final String storeType;
     private final boolean signingReady;
 
-    SigningConfigImpl(@NonNull  String name,
+    @NonNull
+    static SigningConfig createSigningConfig(@NonNull SigningConfig signingConfig) {
+        return new SigningConfigImpl(
+                signingConfig.getName(),
+                signingConfig.getStoreFile(),
+                signingConfig.getStorePassword(),
+                signingConfig.getKeyAlias(),
+                signingConfig.getKeyPassword(),
+                signingConfig.getStoreType(),
+                signingConfig.isSigningReady());
+    }
+
+    private SigningConfigImpl(@NonNull  String name,
                       @Nullable File storeFile,
                       @Nullable String storePassword,
                       @Nullable String keyAlias,

@@ -19,10 +19,11 @@ package com.android.builder.model;
 import com.android.annotations.NonNull;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 
 /**
- * A set of dependencies for an {@link ArtifactInfo}.
+ * A set of dependencies for an {@link AndroidArtifact}.
  */
 public interface Dependencies {
 
@@ -41,7 +42,7 @@ public interface Dependencies {
      * @return the list of jar files.
      */
     @NonNull
-    List<File> getJars();
+    Collection<File> getJars();
 
     /**
      * The list of project dependencies. This is only for non Android module dependencies (which
@@ -50,5 +51,5 @@ public interface Dependencies {
      * @return the list of projects.
      */
     @NonNull
-    List<String> getProjects();
+    Collection<String> getProjects();
 }

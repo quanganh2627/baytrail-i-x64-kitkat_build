@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -49,7 +50,7 @@ public interface AndroidLibrary {
     File getFolder();
 
     /**
-     * Returns the direct dependency of this dependency.
+     * Returns the direct dependency of this dependency. The order is important.
      */
     @NonNull
     List<? extends AndroidLibrary> getLibraryDependencies();
@@ -74,7 +75,7 @@ public interface AndroidLibrary {
      * @return a list of File. May be empty but not null.
      */
     @NonNull
-    List<File> getLocalJars();
+    Collection<File> getLocalJars();
 
     /**
      * Returns the location of the res folder.

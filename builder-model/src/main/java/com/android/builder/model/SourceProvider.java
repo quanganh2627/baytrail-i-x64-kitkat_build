@@ -18,7 +18,7 @@ package com.android.builder.model;
 import com.android.annotations.NonNull;
 
 import java.io.File;
-import java.util.Set;
+import java.util.Collection;
 
 /**
  * Represent a SourceProvider for a given configuration.
@@ -41,7 +41,7 @@ public interface SourceProvider {
      * @return a list of folders. They may not all exist.
      */
     @NonNull
-    Set<File> getJavaDirectories();
+    Collection<File> getJavaDirectories();
 
     /**
      * Returns the java resources folders.
@@ -49,7 +49,7 @@ public interface SourceProvider {
      * @return a list of folders. They may not all exist.
      */
     @NonNull
-    Set<File> getResourcesDirectories();
+    Collection<File> getResourcesDirectories();
 
     /**
      * Returns the aidl source folders.
@@ -57,7 +57,7 @@ public interface SourceProvider {
      * @return a list of folders. They may not all exist.
      */
     @NonNull
-    Set<File> getAidlDirectories();
+    Collection<File> getAidlDirectories();
 
     /**
      * Returns the renderscript source folders.
@@ -65,7 +65,7 @@ public interface SourceProvider {
      * @return a list of folders. They may not all exist.
      */
     @NonNull
-    Set<File> getRenderscriptDirectories();
+    Collection<File> getRenderscriptDirectories();
 
     /**
      * Returns the jni source folders.
@@ -73,7 +73,7 @@ public interface SourceProvider {
      * @return a list of folders. They may not all exist.
      */
     @NonNull
-    Set<File> getJniDirectories();
+    Collection<File> getJniDirectories();
 
     /**
      * Returns the android resources folders.
@@ -81,7 +81,7 @@ public interface SourceProvider {
      * @return a list of folders. They may not all exist.
      */
     @NonNull
-    Set<File> getResDirectories();
+    Collection<File> getResDirectories();
 
     /**
      * Returns the android assets folders.
@@ -89,5 +89,5 @@ public interface SourceProvider {
      * @return a list of folders. They may not all exist.
      */
     @NonNull
-    Set<File> getAssetsDirectories();
+    Collection<File> getAssetsDirectories();
 }

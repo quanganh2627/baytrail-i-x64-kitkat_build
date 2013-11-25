@@ -18,7 +18,6 @@ package com.android.builder.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.NdkConfig;
 
 /**
  * a Product Flavor. This is only the configuration of the flavor.
@@ -27,7 +26,7 @@ import com.android.builder.NdkConfig;
  * or in the artifact info.
  *
  * @see ProductFlavorContainer
- * @see ArtifactInfo#getDependencies()
+ * @see BaseArtifact#getDependencies()
  */
 public interface ProductFlavor extends BaseConfig {
 
@@ -41,7 +40,7 @@ public interface ProductFlavor extends BaseConfig {
 
     /**
      * Returns the name of the product flavor. This is only the value set on this product flavor.
-     * To get the final package name, use {@link ArtifactInfo#getPackageName()}.
+     * To get the final package name, use {@link AndroidArtifact#getPackageName()}.
      *
      * @return the package name.
      */
@@ -95,7 +94,7 @@ public interface ProductFlavor extends BaseConfig {
     /**
      * Returns the test package name. This is only the value set on this product flavor.
      * To get the final value, use {@link Variant#getTestArtifactInfo()} and
-     * {@link ArtifactInfo#getPackageName()}
+     * {@link AndroidArtifact#getPackageName()}
      *
      * @return the test package name.
      */

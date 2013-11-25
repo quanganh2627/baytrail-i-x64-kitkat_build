@@ -20,8 +20,6 @@ import com.android.annotations.NonNull;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Entry point for the model of the Android Projects. This models a single module, whether
@@ -29,6 +27,9 @@ import java.util.Map;
  */
 public interface AndroidProject {
     String BUILD_MODEL_ONLY_SYSTEM_PROPERTY =  "android.build.model.only";
+
+    public static final String ARTIFACT_MAIN = "_main_";
+    public static final String ARTIFACT_INSTRUMENT_TEST = "_instrument_test_";
 
     /**
      * Returns the model version. This is a string in the format X.Y.Z
@@ -61,34 +62,39 @@ public interface AndroidProject {
     ProductFlavorContainer getDefaultConfig();
 
     /**
-     * Returns a map of all the {@link BuildType} in their container. The key is the build type
-     * name as returned by {@link BuildType#getName()}
+     * Returns a list of all the {@link BuildType} in their container.
      *
-     * @return a map of build type containers.
+     * @return a list of build type containers.
      */
     @NonNull
-    Map<String, BuildTypeContainer> getBuildTypes();
+    Collection<BuildTypeContainer> getBuildTypes();
 
     /**
-     * Returns a map of all the {@link ProductFlavor} in their container. The key is the product
-     * flavor name as returned by {@link ProductFlavor#getName()}
+     * Returns a list of all the {@link ProductFlavor} in their container.
      *
-     * @return a map of product flavor containers.
+     * @return a list of product flavor containers.
      */
     @NonNull
-    Map<String, ProductFlavorContainer> getProductFlavors();
+    Collection<ProductFlavorContainer> getProductFlavors();
 
     /**
-     * Returns a map of all the variants. The key is the variant name as returned by
-     * {@link Variant#getName()}.
+     * Returns a list of all the variants.
      *
-     * This does not include test variant. Instead the variant and its component each contribute
-     * their test part.
+     * This does not include test variant. Test variants are additional artifacts in their
+     * respective variant info.
      *
-     * @return a map of the variants.
+     * @return a list of the variants.
      */
     @NonNull
-    Map<String, Variant> getVariants();
+    Collection<Variant> getVariants();
+
+    /**
+     * Returns a list of extra artifacts meta data. This does not include the main artifact.
+     *
+     * @return a list of extra artifacts
+     */
+    @NonNull
+    Collection<ArtifactMetaData> getExtraArtifacts();
 
     /**
      * Returns the compilation target as a string. This is the full extended target hash string.
@@ -106,23 +112,22 @@ public interface AndroidProject {
      * @return a list of jar files.
      */
     @NonNull
-    List<String> getBootClasspath();
+    Collection<String> getBootClasspath();
 
     /**
      * Returns a list of folders or jar files that contains the framework source code.
      * @return a list of folders or jar files that contains the framework source code.
      */
     @NonNull
-    List<File> getFrameworkSource();
+    Collection<File> getFrameworkSources();
 
     /**
-     * Returns a map of {@link SigningConfig}. The key is the signing config name as returned by
-     * {@link SigningConfig#getName()}
+     * Returns a list of {@link SigningConfig}.
      *
      * @return a map of signing config
      */
     @NonNull
-    Map<String, SigningConfig> getSigningConfigs();
+    Collection<SigningConfig> getSigningConfigs();
 
     /**
      * Returns the aapt options.
