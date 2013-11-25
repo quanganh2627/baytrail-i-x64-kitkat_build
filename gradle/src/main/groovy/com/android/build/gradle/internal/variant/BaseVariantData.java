@@ -38,6 +38,8 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import proguard.gradle.ProGuardTask;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -134,20 +136,15 @@ public abstract class BaseVariantData {
         return extraGeneratedSourceFolders;
     }
 
-    public void addGeneratedSourceFolders(@NonNull Task task, @NonNull File... generatedSourceFolders) {
-        if (extraGeneratedSourceFolders == null) {
-            extraGeneratedSourceFolders = Lists.newArrayList();
-        }
-
-        javaCompileTask.dependsOn(task);
-
-        for (File f : generatedSourceFolders) {
-            extraGeneratedSourceFolders.add(f);
-            javaCompileTask.source(f);
-        }
+    public void addJavaSourceFoldersToModel(@NonNull File... generatedSourceFolders) {
+        Collections.addAll(extraGeneratedSourceFolders, generatedSourceFolders);
     }
 
-    public void addGeneratedSourceFolders(@NonNull Task task, @NonNull Iterable<File> generatedSourceFolders) {
+    public void addJavaSourceFoldersToModel(@NonNull Collection<File> generatedSourceFolders) {
+        extraGeneratedSourceFolders.addAll(generatedSourceFolders);
+    }
+
+    public void registerJavaGeneratingTask(@NonNull Task task, @NonNull File... generatedSourceFolders) {
         if (extraGeneratedSourceFolders == null) {
             extraGeneratedSourceFolders = Lists.newArrayList();
         }
@@ -155,8 +152,23 @@ public abstract class BaseVariantData {
         javaCompileTask.dependsOn(task);
 
         for (File f : generatedSourceFolders) {
-            extraGeneratedSourceFolders.add(f);
             javaCompileTask.source(f);
         }
+
+        addJavaSourceFoldersToModel(generatedSourceFolders);
+    }
+
+    public void registerJavaGeneratingTask(@NonNull Task task, @NonNull Collection<File> generatedSourceFolders) {
+        if (extraGeneratedSourceFolders == null) {
+            extraGeneratedSourceFolders = Lists.newArrayList();
+        }
+
+        javaCompileTask.dependsOn(task);
+
+        for (File f : generatedSourceFolders) {
+            javaCompileTask.source(f);
+        }
+
+        addJavaSourceFoldersToModel(generatedSourceFolders);
     }
 }
