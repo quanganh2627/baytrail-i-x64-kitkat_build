@@ -101,7 +101,7 @@ public class Lint extends DefaultTask {
     public void lint() {
         IssueRegistry registry = new BuiltinIssueRegistry()
         LintCliFlags flags = new LintCliFlags()
-        LintGradleClient client = new LintGradleClient(flags, mPlugin.getSdkDirectory())
+        LintGradleClient client = new LintGradleClient(flags, mPlugin)
 
         // Configure Reporters
 

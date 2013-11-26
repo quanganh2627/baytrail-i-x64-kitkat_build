@@ -20,6 +20,7 @@ import com.google.common.collect.Lists;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.BasePlugin;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.detector.api.Project;
@@ -29,11 +30,16 @@ import java.util.List;
 
 public class LintGradleClient extends LintCliClient {
     private List<File> mCustomRules = Lists.newArrayList();
-    private File mySdkHome;
+    private BasePlugin mPlugin;
 
-    public LintGradleClient(@NonNull LintCliFlags flags, @Nullable File sdkHome) {
+    public LintGradleClient(@NonNull LintCliFlags flags, @NonNull BasePlugin plugin) {
         super(flags);
-        mySdkHome = sdkHome;
+        mPlugin = plugin;
+    }
+
+    @NonNull
+    public BasePlugin getPlugin() {
+        return mPlugin;
     }
 
     public void setCustomRules(List<File> customRules) {
@@ -50,14 +56,11 @@ public class LintGradleClient extends LintCliClient {
         return new LintGradleProject(this, dir, referenceDir);
     }
 
-    public void setSdkHome(File home) {
-        mySdkHome = home;
-    }
-
     @Override
     public File getSdkHome() {
-        if (mySdkHome != null) {
-            return mySdkHome;
+        File sdkHome = mPlugin.getSdkDirectory();
+        if (sdkHome != null) {
+            return sdkHome;
         }
         return super.getSdkHome();
     }
