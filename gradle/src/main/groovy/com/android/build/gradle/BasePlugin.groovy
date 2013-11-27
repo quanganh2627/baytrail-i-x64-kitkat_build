@@ -1867,4 +1867,8 @@ public abstract class BasePlugin {
         Attributes attr = manifest.getMainAttributes();
         return attr.getValue("Plugin-Version");
     }
+
+    public Project getProject() {
+        return project
+    }
 }
