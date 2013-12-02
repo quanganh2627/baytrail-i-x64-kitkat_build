@@ -327,6 +327,9 @@ public abstract class BasePlugin {
         if (androidBuilder == null) {
             SdkParser parser = getLoadedSdkParser()
             androidBuilder = new AndroidBuilder(parser, creator, logger, verbose)
+            if (this instanceof LibraryPlugin) {
+                androidBuilder.setBuildingLibrary(true);
+            }
 
             builders.put(variantData, androidBuilder)
         }

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package com.android.build.gradle.tasks
+
+import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.ide.common.res2.FileStatus
 import com.android.ide.common.res2.FileValidity
@@ -74,6 +76,12 @@ public class MergeResources extends IncrementalTask {
             // get the merged set and write it down.
             MergedResourceWriter writer = new MergedResourceWriter(
                     destinationDir, getProcess9Patch() ? builder.aaptRunner : null)
+
+            // Don't put source markers in libraries since clients of the AAR will
+            // not have access to these (and it leaks build server paths etc to users)
+            if (plugin instanceof LibraryPlugin) {
+                writer.setInsertSourceMarkers(false)
+            }
 
             merger.mergeData(writer, false /*doCleanUp*/)
 

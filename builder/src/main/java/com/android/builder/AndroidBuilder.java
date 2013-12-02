@@ -52,12 +52,12 @@ import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.FullRevision;
 import com.android.utils.ILogger;
+import com.android.utils.SdkUtils;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -106,6 +106,7 @@ public class AndroidBuilder {
     private final ILogger mLogger;
     private final CommandLineRunner mCmdLineRunner;
     private final boolean mVerboseExec;
+    private boolean mLibrary;
 
     @NonNull
     private final IAndroidTarget mTarget;
@@ -191,6 +192,17 @@ public class AndroidBuilder {
         }
 
         return classpath;
+    }
+
+    /** Sets whether this builder is currently used to build a library. Defaults to false. */
+    public AndroidBuilder setBuildingLibrary(boolean library) {
+        mLibrary = library;
+        return this;
+    }
+
+    /** Sets whether this builder is currently used to build a library */
+    public boolean isBuildingLibrary() {
+        return mLibrary;
     }
 
     /**
@@ -315,9 +327,11 @@ public class AndroidBuilder {
                 // if no manifest to merge, just copy to location, unless we have to inject
                 // attributes
                 if (attributeInjection.isEmpty() && packageOverride == null) {
-                    Files.copy(mainManifest, new File(outManifestLocation));
+                    SdkUtils.copyXmlWithSourceReference(mainManifest,
+                            new File(outManifestLocation));
                 } else {
                     ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(mLogger), null);
+                    merger.setInsertSourceMarkers(!mLibrary);
                     doMerge(merger, new File(outManifestLocation), mainManifest,
                             attributeInjection, packageOverride);
                 }
@@ -336,6 +350,7 @@ public class AndroidBuilder {
                     }
 
                     ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(mLogger), null);
+                    merger.setInsertSourceMarkers(!mLibrary);
                     doMerge(merger, mainManifestOut, mainManifest, manifestOverlays,
                             attributeInjection, packageOverride);
 
@@ -524,6 +539,7 @@ public class AndroidBuilder {
         }
 
         ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(mLogger), null);
+        merger.setInsertSourceMarkers(!mLibrary);
         doMerge(merger, outManifest, mainManifest, manifests, attributeInjection, packageOverride);
     }
 
