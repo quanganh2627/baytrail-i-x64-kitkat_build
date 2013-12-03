@@ -43,7 +43,7 @@ public class GenerateBuildConfig extends IncrementalTask {
     String flavorName
 
     @Input
-    List<String> flavorNames
+    List<String> flavorNamesWithDimensionNames
 
     @Input
     String buildTypeName
@@ -86,9 +86,12 @@ public class GenerateBuildConfig extends IncrementalTask {
             generator.addField("String", "VERSION_NAME", "\"${getVersionName()}\"")
         }
 
-        int i = 1;
-        for (String name : getFlavorNames()) {
-            generator.addField("String", "FLAVOR${i++}", "\"$name\"")
+        List<String> flavors = getFlavorNamesWithDimensionNames();
+        int count = flavors.size();
+        if (count > 1) {
+            for (int i = 0; i < count ; i+=2) {
+                generator.addField("String", "FLAVOR_${flavors.get(i+1)}", "\"${flavors.get(i)}\"")
+            }
         }
 
         generator.generate();

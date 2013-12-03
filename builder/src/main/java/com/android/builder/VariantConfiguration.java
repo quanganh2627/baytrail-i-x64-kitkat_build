@@ -84,6 +84,7 @@ public class VariantConfiguration implements TestData {
     @Nullable
     private final SourceProvider mBuildTypeSourceProvider;
 
+    private final List<String> mFlavorDimensionNames = Lists.newArrayList();
     private final List<DefaultProductFlavor> mFlavorConfigs = Lists.newArrayList();
     private final List<SourceProvider> mFlavorSourceProviders = Lists.newArrayList();
 
@@ -330,17 +331,29 @@ public class VariantConfiguration implements TestData {
     /**
      * Return the names of the applied flavors.
      *
+     * The list contains the dimension names as well.
+     *
      * @return the list, possibly empty if there are no flavors.
      */
     @NonNull
-    public List<String> getFlavorNames() {
+    public List<String> getFlavorNamesWithDimensionNames() {
         if (mFlavorConfigs.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<String> names = Lists.newArrayListWithCapacity(mFlavorConfigs.size());
-        for (DefaultProductFlavor flavor : mFlavorConfigs) {
-            names.add(flavor.getName());
+        List<String> names;
+        int count = mFlavorConfigs.size();
+
+        if (count > 1) {
+            names = Lists.newArrayListWithCapacity(count * 2);
+
+            for (int i = 0 ; i < count ; i++) {
+                names.add(mFlavorConfigs.get(i).getName());
+                names.add(mFlavorDimensionNames.get(i));
+            }
+
+        } else {
+            names = Collections.singletonList(mFlavorConfigs.get(0).getName());
         }
 
         return names;
@@ -356,15 +369,19 @@ public class VariantConfiguration implements TestData {
      *
      * @param productFlavor the configured product flavor
      * @param sourceProvider the source provider for the product flavor
+     * @param dimensionName the name of the dimension associated with the flavor
      *
      * @return the config object
      */
     @NonNull
-    public VariantConfiguration addProductFlavor(@NonNull DefaultProductFlavor productFlavor,
-                                                 @NonNull SourceProvider sourceProvider) {
+    public VariantConfiguration addProductFlavor(
+            @NonNull DefaultProductFlavor productFlavor,
+            @NonNull SourceProvider sourceProvider,
+            @NonNull String dimensionName) {
 
         mFlavorConfigs.add(productFlavor);
         mFlavorSourceProviders.add(sourceProvider);
+        mFlavorDimensionNames.add(dimensionName);
 
         mMergedFlavor = productFlavor.mergeOver(mMergedFlavor);
         computeNdkConfig();

@@ -438,9 +438,15 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
                     buildTypeData.sourceSet)
 
             for (ProductFlavorData data : flavorDataList) {
+                String dimensionName = "";
+                if (data.productFlavor instanceof GroupableProductFlavorDsl) {
+                    dimensionName = ((GroupableProductFlavorDsl) data.productFlavor).flavorGroup
+                }
                 variantConfig.addProductFlavor(
                         data.productFlavor,
-                        data.sourceSet)
+                        data.sourceSet,
+                        dimensionName
+                )
                 variantProviders.add(data.mainProvider)
             }
 
@@ -491,9 +497,14 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
         List<ConfigurationProvider> testVariantProviders = []
 
         for (ProductFlavorData data : flavorDataList) {
+            String dimensionName = "";
+            if (data.productFlavor instanceof GroupableProductFlavorDsl) {
+                dimensionName = ((GroupableProductFlavorDsl) data.productFlavor).flavorGroup
+            }
             testVariantConfig.addProductFlavor(
                     data.productFlavor,
-                    data.testSourceSet)
+                    data.testSourceSet,
+                    dimensionName)
             testVariantProviders.add(data.testProvider)
         }
 

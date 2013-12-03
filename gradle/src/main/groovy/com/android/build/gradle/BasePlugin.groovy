@@ -590,8 +590,8 @@ public abstract class BasePlugin {
             variantConfiguration.flavorName
         }
 
-        generateBuildConfigTask.conventionMapping.flavorNames = {
-            variantConfiguration.flavorNames
+        generateBuildConfigTask.conventionMapping.flavorNamesWithDimensionNames = {
+            variantConfiguration.flavorNamesWithDimensionNames
         }
 
         generateBuildConfigTask.conventionMapping.items = {
