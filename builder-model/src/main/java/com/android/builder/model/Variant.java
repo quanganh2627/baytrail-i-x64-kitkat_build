@@ -17,8 +17,8 @@
 package com.android.builder.model;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -49,16 +49,13 @@ public interface Variant {
      * @return the artifact.
      */
     @NonNull
-    ArtifactInfo getMainArtifactInfo();
+    AndroidArtifact getMainArtifact();
 
-    /**
-     * Returns the test artifact for this variant. This may be null if this particular variant
-     * is not configured to be tested.
-     *
-     * @return the test artifact.
-     */
-    @Nullable
-    ArtifactInfo getTestArtifactInfo();
+    @NonNull
+    Collection<AndroidArtifact> getExtraAndroidArtifacts();
+
+    @NonNull
+    Collection<JavaArtifact> getExtraJavaArtifacts();
 
     /**
      * Returns the build type. All variants have a build type, so this is never null.
@@ -91,13 +88,6 @@ public interface Variant {
     ProductFlavor getMergedFlavor();
 
     /**
-     * The variant specific SourceProvider.
-     * @return a source provider or null
-     */
-    @Nullable
-    SourceProvider getSourceProvider();
-
-    /**
      * Returns the resource configuration for this variant.
      * TODO implement this.
      *
@@ -106,5 +96,5 @@ public interface Variant {
      * @return the resource configuration options.
      */
     @NonNull
-    List<String> getResourceConfigurations();
+    Collection<String> getResourceConfigurations();
 }

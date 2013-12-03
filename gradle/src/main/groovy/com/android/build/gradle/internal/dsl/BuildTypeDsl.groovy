@@ -21,7 +21,7 @@ import com.android.annotations.VisibleForTesting
 import com.android.builder.AndroidBuilder
 import com.android.builder.BuilderConstants
 import com.android.builder.DefaultBuildType
-import com.android.builder.NdkConfig
+import com.android.builder.model.NdkConfig
 import com.android.builder.model.SigningConfig
 import org.gradle.api.Action
 import org.gradle.api.internal.file.FileResolver

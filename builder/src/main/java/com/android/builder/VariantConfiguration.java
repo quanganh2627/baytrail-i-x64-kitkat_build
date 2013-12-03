@@ -25,6 +25,7 @@ import com.android.builder.dependency.LibraryDependency;
 import com.android.builder.internal.NdkConfigImpl;
 import com.android.builder.internal.StringHelper;
 import com.android.builder.model.ClassField;
+import com.android.builder.model.NdkConfig;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
@@ -86,11 +87,13 @@ public class VariantConfiguration implements TestData {
     private final List<DefaultProductFlavor> mFlavorConfigs = Lists.newArrayList();
     private final List<SourceProvider> mFlavorSourceProviders = Lists.newArrayList();
 
-    /**
-     * Variant specific source provider, may be null
-     */
+    /** Variant specific source provider, may be null */
     @Nullable
     private SourceProvider mVariantSourceProvider;
+
+    /** MultiFlavors specific source provider, may be null */
+    @Nullable
+    private SourceProvider mMultiFlavorSourceProvider;
 
     @NonNull
     private final Type mType;
@@ -377,7 +380,17 @@ public class VariantConfiguration implements TestData {
      */
     public VariantConfiguration setVariantSourceProvider(@Nullable SourceProvider sourceProvider) {
         mVariantSourceProvider = sourceProvider;
+        return this;
+    }
 
+    /**
+     * Sets the variant-specific source provider.
+     * @param sourceProvider the source provider for the product flavor
+     *
+     * @return the config object
+     */
+    public VariantConfiguration setMultiFlavorSourceProvider(@Nullable SourceProvider sourceProvider) {
+        mMultiFlavorSourceProvider = sourceProvider;
         return this;
     }
 
@@ -388,6 +401,11 @@ public class VariantConfiguration implements TestData {
     @Nullable
     public SourceProvider getVariantSourceProvider() {
         return mVariantSourceProvider;
+    }
+
+    @Nullable
+    public SourceProvider getMultiFlavorSourceProvider() {
+        return mMultiFlavorSourceProvider;
     }
 
     private void computeNdkConfig() {
@@ -491,8 +509,15 @@ public class VariantConfiguration implements TestData {
         return mFlavorConfigs;
     }
 
+    /**
+     * Returns the list of SourceProviders for the flavors.
+     *
+     * The list is ordered from higher priority to lower priority.
+     *
+     * @return the list of Source Providers for the flavors. Never null.
+     */
     @NonNull
-    public Iterable<SourceProvider> getFlavorSourceSets() {
+    public List<SourceProvider> getFlavorSourceProviders() {
         return mFlavorSourceProviders;
     }
 
@@ -545,10 +570,11 @@ public class VariantConfiguration implements TestData {
             LibraryDependency library = directDependencies.get(i);
 
             // get its libraries
-            List<LibraryDependency> dependencies = library.getDependencies();
+            Collection<LibraryDependency> dependencies = library.getDependencies();
+            List<LibraryDependency> depList = Lists.newArrayList(dependencies);
 
             // resolve the dependencies for those libraries
-            resolveIndirectLibraryDependencies(dependencies, outFlatDependencies);
+            resolveIndirectLibraryDependencies(depList, outFlatDependencies);
 
             // and add the current one (if needed) in front (higher priority)
             if (!outFlatDependencies.contains(library)) {
@@ -838,6 +864,13 @@ public class VariantConfiguration implements TestData {
             }
         }
 
+        if (mMultiFlavorSourceProvider != null) {
+            File variantLocation = mMultiFlavorSourceProvider.getManifestFile();
+            if (variantLocation.isFile()) {
+                inputs.add(variantLocation);
+            }
+        }
+
         if (mBuildTypeSourceProvider != null) {
             File typeLocation = mBuildTypeSourceProvider.getManifestFile();
             if (typeLocation.isFile()) {
@@ -887,7 +920,7 @@ public class VariantConfiguration implements TestData {
             }
         }
 
-        Set<File> mainResDirs = mDefaultSourceProvider.getResDirectories();
+        Collection<File> mainResDirs = mDefaultSourceProvider.getResDirectories();
 
         ResourceSet resourceSet = new ResourceSet(BuilderConstants.MAIN);
         resourceSet.addSources(mainResDirs);
@@ -900,7 +933,7 @@ public class VariantConfiguration implements TestData {
         for (int n = mFlavorSourceProviders.size() - 1; n >= 0 ; n--) {
             SourceProvider sourceProvider = mFlavorSourceProviders.get(n);
 
-            Set<File> flavorResDirs = sourceProvider.getResDirectories();
+            Collection<File> flavorResDirs = sourceProvider.getResDirectories();
             // we need the same of the flavor config, but it's in a different list.
             // This is fine as both list are parallel collections with the same number of items.
             resourceSet = new ResourceSet(mFlavorConfigs.get(n).getName());
@@ -910,15 +943,23 @@ public class VariantConfiguration implements TestData {
 
         // build type overrides the flavors
         if (mBuildTypeSourceProvider != null) {
-            Set<File> typeResDirs = mBuildTypeSourceProvider.getResDirectories();
+            Collection<File> typeResDirs = mBuildTypeSourceProvider.getResDirectories();
             resourceSet = new ResourceSet(mBuildType.getName());
             resourceSet.addSources(typeResDirs);
             resourceSets.add(resourceSet);
         }
 
+        // multiflavor specific overrides flavor/build type
+        if (mMultiFlavorSourceProvider != null) {
+            Collection<File> variantResDirs = mMultiFlavorSourceProvider.getResDirectories();
+            resourceSet = new ResourceSet(getFullName());
+            resourceSet.addSources(variantResDirs);
+            resourceSets.add(resourceSet);
+        }
+
         // variant specific overrides all
         if (mVariantSourceProvider != null) {
-            Set<File> variantResDirs = mVariantSourceProvider.getResDirectories();
+            Collection<File> variantResDirs = mVariantSourceProvider.getResDirectories();
             resourceSet = new ResourceSet(getFullName());
             resourceSet.addSources(variantResDirs);
             resourceSets.add(resourceSet);
@@ -954,7 +995,7 @@ public class VariantConfiguration implements TestData {
             }
         }
 
-        Set<File> mainResDirs = mDefaultSourceProvider.getAssetsDirectories();
+        Collection<File> mainResDirs = mDefaultSourceProvider.getAssetsDirectories();
 
         AssetSet assetSet = new AssetSet(BuilderConstants.MAIN);
         assetSet.addSources(mainResDirs);
@@ -964,7 +1005,7 @@ public class VariantConfiguration implements TestData {
         for (int n = mFlavorSourceProviders.size() - 1; n >= 0 ; n--) {
             SourceProvider sourceProvider = mFlavorSourceProviders.get(n);
 
-            Set<File> flavorResDirs = sourceProvider.getAssetsDirectories();
+            Collection<File> flavorResDirs = sourceProvider.getAssetsDirectories();
             // we need the same of the flavor config, but it's in a different list.
             // This is fine as both list are parallel collections with the same number of items.
             assetSet = new AssetSet(mFlavorConfigs.get(n).getName());
@@ -974,15 +1015,23 @@ public class VariantConfiguration implements TestData {
 
         // build type overrides flavors
         if (mBuildTypeSourceProvider != null) {
-            Set<File> typeResDirs = mBuildTypeSourceProvider.getAssetsDirectories();
+            Collection<File> typeResDirs = mBuildTypeSourceProvider.getAssetsDirectories();
             assetSet = new AssetSet(mBuildType.getName());
             assetSet.addSources(typeResDirs);
             assetSets.add(assetSet);
         }
 
+        // multiflavor specific overrides flavor/build type
+        if (mMultiFlavorSourceProvider != null) {
+            Collection<File> variantResDirs = mMultiFlavorSourceProvider.getAssetsDirectories();
+            assetSet = new AssetSet(getFullName());
+            assetSet.addSources(variantResDirs);
+            assetSets.add(assetSet);
+        }
+
         // variant specific overrides all
         if (mVariantSourceProvider != null) {
-            Set<File> variantResDirs = mVariantSourceProvider.getAssetsDirectories();
+            Collection<File> variantResDirs = mVariantSourceProvider.getAssetsDirectories();
             assetSet = new AssetSet(getFullName());
             assetSet.addSources(variantResDirs);
             assetSets.add(assetSet);
@@ -1043,6 +1092,10 @@ public class VariantConfiguration implements TestData {
             }
         }
 
+        if (mMultiFlavorSourceProvider != null) {
+            sourceList.addAll(mMultiFlavorSourceProvider.getRenderscriptDirectories());
+        }
+
         if (mVariantSourceProvider != null) {
             sourceList.addAll(mVariantSourceProvider.getRenderscriptDirectories());
         }
@@ -1081,6 +1134,10 @@ public class VariantConfiguration implements TestData {
             }
         }
 
+        if (mMultiFlavorSourceProvider != null) {
+            sourceList.addAll(mMultiFlavorSourceProvider.getAidlDirectories());
+        }
+
         if (mVariantSourceProvider != null) {
             sourceList.addAll(mVariantSourceProvider.getAidlDirectories());
         }
@@ -1100,6 +1157,10 @@ public class VariantConfiguration implements TestData {
             for (SourceProvider flavorSourceSet : mFlavorSourceProviders) {
                 sourceList.addAll(flavorSourceSet.getJniDirectories());
             }
+        }
+
+        if (mMultiFlavorSourceProvider != null) {
+            sourceList.addAll(mMultiFlavorSourceProvider.getJniDirectories());
         }
 
         if (mVariantSourceProvider != null) {

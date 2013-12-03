@@ -15,6 +15,7 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
     private ImageView mTypeOverlayIV;
     private ImageView mFlavorOverlayIV;
     private ImageView mTypeFlavorOverlayIV;
+    private ImageView mVariantTypeFlavorOverlayIV;
 
     /**
      * Creates an {@link ActivityInstrumentationTestCase2} that tests the {@link Main} activity.
@@ -33,6 +34,7 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
         mTypeOverlayIV = (ImageView) a.findViewById(R.id.type_overlay);
         mFlavorOverlayIV = (ImageView) a.findViewById(R.id.flavor_overlay);
         mTypeFlavorOverlayIV = (ImageView) a.findViewById(R.id.type_flavor_overlay);
+        mVariantTypeFlavorOverlayIV = (ImageView) a.findViewById(R.id.variant_type_flavor_overlay);
     }
 
     /**
@@ -47,6 +49,7 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
         assertNotNull(mTypeOverlayIV);
         assertNotNull(mFlavorOverlayIV);
         assertNotNull(mTypeFlavorOverlayIV);
+        assertNotNull(mVariantTypeFlavorOverlayIV);
     }
 
     public void testNoOverlay() {
@@ -63,6 +66,10 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
 
     public void testTypeFlavorOverlay() {
         pixelLooker(mTypeFlavorOverlayIV, GREEN);
+    }
+
+    public void testVariantTypeFlavorOverlay() {
+        pixelLooker(mVariantTypeFlavorOverlayIV, GREEN);
     }
     
     private void pixelLooker(ImageView iv, int expectedColor) {

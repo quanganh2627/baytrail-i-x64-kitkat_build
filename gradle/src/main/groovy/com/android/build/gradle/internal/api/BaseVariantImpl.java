@@ -64,6 +64,12 @@ abstract class BaseVariantImpl implements BaseVariant {
         return getVariantData().getVariantConfiguration().getBaseName();
     }
 
+    @NonNull
+    @Override
+    public String getFlavorName() {
+        return getVariantData().getVariantConfiguration().getFlavorName();
+    }
+
     @Override
     @NonNull
     public DefaultBuildType getBuildType() {

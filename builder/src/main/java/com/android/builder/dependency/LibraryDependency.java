@@ -19,6 +19,7 @@ package com.android.builder.dependency;
 import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidLibrary;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -27,15 +28,15 @@ import java.util.List;
 public interface LibraryDependency extends AndroidLibrary, ManifestDependency, SymbolFileProvider {
 
     /**
-     * Returns the direct dependency of this dependency.
+     * Returns the direct dependency of this dependency. The order is important
      */
     @NonNull
     List<LibraryDependency> getDependencies();
 
     /**
-     * Returns the list of local Jar files that are included in the dependency.
+     * Returns the collection of local Jar files that are included in the dependency.
      * @return a list of JarDependency. May be empty but not null.
      */
     @NonNull
-    List<JarDependency> getLocalDependencies();
+    Collection<JarDependency> getLocalDependencies();
 }

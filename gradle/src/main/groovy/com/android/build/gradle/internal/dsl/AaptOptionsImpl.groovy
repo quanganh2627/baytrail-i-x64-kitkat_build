@@ -45,7 +45,7 @@ public class AaptOptionsImpl implements AaptOptions {
     }
 
     @Override
-    List<String> getNoCompress() {
+    Collection<String> getNoCompress() {
         return noCompressList
     }
 

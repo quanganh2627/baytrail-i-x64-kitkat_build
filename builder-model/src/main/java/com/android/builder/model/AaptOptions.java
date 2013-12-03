@@ -16,7 +16,7 @@
 
 package com.android.builder.model;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Options for aapt.
@@ -30,5 +30,5 @@ public interface AaptOptions {
     /**
      * Returns the list of values for the -0 (disabled compression) option, or null
      */
-    List<String> getNoCompress();
+    Collection<String> getNoCompress();
 }

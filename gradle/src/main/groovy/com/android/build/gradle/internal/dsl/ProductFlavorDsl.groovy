@@ -15,11 +15,12 @@
  */
 
 package com.android.build.gradle.internal.dsl
+
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.builder.AndroidBuilder
 import com.android.builder.DefaultProductFlavor
-import com.android.builder.NdkConfig
+import com.android.builder.model.NdkConfig
 import org.gradle.api.Action
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.internal.reflect.Instantiator

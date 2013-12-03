@@ -17,11 +17,14 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.BuildTypeContainer;
+import com.android.build.gradle.internal.BuildTypeData;
 import com.android.builder.model.BuildType;
+import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.SourceProvider;
+import com.android.builder.model.SourceProviderContainer;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 class BuildTypeContainerImpl implements BuildTypeContainer, Serializable {
     private static final long serialVersionUID = 1L;
@@ -30,11 +33,35 @@ class BuildTypeContainerImpl implements BuildTypeContainer, Serializable {
     private final BuildType buildType;
     @NonNull
     private final SourceProvider sourceProvider;
+    @NonNull
+    private final Collection<SourceProviderContainer> extraSourceProviders;
 
-    BuildTypeContainerImpl(@NonNull BuildTypeImpl buildType,
-                           @NonNull SourceProviderImpl sourceProvider) {
+    /**
+     * Create a BuildTypeContainer from a BuildTypeData
+     *
+     * @param buildTypeData the build type data
+     * @param sourceProviderContainers collection of extra source providers
+     *
+     * @return a non-null BuildTypeContainer
+     */
+    @NonNull
+    static BuildTypeContainer createBTC(
+            @NonNull BuildTypeData buildTypeData,
+            @NonNull Collection<SourceProviderContainer> sourceProviderContainers) {
+
+        return new BuildTypeContainerImpl(
+                BuildTypeImpl.cloneBuildType(buildTypeData.getBuildType()),
+                SourceProviderImpl.cloneProvider(buildTypeData.getSourceSet()),
+                SourceProviderContainerImpl.cloneCollection(sourceProviderContainers));
+    }
+
+    private BuildTypeContainerImpl(
+            @NonNull BuildTypeImpl buildType,
+            @NonNull SourceProviderImpl sourceProvider,
+            @NonNull Collection<SourceProviderContainer> extraSourceProviders) {
         this.buildType = buildType;
         this.sourceProvider = sourceProvider;
+        this.extraSourceProviders = extraSourceProviders;
     }
 
     @Override
@@ -47,5 +74,11 @@ class BuildTypeContainerImpl implements BuildTypeContainer, Serializable {
     @NonNull
     public SourceProvider getSourceProvider() {
         return sourceProvider;
+    }
+
+    @NonNull
+    @Override
+    public Collection<SourceProviderContainer> getExtraSourceProviders() {
+        return extraSourceProviders;
     }
 }

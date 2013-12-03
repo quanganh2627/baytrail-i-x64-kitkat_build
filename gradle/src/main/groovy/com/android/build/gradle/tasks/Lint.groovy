@@ -37,9 +37,9 @@ public class Lint extends DefaultTask {
     @Nullable private File mConfigFile
     @Nullable private File mHtmlOutput
     @Nullable private File mXmlOutput
-    @Nullable private List<Set<File>> mSourceSets
+    @Nullable private List<Collection<File>> mSourceSets
     @Nullable private String mClassPath
-    @Nullable private List<Set<File>> mResourceSets
+    @Nullable private List<Collection<File>> mResourceSets
     private boolean mQuiet
 
     public void setPlugin(@NonNull BasePlugin plugin) {
@@ -74,7 +74,7 @@ public class Lint extends DefaultTask {
      *
      * @param sourceSets files to be added to sources.
      */
-    public void setSources(@NonNull List<Set<File>> sourceSets) {
+    public void setSources(@NonNull List<Collection<File>> sourceSets) {
         mSourceSets = sourceSets
     }
 
@@ -164,7 +164,7 @@ public class Lint extends DefaultTask {
 
         // Flags: sources, resources, classes
 
-        for (Set<File> args : mSourceSets) {
+        for (Collection<File> args : mSourceSets) {
             for (File input : args) {
                 if (input.exists()) {
                     List<File> sources = flags.getSourcesOverride()
@@ -190,7 +190,7 @@ public class Lint extends DefaultTask {
             classes.add(input);
         }
 
-        for (Set<File> args : mResourceSets) {
+        for (Collection<File> args : mResourceSets) {
             for (File input : args) {
                 if (input.exists()) {
                     List<File> resources = flags.getResourcesOverride()

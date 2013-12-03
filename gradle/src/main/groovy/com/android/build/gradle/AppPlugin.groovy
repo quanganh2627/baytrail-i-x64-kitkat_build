@@ -20,7 +20,6 @@ import com.android.annotations.Nullable
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.BuildTypeData
 import com.android.build.gradle.internal.ConfigurationProvider
-import com.android.build.gradle.internal.ConfigurationProviderImpl
 import com.android.build.gradle.internal.ProductFlavorData
 import com.android.build.gradle.internal.api.ApplicationVariantImpl
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
@@ -451,9 +450,17 @@ class AppPlugin extends com.android.build.gradle.BasePlugin implements Plugin<Pr
             // create the variant and get its internal storage object.
             ApplicationVariantData appVariantData = new ApplicationVariantData(variantConfig)
 
-            DefaultAndroidSourceSet sourceSet = (DefaultAndroidSourceSet) extension.sourceSetsContainer.maybeCreate(variantConfig.fullName)
-            variantConfig.setVariantSourceProvider(sourceSet)
-            variantProviders.add(new ConfigurationProviderImpl(project, sourceSet))
+            DefaultAndroidSourceSet variantSourceSet = (DefaultAndroidSourceSet) extension.sourceSetsContainer.maybeCreate(variantConfig.fullName)
+            variantConfig.setVariantSourceProvider(variantSourceSet)
+            // TODO: hmm this won't work
+            //variantProviders.add(new ConfigurationProviderImpl(project, variantSourceSet))
+
+            if (flavorDataList.size() > 1) {
+                DefaultAndroidSourceSet multiFlavorSourceSet = (DefaultAndroidSourceSet) extension.sourceSetsContainer.maybeCreate(variantConfig.flavorName)
+                variantConfig.setMultiFlavorSourceProvider(multiFlavorSourceSet)
+                // TODO: hmm this won't work
+                //variantProviders.add(new ConfigurationProviderImpl(project, multiFlavorSourceSet))
+            }
 
             VariantDependencies variantDep = VariantDependencies.compute(
                     project, appVariantData.variantConfiguration.fullName,

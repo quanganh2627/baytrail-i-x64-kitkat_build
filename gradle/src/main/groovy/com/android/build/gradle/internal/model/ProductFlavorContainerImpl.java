@@ -17,11 +17,16 @@
 package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.ProductFlavorContainer;
+import com.android.build.gradle.internal.ProductFlavorData;
+import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProductFlavor;
+import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
+import com.android.builder.model.SourceProviderContainer;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
 
 /**
  */
@@ -33,15 +38,43 @@ class ProductFlavorContainerImpl implements ProductFlavorContainer, Serializable
     @NonNull
     private final SourceProvider sourceProvider;
     @NonNull
-    private final SourceProvider testSourceProvider;
+    private final Collection<SourceProviderContainer> extraSourceProviders;
 
-    ProductFlavorContainerImpl(@NonNull ProductFlavorImpl productFlavor,
-                               @NonNull SourceProviderImpl sourceProvider,
-                               @NonNull SourceProviderImpl testSourceProvider) {
+    /**
+     * Create a ProductFlavorContainer from a ProductFlavorData
+     *
+     * @param productFlavorData the product flavor data
+     * @param sourceProviderContainers collection of extra source providers
+     *
+     * @return a non-null ProductFlavorContainer
+     */
+    @NonNull
+    static ProductFlavorContainer createPFC(
+            @NonNull ProductFlavorData productFlavorData,
+            @NonNull Collection<SourceProviderContainer> sourceProviderContainers) {
+
+        List<SourceProviderContainer> clonedContainer = SourceProviderContainerImpl.cloneCollection(sourceProviderContainers);
+
+        // instrument test Source Provider
+        SourceProviderContainer testASP = SourceProviderContainerImpl.create(
+                AndroidProject.ARTIFACT_INSTRUMENT_TEST, productFlavorData.getTestSourceSet());
+
+        clonedContainer.add(testASP);
+
+        return new ProductFlavorContainerImpl(
+                ProductFlavorImpl.cloneFlavor(productFlavorData.getProductFlavor()),
+                SourceProviderImpl.cloneProvider(productFlavorData.getSourceSet()),
+                clonedContainer);
+    }
+
+    private ProductFlavorContainerImpl(
+            @NonNull ProductFlavorImpl productFlavor,
+            @NonNull SourceProviderImpl sourceProvider,
+            @NonNull Collection<SourceProviderContainer> extraSourceProviders) {
 
         this.productFlavor = productFlavor;
         this.sourceProvider = sourceProvider;
-        this.testSourceProvider = testSourceProvider;
+        this.extraSourceProviders = extraSourceProviders;
     }
 
     @NonNull
@@ -58,7 +91,7 @@ class ProductFlavorContainerImpl implements ProductFlavorContainer, Serializable
 
     @NonNull
     @Override
-    public SourceProvider getTestSourceProvider() {
-        return testSourceProvider;
+    public Collection<SourceProviderContainer> getExtraSourceProviders() {
+        return extraSourceProviders;
     }
 }

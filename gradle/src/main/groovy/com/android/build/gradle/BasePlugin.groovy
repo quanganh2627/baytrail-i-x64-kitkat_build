@@ -18,6 +18,7 @@ package com.android.build.gradle
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.internal.BadPluginException
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.ProductFlavorData
@@ -29,6 +30,8 @@ import com.android.build.gradle.internal.dependency.ManifestDependencyImpl
 import com.android.build.gradle.internal.dependency.SymbolFileProviderImpl
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.SigningConfigDsl
+import com.android.build.gradle.internal.model.ArtifactMetaDataImpl
+import com.android.build.gradle.internal.model.JavaArtifactImpl
 import com.android.build.gradle.internal.model.ModelBuilder
 import com.android.build.gradle.internal.tasks.AndroidReportTask
 import com.android.build.gradle.internal.tasks.DependencyReportTask
@@ -46,6 +49,7 @@ import com.android.build.gradle.internal.test.report.ReportType
 import com.android.build.gradle.internal.variant.ApkVariantData
 import com.android.build.gradle.internal.variant.ApplicationVariantData
 import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant.DefaultSourceProviderContainer
 import com.android.build.gradle.internal.variant.LibraryVariantData
 import com.android.build.gradle.internal.variant.TestVariantData
 import com.android.build.gradle.internal.variant.TestedVariantData
@@ -69,15 +73,21 @@ import com.android.builder.SdkParser
 import com.android.builder.VariantConfiguration
 import com.android.builder.dependency.JarDependency
 import com.android.builder.dependency.LibraryDependency
+import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
+import com.android.builder.model.ArtifactMetaData
+import com.android.builder.model.BuildType
+import com.android.builder.model.JavaArtifact
 import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SigningConfig
 import com.android.builder.model.SourceProvider
+import com.android.builder.model.SourceProviderContainer
 import com.android.builder.testing.ConnectedDeviceProvider
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
 import com.android.utils.ILogger
 import com.google.common.collect.ArrayListMultimap
+import com.google.common.collect.ListMultimap
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Multimap
@@ -668,7 +678,7 @@ public abstract class BasePlugin {
                     ((AndroidSourceSet) variantConfiguration.buildTypeSourceSet).resources)
         }
         if (variantConfiguration.hasFlavors()) {
-            for (SourceProvider flavorSourceSet : variantConfiguration.flavorSourceSets) {
+            for (SourceProvider flavorSourceSet : variantConfiguration.flavorSourceProviders) {
                 processResources.from(((AndroidSourceSet) flavorSourceSet).resources)
             }
         }
@@ -723,8 +733,8 @@ public abstract class BasePlugin {
             sourceList.add(((AndroidSourceSet) config.buildTypeSourceSet).java)
         }
         if (config.hasFlavors()) {
-            for (SourceProvider flavorSourceSet : config.flavorSourceSets) {
-                sourceList.add(((AndroidSourceSet) flavorSourceSet).java)
+            for (SourceProvider flavorSourceProvider : config.flavorSourceProviders) {
+                sourceList.add(((AndroidSourceSet) flavorSourceProvider).java)
             }
         }
         compileTask.source = sourceList.toArray()
@@ -892,7 +902,7 @@ public abstract class BasePlugin {
         for (int i = 0 ; i < count ; i++) {
             final BaseVariantData baseVariantData = variantDataList.get(i)
             String variantName = baseVariantData.variantConfiguration.fullName
-            Task lintCheck = project.tasks.create("lint" + variantName, Lint)
+            Lint lintCheck = project.tasks.create("lint" + variantName, Lint)
             lintCheck.dependsOn baseVariantData.javaCompileTask, lintCompile
             lint.dependsOn lintCheck
             lintCheck.setPlugin(this)
@@ -900,11 +910,11 @@ public abstract class BasePlugin {
             String outputName = "$project.buildDir/lint/" + variantName
             VariantConfiguration config = baseVariantData.variantConfiguration
             List<LibraryDependency> depList = config.getAllLibraries()
-            List<Set<File>> javaSource = Lists.newArrayList()
-            List<Set<File>> resourceSource = Lists.newArrayList()
+            List<Collection<File>> javaSource = Lists.newArrayList()
+            List<Collection<File>> resourceSource = Lists.newArrayList()
 
             // set the java and res source of this variant's flavors
-            Iterator<SourceProvider> flavorSources = config.flavorSourceSets.iterator()
+            Iterator<SourceProvider> flavorSources = config.flavorSourceProviders.iterator()
             SourceProvider source
             while (flavorSources.hasNext()) {
                 source = flavorSources.next()
@@ -916,8 +926,15 @@ public abstract class BasePlugin {
             if (config.getType() != VariantConfiguration.Type.TEST) {
                 javaSource.add(config.buildTypeSourceSet.javaDirectories)
             }
-            if (config.variantSourceProvider != null) {
-                javaSource.add(config.variantSourceProvider.javaDirectories)
+            SourceProvider sourceProvider = config.variantSourceProvider
+            if (sourceProvider != null) {
+                javaSource.add(sourceProvider.javaDirectories)
+                resourceSource.add(sourceProvider.resDirectories)
+            }
+            sourceProvider = config.multiFlavorSourceProvider
+            if (sourceProvider != null) {
+                javaSource.add(sourceProvider.javaDirectories)
+                resourceSource.add(sourceProvider.resDirectories)
             }
 
             resourceSource.add(config.defaultSourceSet.resDirectories)
@@ -1566,6 +1583,112 @@ public abstract class BasePlugin {
                 "generate${variantData.variantConfiguration.fullName.capitalize()}Sources")
     }
 
+
+    private final Map<String, ArtifactMetaData> extraArtifactMap = Maps.newHashMap()
+    private final ListMultimap<String, AndroidArtifact> extraAndroidArtifacts = ArrayListMultimap.create()
+    private final ListMultimap<String, JavaArtifact> extraJavaArtifacts = ArrayListMultimap.create()
+    private final ListMultimap<String, SourceProviderContainer> extraVariantSourceProviders = ArrayListMultimap.create()
+    private final ListMultimap<String, SourceProviderContainer> extraBuildTypeSourceProviders = ArrayListMultimap.create()
+    private final ListMultimap<String, SourceProviderContainer> extraProductFlavorSourceProviders = ArrayListMultimap.create()
+    private final ListMultimap<String, SourceProviderContainer> extraMultiFlavorSourceProviders = ArrayListMultimap.create()
+
+
+    public Collection<ArtifactMetaData> getExtraArtifacts() {
+        return extraArtifactMap.values()
+    }
+
+    public Collection<AndroidArtifact> getExtraAndroidArtifacts(@NonNull String variantName) {
+        return extraAndroidArtifacts.get(variantName)
+    }
+
+    public Collection<JavaArtifact> getExtraJavaArtifacts(@NonNull String variantName) {
+        return extraJavaArtifacts.get(variantName)
+    }
+
+    public Collection<SourceProviderContainer> getExtraVariantSourceProviders(@NonNull String variantName) {
+        return extraVariantSourceProviders.get(variantName)
+    }
+
+    public Collection<SourceProviderContainer> getExtraFlavorSourceProviders(@NonNull String flavorName) {
+        return extraProductFlavorSourceProviders.get(flavorName)
+    }
+
+    public Collection<SourceProviderContainer> getExtraBuildTypeSourceProviders(@NonNull String buildTypeName) {
+        return extraBuildTypeSourceProviders.get(buildTypeName)
+    }
+
+    public void registerArtifactType(@NonNull String name,
+                                     boolean isTest,
+                                     int artifactType) {
+
+        if (extraArtifactMap.get(name) != null) {
+            throw new IllegalArgumentException("Artifact with name $name already registered.")
+        }
+
+        extraArtifactMap.put(name, new ArtifactMetaDataImpl(name, isTest, artifactType))
+    }
+
+    public void registerBuildTypeSourceProvider(@NonNull String name,
+                                                @NonNull BuildType buildType,
+                                                @NonNull SourceProvider sourceProvider) {
+        if (extraArtifactMap.get(name) == null) {
+            throw new IllegalArgumentException(
+                    "Artifact with name $name is not yet registered. Use registerArtifactType()")
+        }
+
+        extraBuildTypeSourceProviders.put(buildType.name,
+                new DefaultSourceProviderContainer(name, sourceProvider))
+
+    }
+
+    public void registerProductFlavorSourceProvider(@NonNull String name,
+                                                    @NonNull ProductFlavor productFlavor,
+                                                    @NonNull SourceProvider sourceProvider) {
+        if (extraArtifactMap.get(name) == null) {
+            throw new IllegalArgumentException(
+                    "Artifact with name $name is not yet registered. Use registerArtifactType()")
+        }
+
+        extraProductFlavorSourceProviders.put(productFlavor.name,
+                new DefaultSourceProviderContainer(name, sourceProvider))
+
+    }
+
+    public void registerMultiFlavorSourceProvider(@NonNull String name,
+                                                  @NonNull String flavorName,
+                                                  @NonNull SourceProvider sourceProvider) {
+        if (extraArtifactMap.get(name) == null) {
+            throw new IllegalArgumentException(
+                    "Artifact with name $name is not yet registered. Use registerArtifactType()")
+        }
+
+        extraMultiFlavorSourceProviders.put(flavorName,
+                new DefaultSourceProviderContainer(name, sourceProvider))
+    }
+
+    public void registerJavaArtifact(
+            @NonNull String name,
+            @NonNull BaseVariant variant,
+            @NonNull String assembleTaskName,
+            @NonNull String javaCompileTaskName,
+            @NonNull File classesFolder,
+            @Nullable SourceProvider sourceProvider) {
+        ArtifactMetaData artifactMetaData = extraArtifactMap.get(name)
+        if (artifactMetaData == null) {
+            throw new IllegalArgumentException(
+                    "Artifact with name $name is not yet registered. Use registerArtifactType()")
+        }
+        if (artifactMetaData.type != ArtifactMetaData.TYPE_JAVA) {
+            throw new IllegalArgumentException(
+                    "Artifact with name $name is not of type JAVA")
+        }
+
+        JavaArtifact artifact = new JavaArtifactImpl(
+                name, assembleTaskName, javaCompileTaskName, classesFolder,
+                null, sourceProvider, null)
+        extraJavaArtifacts.put(variant.name, artifact)
+    }
+
     //----------------------------------------------------------------------------------------------
     //------------------------------ START DEPENDENCY STUFF ----------------------------------------
     //----------------------------------------------------------------------------------------------
@@ -1857,18 +1980,22 @@ public abstract class BasePlugin {
     }
 
     private static String getLocalVersion() {
-        Class clazz = BasePlugin.class
-        String className = clazz.getSimpleName() + ".class"
-        String classPath = clazz.getResource(className).toString()
-        if (!classPath.startsWith("jar")) {
-            // Class not from JAR, unlikely
-            return null
+        try {
+            Class clazz = BasePlugin.class
+            String className = clazz.getSimpleName() + ".class"
+            String classPath = clazz.getResource(className).toString()
+            if (!classPath.startsWith("jar")) {
+                // Class not from JAR, unlikely
+                return null
+            }
+            String manifestPath = classPath.substring(0, classPath.lastIndexOf("!") + 1) +
+                    "/META-INF/MANIFEST.MF";
+            Manifest manifest = new Manifest(new URL(manifestPath).openStream());
+            Attributes attr = manifest.getMainAttributes();
+            return attr.getValue("Plugin-Version");
+        } catch (Throwable t) {
+            return null;
         }
-        String manifestPath = classPath.substring(0, classPath.lastIndexOf("!") + 1) +
-                "/META-INF/MANIFEST.MF";
-        Manifest manifest = new Manifest(new URL(manifestPath).openStream());
-        Attributes attr = manifest.getMainAttributes();
-        return attr.getValue("Plugin-Version");
     }
 
     public Project getProject() {

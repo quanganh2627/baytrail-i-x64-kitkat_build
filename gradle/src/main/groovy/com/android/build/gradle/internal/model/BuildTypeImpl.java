@@ -18,9 +18,9 @@ package com.android.build.gradle.internal.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.NdkConfig;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ClassField;
+import com.android.builder.model.NdkConfig;
 
 import java.io.File;
 import java.io.Serializable;

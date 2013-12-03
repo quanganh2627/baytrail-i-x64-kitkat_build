@@ -71,6 +71,14 @@ public interface BaseVariant {
     String getBaseName();
 
     /**
+     * Returns the flavor name of the variant. This is a concatenation of all the
+     * applied flavors
+     * @return the name of the flavors, or an empty string if there is not flavors.
+     */
+    @NonNull
+    String getFlavorName();
+
+    /**
      * Returns the {@link com.android.builder.DefaultBuildType} for this build variant.
      */
     @NonNull

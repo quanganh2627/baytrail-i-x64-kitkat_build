@@ -31,6 +31,7 @@ import org.gradle.logging.StyledTextOutput;
 import org.gradle.util.GUtil;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
 import static org.gradle.logging.StyledTextOutput.Style.Description;
@@ -132,15 +133,16 @@ public class AndroidAsciiReportRenderer extends TextReportRenderer {
     }
 
     private void renderChildren(@NonNull List<LibraryDependency> libraries,
-                                @Nullable List<JarDependency> localJars) {
+                                @Nullable Collection<JarDependency> localJars) {
         renderer.startChildren();
         if (localJars != null) {
             final boolean emptyChildren = libraries.isEmpty();
             final int count = localJars.size();
 
-            for (int i = 0; i < count; i++) {
-                JarDependency jarDependency = localJars.get(i);
+            int i = 0;
+            for (JarDependency jarDependency : localJars) {
                 render(jarDependency, emptyChildren && i == count - 1);
+                i++;
             }
         }
 

@@ -18,7 +18,6 @@ package com.android.builder.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.NdkConfig;
 
 /**
  * a Build Type. This is only the configuration of the build type.
@@ -27,7 +26,7 @@ import com.android.builder.NdkConfig;
  * or in the artifact info.
  *
  * @see BuildTypeContainer
- * @see ArtifactInfo#getDependencies()
+ * @see AndroidArtifact#getDependencies()
  */
 public interface BuildType extends BaseConfig {
 
@@ -70,7 +69,7 @@ public interface BuildType extends BaseConfig {
 
     /**
      * Returns the package name suffix applied to this build type.
-     * To get the final package name, use {@link ArtifactInfo#getPackageName()}.
+     * To get the final package name, use {@link AndroidArtifact#getPackageName()}.
      *
      * @return the package name suffix.
      */

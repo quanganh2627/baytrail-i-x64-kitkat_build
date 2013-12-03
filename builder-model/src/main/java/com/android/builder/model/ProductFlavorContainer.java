@@ -18,6 +18,8 @@ package com.android.builder.model;
 
 import com.android.annotations.NonNull;
 
+import java.util.Collection;
+
 /**
  * A Container of all the data related to {@link ProductFlavor}.
  */
@@ -40,10 +42,10 @@ public interface ProductFlavorContainer {
     SourceProvider getSourceProvider();
 
     /**
-     * The associated test sources of the product flavor
+     * Returns a list of ArtifactMetaData/SourceProvider association.
      *
-     * @return the test source provider.
+     * @return a list of ArtifactMetaData/SourceProvider association.
      */
     @NonNull
-    SourceProvider getTestSourceProvider();
+    Collection<SourceProviderContainer> getExtraSourceProviders();
 }
