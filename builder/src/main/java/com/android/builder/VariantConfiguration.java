@@ -864,17 +864,17 @@ public class VariantConfiguration implements TestData {
             }
         }
 
-        if (mMultiFlavorSourceProvider != null) {
-            File variantLocation = mMultiFlavorSourceProvider.getManifestFile();
-            if (variantLocation.isFile()) {
-                inputs.add(variantLocation);
-            }
-        }
-
         if (mBuildTypeSourceProvider != null) {
             File typeLocation = mBuildTypeSourceProvider.getManifestFile();
             if (typeLocation.isFile()) {
                 inputs.add(typeLocation);
+            }
+        }
+
+        if (mMultiFlavorSourceProvider != null) {
+            File variantLocation = mMultiFlavorSourceProvider.getManifestFile();
+            if (variantLocation.isFile()) {
+                inputs.add(variantLocation);
             }
         }
 
@@ -941,19 +941,19 @@ public class VariantConfiguration implements TestData {
             resourceSets.add(resourceSet);
         }
 
+        // multiflavor specific overrides flavor
+        if (mMultiFlavorSourceProvider != null) {
+            Collection<File> variantResDirs = mMultiFlavorSourceProvider.getResDirectories();
+            resourceSet = new ResourceSet(getFlavorName());
+            resourceSet.addSources(variantResDirs);
+            resourceSets.add(resourceSet);
+        }
+
         // build type overrides the flavors
         if (mBuildTypeSourceProvider != null) {
             Collection<File> typeResDirs = mBuildTypeSourceProvider.getResDirectories();
             resourceSet = new ResourceSet(mBuildType.getName());
             resourceSet.addSources(typeResDirs);
-            resourceSets.add(resourceSet);
-        }
-
-        // multiflavor specific overrides flavor/build type
-        if (mMultiFlavorSourceProvider != null) {
-            Collection<File> variantResDirs = mMultiFlavorSourceProvider.getResDirectories();
-            resourceSet = new ResourceSet(getFullName());
-            resourceSet.addSources(variantResDirs);
             resourceSets.add(resourceSet);
         }
 
@@ -1013,19 +1013,19 @@ public class VariantConfiguration implements TestData {
             assetSets.add(assetSet);
         }
 
+        // multiflavor specific overrides flavor
+        if (mMultiFlavorSourceProvider != null) {
+            Collection<File> variantResDirs = mMultiFlavorSourceProvider.getAssetsDirectories();
+            assetSet = new AssetSet(getFlavorName());
+            assetSet.addSources(variantResDirs);
+            assetSets.add(assetSet);
+        }
+
         // build type overrides flavors
         if (mBuildTypeSourceProvider != null) {
             Collection<File> typeResDirs = mBuildTypeSourceProvider.getAssetsDirectories();
             assetSet = new AssetSet(mBuildType.getName());
             assetSet.addSources(typeResDirs);
-            assetSets.add(assetSet);
-        }
-
-        // multiflavor specific overrides flavor/build type
-        if (mMultiFlavorSourceProvider != null) {
-            Collection<File> variantResDirs = mMultiFlavorSourceProvider.getAssetsDirectories();
-            assetSet = new AssetSet(getFullName());
-            assetSet.addSources(variantResDirs);
             assetSets.add(assetSet);
         }
 
