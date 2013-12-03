@@ -63,6 +63,8 @@ public class ManualBuildTest extends BuildTest {
         checkImageColor(drawableOutput, "no_overlay.png", GREEN);
         checkImageColor(drawableOutput, "debug_overlay.png", GREEN);
         checkImageColor(drawableOutput, "beta_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "free_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "free_beta_overlay.png", GREEN);
         checkImageColor(drawableOutput, "free_beta_debug_overlay.png", GREEN);
         checkImageColor(drawableOutput, "free_normal_overlay.png", RED);
 
@@ -71,6 +73,8 @@ public class ManualBuildTest extends BuildTest {
         checkImageColor(drawableOutput, "no_overlay.png", GREEN);
         checkImageColor(drawableOutput, "debug_overlay.png", GREEN);
         checkImageColor(drawableOutput, "beta_overlay.png", RED);
+        checkImageColor(drawableOutput, "free_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "free_beta_overlay.png", RED);
         checkImageColor(drawableOutput, "free_beta_debug_overlay.png", RED);
         checkImageColor(drawableOutput, "free_normal_overlay.png", GREEN);
 
@@ -79,6 +83,8 @@ public class ManualBuildTest extends BuildTest {
         checkImageColor(drawableOutput, "no_overlay.png", GREEN);
         checkImageColor(drawableOutput, "debug_overlay.png", GREEN);
         checkImageColor(drawableOutput, "beta_overlay.png", GREEN);
+        checkImageColor(drawableOutput, "free_overlay.png", RED);
+        checkImageColor(drawableOutput, "free_beta_overlay.png", RED);
         checkImageColor(drawableOutput, "free_beta_debug_overlay.png", RED);
         checkImageColor(drawableOutput, "free_normal_overlay.png", RED);
     }

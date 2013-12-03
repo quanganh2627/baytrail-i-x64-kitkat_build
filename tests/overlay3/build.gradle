@@ -17,7 +17,9 @@ android {
 
     sourceSets {
        beta.setRoot('movedSrc/beta')
+       free.setRoot('movedSrc/free')
        debug.setRoot('movedSrc/debug')
+       freeBeta.setRoot('movedSrc/freeBeta')
        freeBetaDebug.setRoot('movedSrc/freeBetaDebug')
        freeNormal.setRoot('movedSrc/freeNormal')
     }
