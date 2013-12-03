@@ -141,7 +141,7 @@ public class VariantConfigurationTest extends TestCase {
             }
         };
 
-        variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"));
+        variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"), "");
 
         return variant;
     }
@@ -162,7 +162,7 @@ public class VariantConfigurationTest extends TestCase {
             }
         };
 
-        variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"));
+        variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"), "");
         return variant;
     }
 
@@ -182,7 +182,7 @@ public class VariantConfigurationTest extends TestCase {
             }
         };
 
-        variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"));
+        variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"), "");
         return variant;
     }
 }
