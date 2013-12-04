@@ -1,7 +1,9 @@
 package com.android.build.gradle.internal;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -18,8 +20,12 @@ import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.lint.detector.api.Project;
 import com.android.utils.Pair;
+import com.android.utils.XmlUtils;
+
+import org.w3c.dom.Document;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,11 +42,13 @@ public class LintGradleProject extends Project {
     private LintGradleProject(
             @NonNull LintGradleClient client,
             @NonNull File dir,
-            @NonNull File referenceDir) {
+            @NonNull File referenceDir,
+            @NonNull File manifest) {
         super(client, dir, referenceDir);
         mGradleProject = true;
         mMergeManifests = true;
         mDirectLibraries = Lists.newArrayList();
+        readManifest(manifest);
     }
 
     /**
@@ -87,6 +95,18 @@ public class LintGradleProject extends Project {
         // Deliberately not calling super; that code is for ADT compatibility
     }
 
+    protected void readManifest(File manifest) {
+        if (manifest.exists()) {
+            try {
+                String xml = Files.toString(manifest, Charsets.UTF_8);
+                Document document = XmlUtils.parseDocumentSilently(xml, true);
+                readManifest(document);
+            } catch (IOException e) {
+                mClient.log(e, "Could not read manifest %1$s", manifest);
+            }
+        }
+    }
+
     @Override
     public boolean isGradleProject() {
         return true;
@@ -129,7 +149,7 @@ public class LintGradleProject extends Project {
                 @NonNull File referenceDir,
                 @NonNull AndroidProject project,
                 @NonNull Variant variant) {
-            super(client, dir, referenceDir);
+            super(client, dir, referenceDir, variant.getMainArtifact().getGeneratedManifest());
 
             mProject = project;
             mVariant = variant;
@@ -303,20 +323,37 @@ public class LintGradleProject extends Project {
         @Nullable
         @Override
         public String getPackage() {
-            // TODO: Merge with manifest
-            return mProject.getDefaultConfig().getProductFlavor().getPackageName();
+            // For now, lint only needs the manifest package; not the potentially variant specific
+            // package. As part of the Gradle work on the Lint API we should make two separate
+            // package lookup methods -- one for the manifest package, one for the build package
+            if (mPackage == null) { // only used as a fallback in case manifest somehow is null
+                String packageName = mProject.getDefaultConfig().getProductFlavor().getPackageName();
+                if (packageName != null) {
+                    return packageName;
+                }
+            }
+
+            return mPackage; // from manifest
         }
 
         @Override
         public int getMinSdk() {
-            // TODO: Merge with manifest
-            return mProject.getDefaultConfig().getProductFlavor().getMinSdkVersion();
+            int minSdk = mProject.getDefaultConfig().getProductFlavor().getMinSdkVersion();
+            if (minSdk != -1) {
+                return minSdk;
+            }
+
+            return mMinSdk; // from manifest
         }
 
         @Override
         public int getTargetSdk() {
-            // TODO: Merge with manifest
-            return mProject.getDefaultConfig().getProductFlavor().getTargetSdkVersion();
+            int targetSdk = mProject.getDefaultConfig().getProductFlavor().getTargetSdkVersion();
+            if (targetSdk != -1) {
+                return targetSdk;
+            }
+
+            return targetSdk; // from manifest
         }
 
         @Override
@@ -341,7 +378,7 @@ public class LintGradleProject extends Project {
                 @NonNull File dir,
                 @NonNull File referenceDir,
                 @NonNull AndroidLibrary library) {
-            super(client, dir, referenceDir);
+            super(client, dir, referenceDir, library.getManifest());
             mLibrary = library;
 
             // TODO: Make sure we don't use this project for any source library projects!
