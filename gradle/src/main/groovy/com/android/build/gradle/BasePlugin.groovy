@@ -668,6 +668,7 @@ public abstract class BasePlugin {
         processResources.conventionMapping.type = { variantConfiguration.type }
         processResources.conventionMapping.debuggable = { variantConfiguration.buildType.debuggable }
         processResources.conventionMapping.aaptOptions = { extension.aaptOptions }
+        processResources.conventionMapping.resourceConfigs = { variantConfiguration.mergedFlavor.resourceConfigurations }
     }
 
     protected void createProcessJavaResTask(BaseVariantData variantData) {

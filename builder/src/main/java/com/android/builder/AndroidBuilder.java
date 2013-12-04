@@ -53,6 +53,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.FullRevision;
 import com.android.utils.ILogger;
 import com.android.utils.SdkUtils;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -590,7 +591,8 @@ public class AndroidBuilder {
             @Nullable String proguardOutput,
                       VariantConfiguration.Type type,
                       boolean debuggable,
-            @NonNull AaptOptions options)
+            @NonNull AaptOptions options,
+            @NonNull Collection<String> resourceConfigs)
             throws IOException, InterruptedException, LoggedErrorException {
 
         checkNotNull(manifestFile, "manifestFile cannot be null.");
@@ -687,6 +689,13 @@ public class AndroidBuilder {
                 command.add("-0");
                 command.add(noCompress);
             }
+        }
+
+        if (!resourceConfigs.isEmpty()) {
+            command.add("-c");
+
+            Joiner joiner = Joiner.on(',');
+            command.add(joiner.join(resourceConfigs));
         }
 
         if (symbolOutputDir != null &&

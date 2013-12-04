@@ -19,6 +19,8 @@ package com.android.builder.model;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
+import java.util.Collection;
+
 /**
  * a Product Flavor. This is only the configuration of the flavor.
  *
@@ -144,4 +146,15 @@ public interface ProductFlavor extends BaseConfig {
      */
     @Nullable
     NdkConfig getNdkConfig();
+
+    /**
+     * Returns the resource configuration for this variant.
+     * TODO implement this.
+     *
+     * This is the list of -c parameters for aapt.
+     *
+     * @return the resource configuration options.
+     */
+    @NonNull
+    Collection<String> getResourceConfigurations();
 }

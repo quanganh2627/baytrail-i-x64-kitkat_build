@@ -115,10 +115,4 @@ class VariantImpl implements Variant, Serializable {
     public Collection<JavaArtifact> getExtraJavaArtifacts() {
         return extraJavaArtifacts;
     }
-
-    @Override
-    @NonNull
-    public List<String> getResourceConfigurations() {
-        return Collections.emptyList();
-    }
 }

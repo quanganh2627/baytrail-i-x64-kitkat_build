@@ -19,6 +19,13 @@
   PACKAGE_NAME, VERSION_CODE, VERSION_NAME, BUILD_TYPE, FLAVOR as well as FLAVOR_<group>, FLAVOR_<group>, etc... if there are several flavor dimensions.
 - Switch to ProGuard 4.10
    - Added ability to test proguarded (obfuscated) apps.
+- New option on product Flavor (and defaultConfig) allow filtering of resources through the -c option of aapt
+  You can pass single or multiple values through the DSL. All values from the default config and flavors
+  get combined and passed to aapt.
+     resConfig "en"
+  or 
+     resConfig "nodpi","hdpi"
+
 - Jar files are now pre-dexed for faster dexing.
 - First pass at NDK integration
 - API to add new generated source folders:

@@ -51,6 +51,9 @@ public class ProcessAndroidResources extends IncrementalTask {
     @OutputFile @Optional
     File proguardOutputFile
 
+    @Input
+    Collection<String> resourceConfigs
+
     // ----- PRIVATE TASK API -----
 
     @Nested
@@ -88,6 +91,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                 getProguardOutputFile()?.absolutePath,
                 getType(),
                 getDebuggable(),
-                getAaptOptions())
+                getAaptOptions(),
+                getResourceConfigs())
     }
 }
