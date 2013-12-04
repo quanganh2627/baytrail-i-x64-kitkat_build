@@ -86,15 +86,4 @@ public interface Variant {
      */
     @NonNull
     ProductFlavor getMergedFlavor();
-
-    /**
-     * Returns the resource configuration for this variant.
-     * TODO implement this.
-     *
-     * This is the list of -c parameters for aapt.
-     *
-     * @return the resource configuration options.
-     */
-    @NonNull
-    Collection<String> getResourceConfigurations();
 }

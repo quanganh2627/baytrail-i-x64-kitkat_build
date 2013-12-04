@@ -21,11 +21,14 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.NdkConfig;
 import com.android.builder.model.ProductFlavor;
+import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implementation of ProductFlavor that is serializable. Objects used in the DSL cannot be
@@ -47,6 +50,7 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
     private String mTestInstrumentationRunner = null;
     private Boolean mTestHandleProfiling = null;
     private Boolean mTestFunctionalTest = null;
+    private Set<String> mResourceConfigurations = null;
 
     @NonNull
     static ProductFlavorImpl cloneFlavor(ProductFlavor productFlavor) {
@@ -68,6 +72,9 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
         clonedFlavor.mTestInstrumentationRunner = productFlavor.getTestInstrumentationRunner();
         clonedFlavor.mTestHandleProfiling = productFlavor.getTestHandleProfiling();
         clonedFlavor.mTestFunctionalTest = productFlavor.getTestFunctionalTest();
+
+        clonedFlavor.mResourceConfigurations = Sets.newHashSet(
+                productFlavor.getResourceConfigurations());
 
         return clonedFlavor;
     }
@@ -172,6 +179,12 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
         return null;
     }
 
+    @NonNull
+    @Override
+    public Collection<String> getResourceConfigurations() {
+        return mResourceConfigurations;
+    }
+
     @Override
     public String toString() {
         return "ProductFlavorImpl{" +
@@ -188,6 +201,7 @@ class ProductFlavorImpl implements ProductFlavor, Serializable {
                 ", mTestInstrumentationRunner='" + mTestInstrumentationRunner + '\'' +
                 ", mTestHandleProfiling='" + mTestHandleProfiling + '\'' +
                 ", mTestFunctionalTest='" + mTestFunctionalTest + '\'' +
+                ", mResourceConfigurations='" + mResourceConfigurations + '\'' +
                 '}';
     }
 }

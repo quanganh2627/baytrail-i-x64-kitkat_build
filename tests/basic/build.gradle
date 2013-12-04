@@ -45,6 +45,9 @@ android {
 
         buildConfigField "boolean", "DEFAULT", "true"
         buildConfigField "String", "FOO", "\"foo\""
+
+        resConfig "en"
+        resConfigs "nodpi", "hdpi"
     }
 
     buildTypes {

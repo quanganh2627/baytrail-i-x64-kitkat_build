@@ -98,4 +98,15 @@ class ProductFlavorDsl extends DefaultProductFlavor {
     void ndk(Action<NdkConfigDsl> action) {
         action.execute(ndkConfig)
     }
+
+    void resConfig(@NonNull String config) {
+        addResourceConfiguration(config);
+    }
+
+    void resConfigs(@NonNull String... config) {
+        addResourceConfigurations(config);
+    }
+    void resConfigs(@NonNull Collection<String> config) {
+        addResourceConfigurations(config);
+    }
 }

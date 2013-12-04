@@ -23,6 +23,11 @@ import com.android.builder.model.NdkConfig;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.google.common.base.Objects;
+import com.google.common.collect.Sets;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Set;
 
 /**
  * The configuration of a product flavor.
@@ -47,6 +52,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     private Boolean mTestHandleProfiling = null;
     private Boolean mTestFunctionalTest = null;
     private SigningConfig mSigningConfig = null;
+    private Set<String> mResourceConfiguration = null;
 
     /**
      * Creates a ProductFlavor with a given name.
@@ -235,6 +241,40 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         return null;
     }
 
+    public void addResourceConfiguration(@NonNull String configuration) {
+        if (mResourceConfiguration == null) {
+            mResourceConfiguration = Sets.newHashSet();
+        }
+
+        mResourceConfiguration.add(configuration);
+    }
+
+    public void addResourceConfigurations(@NonNull String... configurations) {
+        if (mResourceConfiguration == null) {
+            mResourceConfiguration = Sets.newHashSet();
+        }
+
+        mResourceConfiguration.addAll(Arrays.asList(configurations));
+    }
+
+    public void addResourceConfigurations(@NonNull Collection<String> configurations) {
+        if (mResourceConfiguration == null) {
+            mResourceConfiguration = Sets.newHashSet();
+        }
+
+        mResourceConfiguration.addAll(configurations);
+    }
+
+    @NonNull
+    @Override
+    public Collection<String> getResourceConfigurations() {
+        if (mResourceConfiguration == null) {
+            mResourceConfiguration = Sets.newHashSet();
+        }
+
+        return mResourceConfiguration;
+    }
+
     /**
      * Merges the flavor on top of a base platform and returns a new object with the result.
      * @param base the flavor to merge on top of
@@ -271,6 +311,8 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         flavor.mSigningConfig =
                 mSigningConfig != null ? mSigningConfig : base.mSigningConfig;
 
+        flavor.addResourceConfigurations(base.getResourceConfigurations());
+
         return flavor;
     }
 
@@ -295,43 +337,30 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
 
         DefaultProductFlavor that = (DefaultProductFlavor) o;
 
-        if (!mName.equals(that.mName)) return false;
         if (mMinSdkVersion != that.mMinSdkVersion) return false;
-        if (mTargetSdkVersion != that.mTargetSdkVersion) return false;
         if (mRenderscriptTargetApi != that.mRenderscriptTargetApi) return false;
-        if (mRenderscriptSupportMode != null ?
-                !mRenderscriptSupportMode.equals(that.mRenderscriptSupportMode) :
-                that.mRenderscriptSupportMode != null)
-            return false;
-        if (mRenderscriptNdkMode != null ?
-                !mRenderscriptNdkMode.equals(that.mRenderscriptNdkMode) :
-                that.mRenderscriptNdkMode != null)
-            return false;
+        if (mTargetSdkVersion != that.mTargetSdkVersion) return false;
         if (mVersionCode != that.mVersionCode) return false;
-        if (mPackageName != null ?
-                !mPackageName.equals(that.mPackageName) :
-                that.mPackageName != null)
+        if (!mName.equals(that.mName)) return false;
+        if (mPackageName != null ? !mPackageName.equals(that.mPackageName) : that.mPackageName != null)
             return false;
-        if (mTestInstrumentationRunner != null ?
-                !mTestInstrumentationRunner.equals(that.mTestInstrumentationRunner) :
-                that.mTestInstrumentationRunner != null)
+        if (mRenderscriptNdkMode != null ? !mRenderscriptNdkMode.equals(that.mRenderscriptNdkMode) : that.mRenderscriptNdkMode != null)
             return false;
-        if (mTestHandleProfiling != null ?
-                !mTestHandleProfiling.equals(that.mTestHandleProfiling) :
-                that.mTestHandleProfiling != null)
+        if (mRenderscriptSupportMode != null ? !mRenderscriptSupportMode.equals(that.mRenderscriptSupportMode) : that.mRenderscriptSupportMode != null)
             return false;
-        if (mTestFunctionalTest != null ?
-                !mTestFunctionalTest.equals(that.mTestFunctionalTest) :
-                that.mTestFunctionalTest != null)
+        if (mResourceConfiguration != null ? !mResourceConfiguration.equals(that.mResourceConfiguration) : that.mResourceConfiguration != null)
             return false;
-        if (mTestPackageName != null ?
-                !mTestPackageName.equals(that.mTestPackageName) : that.mTestPackageName != null)
+        if (mSigningConfig != null ? !mSigningConfig.equals(that.mSigningConfig) : that.mSigningConfig != null)
             return false;
-        if (mVersionName != null ?
-                !mVersionName.equals(that.mVersionName) : that.mVersionName != null)
+        if (mTestFunctionalTest != null ? !mTestFunctionalTest.equals(that.mTestFunctionalTest) : that.mTestFunctionalTest != null)
             return false;
-        if (mSigningConfig != null ?
-                !mSigningConfig.equals(that.mSigningConfig) : that.mSigningConfig != null)
+        if (mTestHandleProfiling != null ? !mTestHandleProfiling.equals(that.mTestHandleProfiling) : that.mTestHandleProfiling != null)
+            return false;
+        if (mTestInstrumentationRunner != null ? !mTestInstrumentationRunner.equals(that.mTestInstrumentationRunner) : that.mTestInstrumentationRunner != null)
+            return false;
+        if (mTestPackageName != null ? !mTestPackageName.equals(that.mTestPackageName) : that.mTestPackageName != null)
+            return false;
+        if (mVersionName != null ? !mVersionName.equals(that.mVersionName) : that.mVersionName != null)
             return false;
 
         return true;
@@ -350,13 +379,11 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         result = 31 * result + (mVersionName != null ? mVersionName.hashCode() : 0);
         result = 31 * result + (mPackageName != null ? mPackageName.hashCode() : 0);
         result = 31 * result + (mTestPackageName != null ? mTestPackageName.hashCode() : 0);
-        result = 31 * result + (mTestInstrumentationRunner != null ?
-                mTestInstrumentationRunner.hashCode() : 0);
-        result = 31 * result + (mTestHandleProfiling != null ?
-                mTestHandleProfiling.hashCode() : 0);
-        result = 31 * result + (mTestFunctionalTest != null ?
-                mTestFunctionalTest.hashCode() : 0);
+        result = 31 * result + (mTestInstrumentationRunner != null ? mTestInstrumentationRunner.hashCode() : 0);
+        result = 31 * result + (mTestHandleProfiling != null ? mTestHandleProfiling.hashCode() : 0);
+        result = 31 * result + (mTestFunctionalTest != null ? mTestFunctionalTest.hashCode() : 0);
         result = 31 * result + (mSigningConfig != null ? mSigningConfig.hashCode() : 0);
+        result = 31 * result + (mResourceConfiguration != null ? mResourceConfiguration.hashCode() : 0);
         return result;
     }
 
@@ -378,11 +405,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
                 .add("testHandleProfiling", mTestHandleProfiling)
                 .add("testFunctionalTest", mTestFunctionalTest)
                 .add("signingConfig", mSigningConfig)
+                .add("resConfig", mResourceConfiguration)
                 .toString();
     }
-
-    /*
-        release signing info (keystore, key alias, passwords,...).
-        native abi filter
-    */
 }
