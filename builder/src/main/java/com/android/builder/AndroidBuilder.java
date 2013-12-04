@@ -331,7 +331,7 @@ public class AndroidBuilder {
                             new File(outManifestLocation));
                 } else {
                     ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(mLogger), null);
-                    merger.setInsertSourceMarkers(!mLibrary);
+                    merger.setInsertSourceMarkers(isInsertSourceMarkers());
                     doMerge(merger, new File(outManifestLocation), mainManifest,
                             attributeInjection, packageOverride);
                 }
@@ -350,7 +350,7 @@ public class AndroidBuilder {
                     }
 
                     ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(mLogger), null);
-                    merger.setInsertSourceMarkers(!mLibrary);
+                    merger.setInsertSourceMarkers(isInsertSourceMarkers());
                     doMerge(merger, mainManifestOut, mainManifest, manifestOverlays,
                             attributeInjection, packageOverride);
 
@@ -539,8 +539,25 @@ public class AndroidBuilder {
         }
 
         ManifestMerger merger = new ManifestMerger(MergerLog.wrapSdkLog(mLogger), null);
-        merger.setInsertSourceMarkers(!mLibrary);
+        merger.setInsertSourceMarkers(isInsertSourceMarkers());
         doMerge(merger, outManifest, mainManifest, manifests, attributeInjection, packageOverride);
+    }
+
+    /**
+     * Returns whether we should insert source markers in generated files (such as
+     * XML resources and merged manifest files)
+     *
+     * @return true to generate source comments
+     */
+    public boolean isInsertSourceMarkers() {
+        // In release library builds (generating AAR's) we don't want source comments.
+        // In other scenarios (e.g. during development) we do.
+
+        // TODO: Find out whether we're building in a release build type
+        boolean isRelease = false;
+
+        //noinspection ConstantConditions
+        return !(mLibrary && isRelease);
     }
 
     private void doMerge(ManifestMerger merger, File output, File input,
