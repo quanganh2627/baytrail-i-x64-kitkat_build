@@ -22,105 +22,13 @@ dependencies {
     testCompile "com.android.tools:testutils:$project.ext.baseAndroidVersion"
 }
 
-def getVersion() {
-    if (project.has("release")) {
-        return project.ext.baseVersion
-    }
-
-    return project.ext.baseVersion + '-SNAPSHOT'
-}
-
-version = getVersion()
 archivesBaseName = 'builder'
-jar.manifest.attributes("Builder-Version": version)
+project.ext.pomName = 'Android Builder library'
+project.ext.pomDesc = 'Library to build Android applications.'
 
-task publishLocal(type: Upload) {
-    configuration = configurations.archives
-    repositories {
-        mavenDeployer {
-            repository(url: uri(rootProject.ext.localRepo))
-        }
-    }
-}
+apply from: '../publish.gradle'
+apply from: '../javadoc.gradle'
+
+jar.manifest.attributes("Builder-Version": version)
 publishLocal.dependsOn ':builder-model:publishLocal', ':builder-test-api:publishLocal'
 
-project.ext.sonatypeUsername = hasProperty('sonatypeUsername') ? sonatypeUsername : ""
-project.ext.sonatypePassword = hasProperty('sonatypePassword') ? sonatypePassword : ""
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment ->
-                if (!project.has("release")) {
-                    throw new StopExecutionException("uploadArchives must be called with the release.gradle init script")
-                }
-
-                if (project.ext.sonatypeUsername.length() == 0 || project.ext.sonatypePassword.length() == 0) {
-                    throw new StopExecutionException("uploadArchives cannot be called without sonatype username and password")
-                }
-
-                signing.signPom(deployment)
-            }
-
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: project.ext.sonatypeUsername, password: project.ext.sonatypePassword)
-            }
-
-            pom.project {
-                name 'Android Builder library'
-                description 'library to build Android applications.'
-                url 'http://tools.android.com'
-                inceptionYear '2007'
-
-                licenses {
-                    license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                        distribution 'repo'
-                    }
-                }
-
-                scm {
-                    url "https://android.googlesource.com/platform/tools/build"
-                    connection "git://android.googlesource.com/platform/tools/build.git"
-                }
-                developers {
-                    developer {
-                        name 'The Android Open Source Project'
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-// custom tasks for creating source/javadoc jars
-task sourcesJar(type: Jar, dependsOn:classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-javadoc {
-    exclude               "**/internal/**"
-    options.memberLevel = org.gradle.external.javadoc.JavadocMemberLevel.PROTECTED
-
-    title                 "Android Builder"
-}
-
-task javadocJar(type: Jar, dependsOn:javadoc) {
-    classifier         'javadoc'
-    from               javadoc.destinationDir
-}
- 
-// add javadoc/source jar tasks as artifacts
-artifacts {
-    archives jar
-    archives sourcesJar
-    archives javadocJar
-}
-
-signing {
-    required { project.has("release") && gradle.taskGraph.hasTask("uploadArchives") }
-    sign configurations.archives
-}
