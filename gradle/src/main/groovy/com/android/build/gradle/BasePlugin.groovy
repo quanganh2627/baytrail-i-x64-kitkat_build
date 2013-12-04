@@ -15,6 +15,7 @@
  */
 
 package com.android.build.gradle
+
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
 import com.android.build.gradle.api.AndroidSourceSet
@@ -131,6 +132,7 @@ import static com.android.builder.BuilderConstants.FD_INSTRUMENT_TESTS
 import static com.android.builder.BuilderConstants.FD_REPORTS
 import static com.android.builder.BuilderConstants.INSTRUMENT_TEST
 import static java.io.File.separator
+
 /**
  * Base class for all Android plugins
  */
@@ -216,9 +218,17 @@ public abstract class BasePlugin {
 
         mainPreBuild = project.tasks.create("preBuild")
 
-        lint = project.tasks.create("lint")
+        lint = project.tasks.create("lint", Lint)
         lint.description = "Runs lint on all variants."
         lint.group = JavaBasePlugin.VERIFICATION_GROUP
+        lint.setPlugin(this)
+        int count = variantDataList.size()
+        for (int i = 0 ; i < count ; i++) {
+            final BaseVariantData baseVariantData = variantDataList.get(i)
+            if (isLintVariant(baseVariantData)) {
+                lint.dependsOn baseVariantData.javaCompileTask
+            }
+        }
         project.tasks.check.dependsOn lint
 
         project.afterEvaluate {
@@ -918,89 +928,35 @@ public abstract class BasePlugin {
         }
     }
 
-    protected void createLintTasks() {
-        File configFile = project.file("$project.projectDir/lint.xml")
+    /** Is the given variant relevant for lint? */
+    private static boolean isLintVariant(@NonNull BaseVariantData baseVariantData) {
+        // Only create lint targets for variants like debug and release, not debugTest
+        VariantConfiguration config = baseVariantData.variantConfiguration
+        return config.getType() != VariantConfiguration.Type.TEST;
+    }
 
-        // for each variant setup a lint task
+    // Add tasks for running lint on individual variants. We've already added a
+    // lint task earlier which runs on all variants.
+    protected void createLintTasks() {
         int count = variantDataList.size()
         for (int i = 0 ; i < count ; i++) {
             final BaseVariantData baseVariantData = variantDataList.get(i)
+            if (!isLintVariant(baseVariantData)) {
+                continue;
+            }
+
             String variantName = baseVariantData.variantConfiguration.fullName
-            Lint lintCheck = project.tasks.create("lint" + variantName, Lint)
+            def capitalizedVariantName = variantName.capitalize()
+            Task lintCheck = project.tasks.create("lint" + capitalizedVariantName, Lint)
             lintCheck.dependsOn baseVariantData.javaCompileTask, lintCompile
-            lint.dependsOn lintCheck
+            // Note that we don't do "lint.dependsOn lintCheck"; the "lint" target will
+            // on its own run through all variants (and compare results), it doesn't delegate
+            // to the individual tasks (since it needs to coordinate data collection and
+            // reporting)
             lintCheck.setPlugin(this)
-
-            String outputName = "$project.buildDir/lint/" + variantName
-            VariantConfiguration config = baseVariantData.variantConfiguration
-            List<LibraryDependency> depList = config.getAllLibraries()
-            List<Collection<File>> javaSource = Lists.newArrayList()
-            List<Collection<File>> resourceSource = Lists.newArrayList()
-
-            // set the java and res source of this variant's flavors
-            Iterator<SourceProvider> flavorSources = config.flavorSourceProviders.iterator()
-            SourceProvider source
-            while (flavorSources.hasNext()) {
-                source = flavorSources.next()
-                javaSource.add(source.javaDirectories)
-                resourceSource.add(source.resDirectories)
-            }
-
-            javaSource.add(config.defaultSourceSet.javaDirectories)
-            if (config.getType() != VariantConfiguration.Type.TEST) {
-                javaSource.add(config.buildTypeSourceSet.javaDirectories)
-            }
-            SourceProvider sourceProvider = config.variantSourceProvider
-            if (sourceProvider != null) {
-                javaSource.add(sourceProvider.javaDirectories)
-                resourceSource.add(sourceProvider.resDirectories)
-            }
-            sourceProvider = config.multiFlavorSourceProvider
-            if (sourceProvider != null) {
-                javaSource.add(sourceProvider.javaDirectories)
-                resourceSource.add(sourceProvider.resDirectories)
-            }
-
-            resourceSource.add(config.defaultSourceSet.resDirectories)
-            if (config.getType() != VariantConfiguration.Type.TEST) {
-                resourceSource.add(config.buildTypeSourceSet.resDirectories)
-            }
-            File genRes = baseVariantData.renderscriptCompileTask.getResOutputDir()
-            if (genRes != null) {
-                resourceSource.add(
-                    Collections.singleton(genRes)
-                )
-            }
-
-            lintCheck.doFirst {
-                File compiledLintJar = project.file("$project.buildDir/lint/lint.jar");
-                if (compiledLintJar.exists()) {
-                    lintCheck.addCustomRule(compiledLintJar);
-                }
-                // set custom lint rules from library dependencies
-                for (LibraryDependency dep : depList) {
-                    File depLintJar = dep.getLintJar()
-                    if (depLintJar.exists()) {
-                        lintCheck.addCustomRule(depLintJar)
-                    }
-                }
-
-                // set lint output options
-                lintCheck.setHtmlOutput(project.file(outputName + "Output.html"))
-                lintCheck.setXmlOutput(project.file(outputName + "Output.xml"))
-                lintCheck.setQuiet()
-
-                // set lint enabled checks
-                if (configFile.exists()) {
-                    lintCheck.setConfig(configFile)
-                }
-
-                // set lint project options
-                lintCheck.setSources(javaSource)
-                lintCheck.setClasspath(
-                        "$project.buildDir/classes/$baseVariantData.variantConfiguration.dirName")
-                lintCheck.setLintResources(resourceSource)
-            }
+            lintCheck.setVariantName(variantName)
+            lintCheck.description = "Runs lint on the " + capitalizedVariantName + " build"
+            lintCheck.group = JavaBasePlugin.VERIFICATION_GROUP
         }
     }
 
