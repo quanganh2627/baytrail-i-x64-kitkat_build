@@ -30,14 +30,6 @@ dependencies {
 sourceSets.test.compileClasspath += configurations.gradleRepo
 sourceSets.test.runtimeClasspath += configurations.gradleRepo
 
-def getVersion() {
-    if (project.has("release")) {
-        return project.ext.baseVersion
-    }
-
-    return project.ext.baseVersion + '-SNAPSHOT'
-}
-
 test.dependsOn ':gradle:publishLocal'
 
 idea {
