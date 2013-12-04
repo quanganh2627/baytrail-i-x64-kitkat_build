@@ -14,44 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.builder.model;
+#pragma version(1)
+#pragma rs java_package_name(com.example.android.rs.hellocomputendk)
 
-import com.android.annotations.Nullable;
+const static float3 gMonoMult = {0.299f, 0.587f, 0.114f};
 
-import java.util.Collection;
+void root(const uchar4 *v_in, uchar4 *v_out) {
+    float4 f4 = rsUnpackColor8888(*v_in);
 
-/**
- * Base class for NDK config file.
- */
-public interface NdkConfig {
-
-    /**
-     * The module name
-     */
-    @Nullable
-    public String getModuleName();
-
-    /**
-     * The C Flags
-     */
-    @Nullable
-    public String getcFlags();
-
-    /**
-     * The LD Libs
-     */
-    @Nullable
-    public Collection<String> getLdLibs();
-
-    /**
-     * The ABI Filters
-     */
-    @Nullable
-    public Collection<String> getAbiFilters();
-
-    /**
-     * The APP_STL value
-     */
-    @Nullable
-    public String getStl();
+    float3 mono = dot(f4.rgb, gMonoMult);
+    *v_out = rsPackColorTo8888(mono);
 }
+

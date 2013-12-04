@@ -98,6 +98,10 @@ public interface BuildType extends BaseConfig {
      */
     boolean isZipAlign();
 
+    /**
+     * Returns the NDK configuration.
+     * @return the ndk config.
+     */
     @Nullable
     NdkConfig getNdkConfig();
 }

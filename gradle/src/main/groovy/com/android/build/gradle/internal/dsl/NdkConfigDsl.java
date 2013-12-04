@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
+ * Implementation of NdkConfig to be used in the gradle DSL.
  */
 public class NdkConfigDsl implements NdkConfig, Serializable {
     private static final long serialVersionUID = 1L;

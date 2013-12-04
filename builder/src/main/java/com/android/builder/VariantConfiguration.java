@@ -22,7 +22,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.builder.dependency.DependencyContainer;
 import com.android.builder.dependency.JarDependency;
 import com.android.builder.dependency.LibraryDependency;
-import com.android.builder.internal.NdkConfigImpl;
+import com.android.builder.internal.MergedNdkConfig;
 import com.android.builder.internal.StringHelper;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.NdkConfig;
@@ -105,7 +105,7 @@ public class VariantConfiguration implements TestData {
     private LibraryDependency mOutput;
 
     private DefaultProductFlavor mMergedFlavor;
-    private final NdkConfigImpl mMergedNdkConfig = new NdkConfigImpl();
+    private final MergedNdkConfig mMergedNdkConfig = new MergedNdkConfig();
 
     private final Set<JarDependency> mJars = Sets.newHashSet();
 

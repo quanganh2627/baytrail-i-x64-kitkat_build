@@ -89,7 +89,19 @@ public interface ProductFlavor extends BaseConfig {
      */
     int getRenderscriptTargetApi();
 
+    /**
+     * Returns whether the renderscript code should be compiled in support mode to
+     * make it compatible with older versions of Android.
+     *
+     * @return true if support mode is enabled.
+     */
     boolean getRenderscriptSupportMode();
+
+    /**
+     * Returns whether the renderscript code should be compiled to generate C/C++ bindings.
+     * @return true for C/C++ generation, false for Java
+     */
+    boolean getRenderscriptNdkMode();
 
     /**
      * Returns the test package name. This is only the value set on this product flavor.
@@ -126,6 +138,10 @@ public interface ProductFlavor extends BaseConfig {
     @Nullable
     Boolean getTestFunctionalTest();
 
+    /**
+     * Returns the NDK configuration.
+     * @return the ndk config.
+     */
     @Nullable
     NdkConfig getNdkConfig();
 }
