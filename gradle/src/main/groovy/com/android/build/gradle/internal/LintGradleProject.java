@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
@@ -152,20 +153,11 @@ public class LintGradleProject extends Project {
         private List<SourceProvider> getSourceProviders() {
             if (mProviders == null) {
                 List<SourceProvider> providers = Lists.newArrayList();
+                AndroidArtifact mainArtifact = mVariant.getMainArtifact();
 
                 SourceProvider defaultProvider = mProject.getDefaultConfig().getSourceProvider();
                 if (defaultProvider != null) {
                     providers.add(defaultProvider);
-                }
-
-                SourceProvider sourceProvider = mVariant.getMainArtifact().getVariantSourceProvider();
-                if (sourceProvider != null) {
-                    providers.add(sourceProvider);
-                }
-
-                sourceProvider = mVariant.getMainArtifact().getMultiFlavorSourceProvider();
-                if (sourceProvider != null) {
-                    providers.add(sourceProvider);
                 }
 
                 for (String flavorName : mVariant.getProductFlavors()) {
@@ -180,6 +172,11 @@ public class LintGradleProject extends Project {
                     }
                 }
 
+                SourceProvider multiProvider = mainArtifact.getMultiFlavorSourceProvider();
+                if (multiProvider != null) {
+                    providers.add(multiProvider);
+                }
+
                 String buildTypeName = mVariant.getBuildType();
                 for (BuildTypeContainer buildType : mProject.getBuildTypes()) {
                     if (buildTypeName.equals(buildType.getBuildType().getName())) {
@@ -190,6 +187,12 @@ public class LintGradleProject extends Project {
                         break;
                     }
                 }
+
+                SourceProvider variantProvider =  mainArtifact.getVariantSourceProvider();
+                if (variantProvider != null) {
+                    providers.add(variantProvider);
+                }
+
                 mProviders = providers;
             }
 
