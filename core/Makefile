@@ -416,7 +416,6 @@ ifdef BOARD_KERNEL_PAGESIZE
   INTERNAL_BOOTIMAGE_ARGS += --pagesize $(BOARD_KERNEL_PAGESIZE)
 endif
 
-ifneq ($(TARGET_MAKE_NO_DEFAULT_BOOTIMAGE),true)
 INSTALLED_BOOTIMAGE_TARGET := $(PRODUCT_OUT)/boot.img
 
 ifeq ($(TARGET_BOOTIMAGE_USE_EXT2),true)
@@ -446,12 +445,6 @@ bootimage-nodeps: $(MKBOOTIMG)
 	$(hide) $(call assert-max-image-size,$(INSTALLED_BOOTIMAGE_TARGET),$(BOARD_BOOTIMAGE_PARTITION_SIZE),raw)
 
 endif # TARGET_BOOTIMAGE_USE_EXT2
-
-else # TARGET_MAKE_NO_DEFAULT_BOOTIMAGE
-
-$(INSTALLED_BOOTIMAGE_TARGET): $(MAKE_NO_DEFAULT_BOOTIMAGE_ITEMS)
-	$(MAKE_NO_DEFAULT_BOOTIMAGE)
-endif # TARGET_MAKE_NO_DEFAULT_BOOTIMAGE
 
 else	# TARGET_NO_KERNEL
 # HACK: The top-level targets depend on the bootimage.  Not all targets
@@ -630,8 +623,6 @@ endef
 # -----------------------------------------------------------------
 # Recovery image
 
-ifneq ($(TARGET_MAKE_NO_DEFAULT_RECOVERY),true)
-
 # If neither TARGET_NO_KERNEL nor TARGET_NO_RECOVERY are true
 ifeq (,$(filter true, $(TARGET_NO_KERNEL) $(TARGET_NO_RECOVERY)))
 
@@ -753,7 +744,6 @@ endif
 
 .PHONY: recoveryimage
 recoveryimage: $(INSTALLED_RECOVERYIMAGE_TARGET) $(RECOVERY_RESOURCE_ZIP)
-endif # TARGET_MAKE_NO_DEFAULT_RECOVERY
 
 ifneq ($(BOARD_NAND_PAGE_SIZE),)
 mkyaffs2_extra_flags := -c $(BOARD_NAND_PAGE_SIZE)
@@ -868,18 +858,6 @@ ifeq (true,$(WITH_DEXPREOPT))
 $(warning Warning: with dexpreopt enabled, you may need a full rebuild.)
 endif
 endif
-
-# -----------------------------------------------------------------
-# Zip package of system.img
-#
-INSTALLED_SYSTEMIMG_GZ_TARGET := $(PRODUCT_OUT)/system.img.gz
-
-$(INSTALLED_SYSTEMIMG_GZ_TARGET) : $(INSTALLED_SYSTEMIMAGE) | $(MINIGZIP)
-	@echo "Generate system.img.gz"
-	$(MINIGZIP) <$? >$@
-
-.PHONY: systemimg_gz
-systemimg_gz: $(INSTALLED_SYSTEMIMG_GZ_TARGET)
 
 #######
 ## system tarball
@@ -1144,8 +1122,6 @@ otatools: $(OTATOOLS)
 # This zip can be used to create an OTA package or filesystem image
 # as a post-build step.
 #
-ifneq ($(TARGET_MAKE_NO_DEFAULT_OTA_PACKAGE),true)
-
 name := $(TARGET_PRODUCT)
 ifeq ($(TARGET_BUILD_TYPE),debug)
   name := $(name)_debug
@@ -1359,7 +1335,6 @@ endif    # recovery_fstab is defined
 endif    # TARGET_NO_KERNEL != true
 endif    # TARGET_DEVICE != generic*
 endif    # TARGET_PRODUCT != sdk
-endif # TARGET_MAKE_NO_DEFAULT_OTA_PACKAGE
 
 ifdef is_tests_build
 # -----------------------------------------------------------------
