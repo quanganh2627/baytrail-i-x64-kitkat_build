@@ -241,7 +241,7 @@ $(built_odex) : $(common_javalib_jar) | $(DEXPREOPT) $(DEXOPT)
 	@mkdir -p $(dir $@)
 	$(call dexpreopt-one-file,$<,$@)
 
-$(LOCAL_BUILT_MODULE) : $(common_javalib_jar) | $(ACP)
+$(LOCAL_BUILT_MODULE) : $(common_javalib_jar) | $(AAPT) $(ACP)
 	$(call copy-file-to-target)
 	$(call dexpreopt-remove-classes.dex,$@)
 endif # dexpreopt_boot_jar_module
