@@ -29,7 +29,8 @@ PRODUCT_PACKAGES := \
     VideoEditor \
     WAPPushManager
 
-PRODUCT_PACKAGES += \
+ifneq ($(REMOVE_LIVEWALLPAPER),true)
+  PRODUCT_PACKAGES += \
     Galaxy4 \
     HoloSpiralWallpaper \
     LiveWallpapers \
@@ -39,6 +40,7 @@ PRODUCT_PACKAGES += \
     PhaseBeam \
     VisualizationWallpapers \
     PhotoTable
+endif
 
 # Additional settings used in all AOSP builds
 PRODUCT_PROPERTY_OVERRIDES := \
