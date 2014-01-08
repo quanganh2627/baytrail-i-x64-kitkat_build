@@ -207,10 +207,16 @@ ifeq ($(LOCAL_IS_HOST_MODULE)$(LOCAL_MODULE_CLASS),JAVA_LIBRARIES)
 common_classes_jar := $(call intermediates-dir-for,JAVA_LIBRARIES,$(LOCAL_MODULE),,COMMON)/classes.jar
 common_javalib_jar := $(dir $(common_classes_jar))javalib.jar
 
-$(common_classes_jar) : $(my_prebuilt_src_file) | $(ACP)
+# In case the classes.jar is also available for a prebuilt library,
+# copy it instead of the src_file
+my_prebuilt_src_classes := $(firstword \
+  $(wildcard $(my_prebuilt_src_file).classes.jar) \
+  $(my_prebuilt_src_file))
+
+$(common_classes_jar) : $(my_prebuilt_src_classes) | $(ACP)
 	$(transform-prebuilt-to-target)
 
-$(common_javalib_jar) : $(common_classes_jar) | $(ACP)
+$(common_javalib_jar) : $(my_prebuilt_src_file) | $(ACP)
 	$(transform-prebuilt-to-target)
 
 # make sure the classes.jar and javalib.jar are built before $(LOCAL_BUILT_MODULE)
