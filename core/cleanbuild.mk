@@ -192,8 +192,6 @@ installclean_files := \
 	$(PRODUCT_OUT)/system \
 	$(PRODUCT_OUT)/dex_bootjars \
 	$(PRODUCT_OUT)/obj/JAVA_LIBRARIES \
-	$(PRODUCT_OUT)/iago \
-	$(PRODUCT_OUT)/efi \
 	$(PRODUCT_OUT)/obj/FAKE \
 	$(PRODUCT_OUT)/obj/EXECUTABLES/adbd_intermediates \
 	$(PRODUCT_OUT)/obj/EXECUTABLES/init_intermediates \
