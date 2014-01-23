@@ -81,10 +81,14 @@ endif
 
 ifeq (,$(LOCAL_ASSET_DIR))
 LOCAL_ASSET_DIR := $(LOCAL_PATH)/assets
+# Remove the "-dsds" part of LOCAL_ASSET_DIR
+LOCAL_ASSET_DIR := $(subst -dsds,,$(LOCAL_ASSET_DIR))
 endif
 
 ifeq (,$(LOCAL_RESOURCE_DIR))
   LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
+  # Remove the "-dsds" part of LOCAL_RESOURCE_DIR
+  LOCAL_RESOURCE_DIR := $(subst -dsds,,$(LOCAL_RESOURCE_DIR))
 endif
 
 package_resource_overlays := $(strip \
