@@ -81,7 +81,8 @@ ifeq ($(TARGET_ARCH),x86)
     -finline-limit=300 \
     -fno-inline-functions-called-once \
     -mfpmath=sse \
-    -mbionic
+    -mbionic \
+    -march=slm
 endif
 
 CLANG_CONFIG_EXTRA_TARGET_C_INCLUDES := external/clang/lib/include $(TARGET_OUT_HEADERS)/clang
