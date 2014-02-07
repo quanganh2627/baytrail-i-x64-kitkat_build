@@ -221,13 +221,12 @@ $(common_javalib_jar) : $(my_prebuilt_src_file) | $(ACP)
 
 # make sure the classes.jar and javalib.jar are built before $(LOCAL_BUILT_MODULE)
 $(built_module) : $(common_javalib_jar)
-	$(call copy-file-to-target)
 
 # Static libraries should be uninstallable and are not optimized.
-ifneq ($(LOCAL_UNINSTALLABLE_MODULE),true)
 # Do pre-optimization of the libraries according to build settings.
 # Use the same procedure as java_library.mk for compiled modules.
-ifeq ($(LOCAL_DEX_PREOPT),true)
+# if LOCAL_UNINSTALLABLE_MODULE != true and LOCAL_DEX_PREOPT == true
+ifeq (_true,$(filter $(LOCAL_UNINSTALLABLE_MODULE),true)_$(LOCAL_DEX_PREOPT))
 dexpreopt_boot_jar_module := $(filter $(LOCAL_MODULE),$(DEXPREOPT_BOOT_JARS_MODULES))
 ifneq ($(dexpreopt_boot_jar_module),)
 # boot jar's rules are defined in dex_preopt.mk
@@ -254,6 +253,8 @@ $(LOCAL_BUILT_MODULE) : $(common_javalib_jar) | $(AAPT) $(ACP)
 	$(call copy-file-to-target)
 	$(call dexpreopt-remove-classes.dex,$@)
 endif # dexpreopt_boot_jar_module
-endif # LOCAL_DEX_PREOPT
-endif # LOCAL_UNINSTALLABLE_MODULE
+else
+$(built_module) : $(common_javalib_jar)
+	$(call copy-file-to-target)
+endif # LOCAL_UNINSTALLABLE_MODULE != true and LOCAL_DEX_PREOPT == true
 endif # TARGET JAVA_LIBRARIES
