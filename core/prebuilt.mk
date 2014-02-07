@@ -26,16 +26,23 @@ my_prebuilt_src_file := $(LOCAL_PATH)/$(LOCAL_SRC_FILES)
 endif
 
 ifneq ($(filter APPS JAVA_LIBRARIES,$(LOCAL_IS_HOST_MODULE)$(LOCAL_MODULE_CLASS)),)
-ifeq (true,$(WITH_DEXPREOPT))
-ifeq (true,$(WITH_DEXPREOPT_PREBUILT))
+
+ifneq (true_true,$(WITH_DEXPREOPT)_$(WITH_DEXPREOPT_PREBUILT))
+LOCAL_DEX_PREOPT :=
+else
 ifeq (,$(TARGET_BUILD_APPS))
+ifeq (,$(LOCAL_APK_LIBRARIES))
 ifndef LOCAL_DEX_PREOPT
-LOCAL_DEX_PREOPT := true
+LOCAL_DEX_PREOPT := $(DEX_PREOPT_DEFAULT)
 endif
 endif
 endif
 endif
+ifeq (false,$(LOCAL_DEX_PREOPT))
+LOCAL_DEX_PREOPT :=
 endif
+
+endif # APPS or JAVA_LIBRARIES
 
 ifdef LOCAL_IS_HOST_MODULE
   my_prefix := HOST_
@@ -157,7 +164,7 @@ else
 endif
 
 ifneq ($(filter APPS,$(LOCAL_MODULE_CLASS)),)
-ifeq ($(LOCAL_DEX_PREOPT),true)
+ifdef LOCAL_DEX_PREOPT
 # Make sure the boot jars get dexpreopt-ed first
 $(built_module): $(DEXPREOPT_BOOT_ODEXS) | $(DEXPREOPT) $(DEXOPT) $(AAPT)
 endif
@@ -170,15 +177,17 @@ $(built_module) : $(my_prebuilt_src_file) | $(ACP) $(ZIPALIGN) $(SIGNAPK_JAR)
 	$(transform-prebuilt-to-target)
 	$(sign-package)
 endif
-ifeq ($(LOCAL_DEX_PREOPT),true)
+ifdef LOCAL_DEX_PREOPT
 	$(hide) rm -f $(patsubst %.apk,%.odex,$@)
 	$(call dexpreopt-one-file,$@,$(patsubst %.apk,%.odex,$@))
+ifneq (nostripping,$(LOCAL_DEX_PREOPT))
 	$(call dexpreopt-remove-classes.dex,$@)
+endif
 endif
 # Align non-presigned and presigned .apks
 	$(align-package)
 
-ifeq ($(LOCAL_DEX_PREOPT),true)
+ifdef LOCAL_DEX_PREOPT
 built_odex := $(basename $(built_module)).odex
 $(built_odex): $(built_module)
 endif
@@ -221,13 +230,15 @@ $(common_javalib_jar) : $(my_prebuilt_src_file) | $(ACP)
 
 # make sure the classes.jar and javalib.jar are built before $(LOCAL_BUILT_MODULE)
 $(built_module) : $(common_javalib_jar)
-	$(call copy-file-to-target)
 
 # Static libraries should be uninstallable and are not optimized.
-ifneq ($(LOCAL_UNINSTALLABLE_MODULE),true)
+ifeq (true,$(LOCAL_UNINSTALLABLE_MODULE))
+LOCAL_DEX_PREOPT :=
+endif
+
 # Do pre-optimization of the libraries according to build settings.
 # Use the same procedure as java_library.mk for compiled modules.
-ifeq ($(LOCAL_DEX_PREOPT),true)
+ifdef LOCAL_DEX_PREOPT
 dexpreopt_boot_jar_module := $(filter $(LOCAL_MODULE),$(DEXPREOPT_BOOT_JARS_MODULES))
 ifneq ($(dexpreopt_boot_jar_module),)
 # boot jar's rules are defined in dex_preopt.mk
@@ -252,8 +263,15 @@ $(built_odex) : $(common_javalib_jar) | $(DEXPREOPT) $(DEXOPT)
 
 $(LOCAL_BUILT_MODULE) : $(common_javalib_jar) | $(AAPT) $(ACP)
 	$(call copy-file-to-target)
+ifneq (nostripping,$(LOCAL_DEX_PREOPT))
 	$(call dexpreopt-remove-classes.dex,$@)
+endif
+
 endif # dexpreopt_boot_jar_module
+
+else # LOCAL_DEX_PREOPT
+$(built_module) : $(common_javalib_jar) | $(ACP)
+	$(call copy-file-to-target)
+
 endif # LOCAL_DEX_PREOPT
-endif # LOCAL_UNINSTALLABLE_MODULE
 endif # TARGET JAVA_LIBRARIES
