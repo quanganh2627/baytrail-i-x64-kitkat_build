@@ -51,10 +51,6 @@ SRC_DROIDDOC_DIR := $(TOPDIR)build/tools/droiddoc
 # Various mappings to avoid hard-coding paths all over the place
 include $(BUILD_SYSTEM)/pathmap.mk
 
-## Intel specific modification for handling dsds code
-include $(TOPDIR)device/intel/common/flavor.mk
-## End of Intel modification
-
 # ###############################################################
 # Build system internal files
 # ###############################################################
