@@ -64,6 +64,7 @@ $(ext_mod_file): private_src_dir:=$(LOCAL_MODULE_PATH)
 $(ext_mod_file): $(INSTALLED_KERNEL_TARGET) FORCE
 	$(hide) mkdir -p $(@D)
 	$(hide) $(ACP) -rtf $(private_src_dir)/* $(@D)
+	$(hide) find $(@D) -name Android.mk | xargs rm -f
 	$(mk_kernel) M=$(@D) $(PRIVATE_KERNEL_MODULE_INCLUDES) modules
 	touch $@
 
