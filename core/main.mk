@@ -212,7 +212,7 @@ endif
 # These are the modifier targets that don't do anything themselves, but
 # change the behavior of the build.
 # (must be defined before including definitions.make)
-INTERNAL_MODIFIER_TARGETS := showcommands all incrementaljavac
+INTERNAL_MODIFIER_TARGETS := showcommands all incrementaljavac depflags
 
 .PHONY: incrementaljavac
 incrementaljavac: ;
@@ -228,6 +228,19 @@ ENABLE_INCREMENTALJAVAC :=
 ifneq (,$(filter incrementaljavac, $(MAKECMDGOALS)))
 ENABLE_INCREMENTALJAVAC := true
 MAKECMDGOALS := $(filter-out incrementaljavac, $(MAKECMDGOALS))
+endif
+
+
+# depflags
+# Enables tracking and dependency of compilation flags for successive incremental
+# builds.
+# WARNING: This will increase build time, thus disabled by default.
+.PHONY: depflags
+depflags:
+	$(hide) echo Dependency tracking on compilation flags enabled ...
+
+ifneq (,$(filter depflags, $(MAKECMDGOALS)))
+ENABLE_DEPFLAGS := true
 endif
 
 # EMMA_INSTRUMENT_STATIC merges the static emma library to each emma-enabled module.
