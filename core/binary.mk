@@ -669,6 +669,11 @@ $(all_objects) : | $(import_includes)
 ALL_C_CPP_ETC_OBJECTS += $(all_objects)
 
 ###########################################################
+## Manage dependencies on compilation flags
+###########################################################
+include $(BUILD_SYSTEM)/flags_deps.mk
+
+###########################################################
 ## Copy headers to the install tree
 ###########################################################
 include $(BUILD_COPY_HEADERS)
