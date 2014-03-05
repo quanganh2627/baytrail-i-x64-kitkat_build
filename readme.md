@@ -90,6 +90,3 @@ For each variant (product-flavor, build-type):
 * Crunches resources in `build/resources`
 * Packages the resource into `build/libs`
 * Assembles the application package into `build/libs`.
-
-Some other notes:
-* No support for running ProGuard.
