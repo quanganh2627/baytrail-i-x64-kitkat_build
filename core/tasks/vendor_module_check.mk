@@ -25,6 +25,10 @@ _vendor_owner_whitelist := \
         imgtec \
         invensense \
         intel \
+        intel_apache \
+        intel_oblumg \
+        intel_obl \
+        intel_mit \
         lge \
         nvidia \
         nxp \
