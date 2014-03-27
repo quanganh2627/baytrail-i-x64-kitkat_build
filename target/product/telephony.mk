@@ -18,6 +18,7 @@
 # to products that have telephony hardware.
 
 PRODUCT_PACKAGES := \
+    TeleService \
     Dialer \
     Mms \
     rild
