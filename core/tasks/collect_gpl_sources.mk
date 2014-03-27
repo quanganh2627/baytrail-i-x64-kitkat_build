@@ -15,10 +15,10 @@
 gpl_source_tgz := $(call intermediates-dir-for,PACKAGING,gpl_source,HOST,COMMON)/gpl_source.tgz
 
 $(gpl_source_tgz): PRIVATE_PATHS := $(sort $(patsubst %/, %, $(dir $(ALL_GPL_MODULE_LICENSE_FILES))))
-$(gpl_source_tgz) : $(ALL_GPL_MODULE_LICENSE_FILES) $(ALL_EXTRA_SOURCE_TARBALLS)
+$(gpl_source_tgz) : $(ALL_GPL_MODULE_LICENSE_FILES)
 	@echo Package gpl sources: $@
 	@rm -rf $(dir $@) && mkdir -p $(dir $@)
-	$(hide) tar cfz $@ --exclude ".git*" $(PRIVATE_PATHS) $(ALL_EXTRA_SOURCE_TARBALLS)
+	$(hide) tar cfz $@ --exclude ".git*" $(PRIVATE_PATHS)
 
 
 .PHONY: gpl_source_tgz
