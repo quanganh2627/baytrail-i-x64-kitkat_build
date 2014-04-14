@@ -41,6 +41,7 @@ PRODUCT_PACKAGES := \
     QuickSearchBox \
     Settings \
     SystemUI \
+    TeleService \
     CalendarProvider \
     hostapd \
     wpa_supplicant.conf \
