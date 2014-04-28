@@ -69,7 +69,6 @@ $(info Building kernel from source)
 
 ifeq ($(TARGET_ARCH),x86)
   KERNEL_TARGET := bzImage
-  TARGET_KERNEL_CONFIG ?= android-x86_defconfig
   ifeq ($(TARGET_KERNEL_ARCH),)
     TARGET_KERNEL_ARCH := i386
   endif
@@ -83,7 +82,7 @@ ifeq ($(TARGET_ARCH),arm)
   endif
 endif
 
-TARGET_KERNEL_SOURCE ?= kernel
+TARGET_KERNEL_SOURCE ?= ../linux-3.10
 
 kernel_script_deps := $(foreach s,$(TARGET_KERNEL_SCRIPTS),$(TARGET_KERNEL_SOURCE)/scripts/$(s))
 script_output := $(CURDIR)/$(TARGET_OUT_INTERMEDIATES)/kscripts
@@ -96,9 +95,9 @@ mk_kernel_base := + $(hide) $(MAKE) ARCH=$(TARGET_KERNEL_ARCH) $(if $(SHOW_COMMA
 ifneq ($(TARGET_KERNEL_CROSS_COMPILE),false)
   ifneq ($(TARGET_KERNEL_TOOLS_PREFIX),)
     ifneq ($(USE_CCACHE),)
-       mk_kernel_base += CROSS_COMPILE="$(CURDIR)/$(CCACHE_BIN) $(CURDIR)/$(TARGET_KERNEL_TOOLS_PREFIX)"
+       mk_kernel += CROSS_COMPILE="$(CURDIR)/$(CCACHE_BIN) $(CURDIR)/$(TARGET_KERNEL_TOOLS_PREFIX)"
     else
-       mk_kernel_base += CROSS_COMPILE=$(CURDIR)/$(TARGET_KERNEL_TOOLS_PREFIX)
+       mk_kernel += CROSS_COMPILE=$(CURDIR)/$(TARGET_KERNEL_TOOLS_PREFIX)
     endif
   endif
 endif
@@ -149,18 +148,23 @@ $(kernel_dotconfig_file): $(kernel_config_file) $(TARGET_KERNEL_CONFIG_OVERRIDES
 	$(mk_kernel) oldnoconfig
 	$(hide) rm -f $@.old
 
-built_kernel_target := $(PRODUCT_KERNEL_OUTPUT)/arch/$(TARGET_ARCH)/boot/$(KERNEL_TARGET)
-
+built_kernel_target := $(PRODUCT_KERNEL_OUTPUT)/arch/$(TARGET_ARCH)/boot/vmlinux.bin
+built_dtb_target    := $(PRODUCT_KERNEL_OUTPUT)/arch/$(TARGET_ARCH)/boot/dts/$(DTB)
 # Declared .PHONY to force a rebuild each time. We can't tell if the kernel
 # sources have changed from this context
 .PHONY : $(INSTALLED_KERNEL_TARGET)
 
-$(INSTALLED_KERNEL_TARGET): $(kernel_dotconfig_file) $(kernel_key_deps) $(MINIGZIP) | $(ACP)
+$(INSTALLED_KERNEL_TARGET): $(kernel_dotconfig_file) $(MINIGZIP) | $(ACP)
 	$(mk_kernel) $(KERNEL_TARGET) $(if $(kernel_mod_enabled),modules)
 	$(hide) $(ACP) -fp $(built_kernel_target) $@
 
 $(INSTALLED_SYSTEM_MAP): $(INSTALLED_KERNEL_TARGET) | $(ACP)
 	$(hide) $(ACP) $(PRODUCT_KERNEL_OUTPUT)/System.map $@
+
+#Build DTB image to destination for mkbootimg processing.
+$(INSTALLED_2NDBOOTLOADER_TARGET): $(kernel_dotconfig_file) $(INSTALLED_KERNEL_TARGET) | $(ACP)
+	$(mk_kernel) $(DTB)
+	$(hide) $(ACP) -fp $(built_dtb_target) $@
 
 # Extra newline intentional to prevent calling foreach from concatenating
 # into a single line
@@ -182,11 +186,6 @@ define install-compat-module
 
 endef
 
-# Filter the list of external modules, to remove those that are not in PRODUCT_PACKAGES
-EXTERNAL_KERNEL_MODULES_TO_INSTALL := $(filter $(EXTERNAL_KERNEL_MODULES_TO_INSTALL),$(product_MODULES) $(foreach t,$(tags_to_install),$(ALL_MODULE_NAME_TAGS.$(t))))
-
-# Filter the list of compat modules to remove those that are not in PRODUCT_PACKAGES
-EXTERNAL_KERNEL_COMPAT_MODULES_TO_INSTALL := $(filter $(EXTERNAL_KERNEL_COMPAT_MODULES_TO_INSTALL),$(product_MODULES))
 
 # $1: module install directory; common to all modules
 define make-modules
@@ -203,6 +202,7 @@ $(INSTALLED_MODULES_TARGET): $(foreach m,$(EXTERNAL_KERNEL_MODULES_TO_INSTALL),$
 $(INSTALLED_MODULES_TARGET): $(foreach m,$(EXTERNAL_KERNEL_COMPAT_MODULES_TO_INSTALL),$(ALL_MODULES.$(m).BUILT))
 endif
 
+.PHONY: kernel_modules
 $(INSTALLED_MODULES_TARGET): $(INSTALLED_KERNEL_TARGET) $(MINIGZIP) | $(ACP)
 	$(hide) rm -rf $(modbuild_output)/lib/modules
 	$(hide) mkdir -p $(modbuild_output)/lib/modules
@@ -308,9 +308,10 @@ $(host_scripts): $(INSTALLED_KERNEL_SCRIPTS)
 	$(hide) mkdir -p $(HOST_OUT_EXECUTABLES)
 	$(hide) tar -C $(HOST_OUT_EXECUTABLES) -xzvf $(INSTALLED_KERNEL_SCRIPTS) $(notdir $@)
 
-.PHONY: kernel
-kernel: $(INSTALLED_KERNEL_ARCHIVE)
-
+.PHONY: kernel kernel_modules kernel_dtb
+kernel: $(INSTALLED_KERNEL_TARGET)
+kernel_modules: $(INSTALLED_MODULES_TARGET)
+kernel_dtb: $(INSTALLED_2NDBOOTLOADER_TARGET)
 $(call dist-for-goals,droidcore,$(INSTALLED_KERNEL_ARCHIVE):$(TARGET_PRODUCT)-kernel-archive-$(FILE_NAME_TAG).zip)
 
 # For including sources in gpl_source_tgz
