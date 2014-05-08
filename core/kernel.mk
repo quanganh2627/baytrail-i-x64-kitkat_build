@@ -166,6 +166,12 @@ $(INSTALLED_2NDBOOTLOADER_TARGET): $(kernel_dotconfig_file) $(INSTALLED_KERNEL_T
 	$(mk_kernel) $(DTB)
 	$(hide) $(ACP) -fp $(built_dtb_target) $@
 
+# Kernel reconfiguration
+.PHONY: kernel_menuconfig
+kernel_menuconfig: $(kernel_dotconfig_file) | $(ACP)
+	$(mk_kernel) menuconfig
+	$(ACP) -fp $(kernel_dotconfig_file) $(kernel_config_file)
+
 # Extra newline intentional to prevent calling foreach from concatenating
 # into a single line
 # $1: module name
@@ -202,7 +208,6 @@ $(INSTALLED_MODULES_TARGET): $(foreach m,$(EXTERNAL_KERNEL_MODULES_TO_INSTALL),$
 $(INSTALLED_MODULES_TARGET): $(foreach m,$(EXTERNAL_KERNEL_COMPAT_MODULES_TO_INSTALL),$(ALL_MODULES.$(m).BUILT))
 endif
 
-.PHONY: kernel_modules
 $(INSTALLED_MODULES_TARGET): $(INSTALLED_KERNEL_TARGET) $(MINIGZIP) | $(ACP)
 	$(hide) rm -rf $(modbuild_output)/lib/modules
 	$(hide) mkdir -p $(modbuild_output)/lib/modules
@@ -308,10 +313,15 @@ $(host_scripts): $(INSTALLED_KERNEL_SCRIPTS)
 	$(hide) mkdir -p $(HOST_OUT_EXECUTABLES)
 	$(hide) tar -C $(HOST_OUT_EXECUTABLES) -xzvf $(INSTALLED_KERNEL_SCRIPTS) $(notdir $@)
 
-.PHONY: kernel kernel_modules kernel_dtb
+.PHONY: kernel
 kernel: $(INSTALLED_KERNEL_TARGET)
+
+.PHONY: kernel_modules
 kernel_modules: $(INSTALLED_MODULES_TARGET)
+
+.PHONY: kernel_dtb
 kernel_dtb: $(INSTALLED_2NDBOOTLOADER_TARGET)
+
 $(call dist-for-goals,droidcore,$(INSTALLED_KERNEL_ARCHIVE):$(TARGET_PRODUCT)-kernel-archive-$(FILE_NAME_TAG).zip)
 
 # For including sources in gpl_source_tgz
