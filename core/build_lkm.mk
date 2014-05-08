@@ -92,6 +92,11 @@ $(ext_mod_file): $(INSTALLED_KERNEL_TARGET) FORCE | $(ACP)
 # install modifies common files.
 EXTERNAL_KERNEL_MODULES_TO_INSTALL += $(LOCAL_MODULE)
 
+# Define a couple of utility make targets for debugging
+.PHONY: config_$(LOCAL_MODULE) build_$(LOCAL_MODULE)
+config_$(LOCAL_MODULE): $(ext_cfg_file)
+build_$(LOCAL_MODULE): $(ext_mod_file)
+
 gpl_license_file := $(call find-parent-file,$(LOCAL_PATH),MODULE_LICENSE*_GPL* MODULE_LICENSE*_MPL* MODULE_LICENSE*_LGPL*)
 ifneq ($(gpl_license_file),)
   LOCAL_MODULE_TAGS += gnu
