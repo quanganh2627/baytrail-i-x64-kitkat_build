@@ -21,9 +21,9 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.SigningConfig;
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
-import com.android.sdklib.util.GrabProcessOutput;
-import com.android.sdklib.util.GrabProcessOutput.IProcessOutput;
-import com.android.sdklib.util.GrabProcessOutput.Wait;
+import com.android.utils.GrabProcessOutput;
+import com.android.utils.GrabProcessOutput.IProcessOutput;
+import com.android.utils.GrabProcessOutput.Wait;
 import com.android.utils.ILogger;
 
 import java.io.File;
