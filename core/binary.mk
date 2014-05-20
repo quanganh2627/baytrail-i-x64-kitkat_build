@@ -20,7 +20,13 @@ ifdef LOCAL_SDK_VERSION
     $(error $(LOCAL_PATH): LOCAL_SDK_VERSION cannot be used in host module)
   endif
   my_ndk_source_root := $(HISTORICAL_NDK_VERSIONS_ROOT)/current/sources
-  my_ndk_sysroot := $(HISTORICAL_NDK_VERSIONS_ROOT)/current/platforms/android-$(LOCAL_SDK_VERSION)/arch-$(TARGET_$(LOCAL_2ND_ARCH_VAR_PREFIX)ARCH)
+  # There is no android-current symlink, so the target directory must be extracted
+  ifeq ($(LOCAL_SDK_VERSION),current)
+    sdk_version := $(notdir $(realpath $(HISTORICAL_NDK_VERSIONS_ROOT)/current))
+  else
+    sdk_version := $(LOCAL_SDK_VERSION)
+  endif
+  my_ndk_sysroot := $(HISTORICAL_NDK_VERSIONS_ROOT)/current/platforms/android-$(sdk_version)/arch-$(TARGET_$(LOCAL_2ND_ARCH_VAR_PREFIX)ARCH)
   my_ndk_sysroot_include := $(my_ndk_sysroot)/usr/include
   ifeq (x86_64,$(TARGET_$(LOCAL_2ND_ARCH_VAR_PREFIX)ARCH))
     my_ndk_sysroot_lib := $(my_ndk_sysroot)/usr/lib64
@@ -39,7 +45,7 @@ ifdef LOCAL_SDK_VERSION
   ifeq (,$(LOCAL_NDK_STL_VARIANT))
     LOCAL_NDK_STL_VARIANT := system
   endif
-  ifneq (1,$(words $(filter system stlport_static stlport_shared c++_static c++_shared gnustl_static, $(LOCAL_NDK_STL_VARIANT))))
+  ifneq (1,$(words $(filter system stlport_static stlport_shared c++_static c++_shared gnustl_static gnustl_shared, $(LOCAL_NDK_STL_VARIANT))))
     $(error $(LOCAL_PATH): Unknown LOCAL_NDK_STL_VARIANT $(LOCAL_NDK_STL_VARIANT))
   endif
   ifeq (system,$(LOCAL_NDK_STL_VARIANT))
@@ -67,10 +73,16 @@ ifdef LOCAL_SDK_VERSION
     endif
     my_ndk_stl_cppflags := -std=c++11
   else
-    # LOCAL_NDK_STL_VARIANT is gnustl_static
     my_ndk_stl_include_path := $(my_ndk_source_root)/cxx-stl/gnu-libstdc++/$($(LOCAL_2ND_ARCH_VAR_PREFIX)TARGET_NDK_GCC_VERSION)/libs/$(TARGET_$(LOCAL_2ND_ARCH_VAR_PREFIX)CPU_ABI)/include \
                                $(my_ndk_source_root)/cxx-stl/gnu-libstdc++/$($(LOCAL_2ND_ARCH_VAR_PREFIX)TARGET_NDK_GCC_VERSION)/include
-    my_ndk_stl_static_lib := $(my_ndk_source_root)/cxx-stl/gnu-libstdc++/$($(LOCAL_2ND_ARCH_VAR_PREFIX)TARGET_NDK_GCC_VERSION)/libs/$(TARGET_$(LOCAL_2ND_ARCH_VAR_PREFIX)CPU_ABI)/libgnustl_static.a
+    ifeq (gnustl_static,$(LOCAL_NDK_STL_VARIANT))
+      # LOCAL_NDK_STL_VARIANT is gnustl_static
+      my_ndk_stl_static_lib := $(my_ndk_source_root)/cxx-stl/gnu-libstdc++/$($(LOCAL_2ND_ARCH_VAR_PREFIX)TARGET_NDK_GCC_VERSION)/libs/$(TARGET_$(LOCAL_2ND_ARCH_VAR_PREFIX)CPU_ABI)/libgnustl_static.a
+    else
+      # LOCAL_NDK_STL_VARIANT is gnustl_shared
+      my_ndk_stl_shared_lib_fullpath := $(my_ndk_source_root)/cxx-stl/gnu-libstdc++/$($(LOCAL_2ND_ARCH_VAR_PREFIX)TARGET_NDK_GCC_VERSION)/libs/$(TARGET_$(LOCAL_2ND_ARCH_VAR_PREFIX)CPU_ABI)/libgnustl_shared.so
+      my_ndk_stl_shared_lib := -lgnustl_shared
+    endif
   endif
   endif
   endif
