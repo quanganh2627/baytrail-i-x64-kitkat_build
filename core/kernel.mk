@@ -322,7 +322,7 @@ kernel_modules: $(INSTALLED_MODULES_TARGET)
 .PHONY: kernel_dtb
 kernel_dtb: $(INSTALLED_2NDBOOTLOADER_TARGET)
 
-$(call dist-for-goals,droidcore,$(INSTALLED_KERNEL_ARCHIVE):$(TARGET_PRODUCT)-kernel-archive-$(FILE_NAME_TAG).zip)
+##$(call dist-for-goals,droidcore,$(INSTALLED_KERNEL_ARCHIVE):$(TARGET_PRODUCT)-kernel-archive-$(FILE_NAME_TAG).zip)
 
 # For including sources in gpl_source_tgz
 ALL_EXTRA_SOURCE_TARBALLS += $(INSTALLED_KERNEL_SOURCE_TARBALL)
