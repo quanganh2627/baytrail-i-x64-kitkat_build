@@ -673,7 +673,7 @@ ifeq ($(recovery_fstab),)
 endif
 
 INTERNAL_RECOVERYIMAGE_ARGS := \
-	$(addprefix --second ,$(INSTALLED_2NDBOOTLOADER_TARGET)) \
+	$(addprefix --second ,$(INSTALLED_2NDBOOTLOADER_RECOVERY_TARGET)) \
 	--kernel $(recovery_kernel) \
 	--ramdisk $(recovery_ramdisk)
 
@@ -712,7 +712,7 @@ $(INSTALLED_RECOVERYIMAGE_TARGET): $(MKBOOTFS) $(MKBOOTIMG) $(MINIGZIP) \
 		$(INSTALLED_BOOTIMAGE_TARGET) \
 		$(recovery_binary) \
 		$(recovery_initrc) $(recovery_kernel) \
-		$(INSTALLED_2NDBOOTLOADER_TARGET) \
+		$(INSTALLED_2NDBOOTLOADER_RECOVERY_TARGET) \
 		$(recovery_build_prop) $(recovery_resource_deps) \
 		$(recovery_fstab) \
 		$(RECOVERY_INSTALL_OTA_KEYS)

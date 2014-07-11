@@ -1,4 +1,4 @@
-#
+# Copyright (C) 2013-2014 Intel Mobile Communications GmbH
 # Copyright (C) 2009 The Android-x86 Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -150,6 +150,8 @@ $(kernel_dotconfig_file): $(kernel_config_file) $(TARGET_KERNEL_CONFIG_OVERRIDES
 
 built_kernel_target := $(PRODUCT_KERNEL_OUTPUT)/arch/$(TARGET_ARCH)/boot/vmlinux.bin
 built_dtb_target    := $(PRODUCT_KERNEL_OUTPUT)/arch/$(TARGET_ARCH)/boot/dts/$(DTB)
+built_dtb_recovery_target    := $(PRODUCT_KERNEL_OUTPUT)/arch/$(TARGET_ARCH)/boot/dts/$(DTB_RECOVERY)
+
 # Declared .PHONY to force a rebuild each time. We can't tell if the kernel
 # sources have changed from this context
 .PHONY : $(INSTALLED_KERNEL_TARGET)
@@ -165,6 +167,11 @@ $(INSTALLED_SYSTEM_MAP): $(INSTALLED_KERNEL_TARGET) | $(ACP)
 $(INSTALLED_2NDBOOTLOADER_TARGET): $(kernel_dotconfig_file) $(INSTALLED_KERNEL_TARGET) | $(ACP)
 	$(mk_kernel) $(DTB)
 	$(hide) $(ACP) -fp $(built_dtb_target) $@
+
+#Build RECOVERY DTB image to destination for mkbootimg processing.
+$(INSTALLED_2NDBOOTLOADER_RECOVERY_TARGET): $(INSTALLED_2NDBOOTLOADER_TARGET)
+	$(mk_kernel) $(DTB_RECOVERY)
+	$(hide) $(ACP) -fp $(built_dtb_recovery_target) $@
 
 # Kernel reconfiguration
 .PHONY: kernel_menuconfig
@@ -321,6 +328,9 @@ kernel_modules: $(INSTALLED_MODULES_TARGET)
 
 .PHONY: kernel_dtb
 kernel_dtb: $(INSTALLED_2NDBOOTLOADER_TARGET)
+
+.PHONY: kernel_recovery_dtb
+kernel_recovery_dtb: $(INSTALLED_2NDBOOTLOADER_RECOVERY_TARGET)
 
 ##$(call dist-for-goals,droidcore,$(INSTALLED_KERNEL_ARCHIVE):$(TARGET_PRODUCT)-kernel-archive-$(FILE_NAME_TAG).zip)
 
