@@ -823,18 +823,20 @@ define build-systemimage-target
       $(TARGET_OUT) $(systemimage_intermediates)/system_image_info.txt $(1)
 endef
 
-$(BUILT_SYSTEMIMAGE): $(INSTALLED_MODULES_TARGET) \
-		      $(INSTALLED_KERNELFW_TARGET) \
-		      $(INTERNAL_SYSTEMIMAGE_FILES) \
-		      $(INTERNAL_USERIMAGES_DEPS) \
-
+#Move Kernel Module and FW Folder Cleanup as Intermediate Step.
+kernel_mod_fw_cleanup: $(INSTALLED_MODULES_TARGET) $(INSTALLED_KERNELFW_TARGET) $(INTERNAL_SYSTEMIMAGE_FILES) $(INTERNAL_USERIMAGES_DEPS)
 	$(hide) rm -rf $(TARGET_OUT)/lib/modules
 	$(hide) rm -rf $(TARGET_OUT)/lib/firmware
 	$(hide) mkdir -p $(TARGET_OUT)/lib/
+
+#Move Kernel Module and FW Unzip as Intermediate Step.
+kernel_mod_fw_unzip: kernel_mod_fw_cleanup
 	$(if $(INSTALLED_MODULES_TARGET),$(hide) tar -xz -C $(TARGET_OUT)/lib/ -f $(INSTALLED_MODULES_TARGET))
 	$(if $(INSTALLED_MODULES_TARGET),$(hide) chmod -fR g-w $(TARGET_OUT)/lib/modules)
 	$(if $(INSTALLED_KERNELFW_TARGET),$(hide) tar -xz -C $(TARGET_OUT)/lib/ -f $(INSTALLED_KERNELFW_TARGET))
 	$(if $(INSTALLED_KERNELFW_TARGET),$(hide) chmod -fR g-w $(TARGET_OUT)/lib/firmware)
+
+$(BUILT_SYSTEMIMAGE): kernel_mod_fw_unzip
 	$(call build-systemimage-target,$@)
 
 INSTALLED_SYSTEMIMAGE := $(PRODUCT_OUT)/system.img
