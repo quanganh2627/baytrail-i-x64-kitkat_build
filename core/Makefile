@@ -410,11 +410,6 @@ event-log-tags: $(event_log_tags_file)
 
 ALL_DEFAULT_INSTALLED_MODULES += $(event_log_tags_file)
 
-
-ifeq ($(strip $(TARGET_USE_USERFASTBOOT)),true)
-include bootable/userfastboot/ramdisk.mk
-endif
-
 # #################################################################
 # Targets for boot/OS images
 # #################################################################
@@ -433,6 +428,10 @@ ifneq ($(strip $(TARGET_NO_KERNEL)),true)
   INSTALLED_KERNEL_TARGET := $(PRODUCT_OUT)/kernel
 else
   INSTALLED_KERNEL_TARGET :=
+endif
+
+ifeq ($(strip $(TARGET_USE_USERFASTBOOT)),true)
+include bootable/userfastboot/ramdisk.mk
 endif
 
 # -----------------------------------------------------------------
