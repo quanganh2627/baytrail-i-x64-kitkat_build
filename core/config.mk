@@ -96,6 +96,8 @@ BUILD_NOTICE_FILE := $(BUILD_SYSTEM)/notice_files.mk
 BUILD_HOST_DALVIK_JAVA_LIBRARY := $(BUILD_SYSTEM)/host_dalvik_java_library.mk
 BUILD_HOST_DALVIK_STATIC_JAVA_LIBRARY := $(BUILD_SYSTEM)/host_dalvik_static_java_library.mk
 
+BUILD_EXTERNAL_KERNEL_MODULE := $(BUILD_SYSTEM)/build_lkm.mk
+BUILD_COMPAT_MODULE := $(BUILD_SYSTEM)/build_compat_module.mk
 
 -include cts/build/config.mk
 
@@ -150,6 +152,60 @@ endif
 # are specific to the user's build configuration.
 include $(BUILD_SYSTEM)/envsetup.mk
 
+#<<<<<<< HEAD
+#=======
+# Boards may be defined under $(SRC_TARGET_DIR)/board/$(TARGET_DEVICE)
+# or under vendor/*/$(TARGET_DEVICE).  Search in both places, but
+# make sure only one exists.
+# Real boards should always be associated with an OEM vendor.
+board_config_mk := \
+	$(strip $(wildcard \
+		$(SRC_TARGET_DIR)/board/$(TARGET_DEVICE)/BoardConfig.mk \
+		$(shell test -d device && find device -maxdepth 4 -path '*/$(TARGET_DEVICE)/BoardConfig.mk') \
+		$(shell test -d vendor && find vendor -maxdepth 4 -path '*/$(TARGET_DEVICE)/BoardConfig.mk') \
+	))
+ifeq ($(board_config_mk),)
+  $(error No config file found for TARGET_DEVICE $(TARGET_DEVICE))
+endif
+ifneq ($(words $(board_config_mk)),1)
+  $(error Multiple board config files for TARGET_DEVICE $(TARGET_DEVICE): $(board_config_mk))
+endif
+include $(board_config_mk)
+ifeq ($(TARGET_ARCH),)
+  $(error TARGET_ARCH not defined by board config: $(board_config_mk))
+endif
+TARGET_DEVICE_DIR := $(patsubst %/,%,$(dir $(board_config_mk)))
+board_config_mk :=
+
+# Perhaps we should move this block to build/core/Makefile,
+# once we don't have TARGET_NO_KERNEL reference in AndroidBoard.mk/Android.mk.
+ifneq ($(strip $(TARGET_NO_BOOTLOADER)),true)
+  INSTALLED_BOOTLOADER_MODULE := $(PRODUCT_OUT)/bootloader
+  ifeq ($(strip $(TARGET_BOOTLOADER_IS_2ND)),true)
+    INSTALLED_2NDBOOTLOADER_TARGET := $(PRODUCT_OUT)/2ndbootloader
+  else
+    INSTALLED_2NDBOOTLOADER_TARGET :=
+  endif
+else
+  INSTALLED_BOOTLOADER_MODULE :=
+  INSTALLED_2NDBOOTLOADER_TARGET :=
+endif # TARGET_NO_BOOTLOADER
+ifneq ($(strip $(TARGET_NO_KERNEL)),true)
+  INSTALLED_KERNEL_TARGET := $(PRODUCT_OUT)/kernel
+  INSTALLED_MODULES_TARGET := $(PRODUCT_OUT)/kernelmod.tar.gz
+  #INSTALLED_KERNELFW_TARGET := $(PRODUCT_OUT)/kernelfw.tar.gz
+  #INSTALLED_SYSTEM_MAP := $(PRODUCT_OUT)/System.map
+  #INSTALLED_KERNEL_SCRIPTS := $(PRODUCT_OUT)/kernelscr.tar.gz
+else
+  INSTALLED_KERNEL_TARGET :=
+  INSTALLED_MODULES_TARGET :=
+  INSTALLED_KERNELFW_TARGET :=
+  INSTALLED_SYSTEM_MAP :=
+  INSTALLED_KERNEL_SCRIPTS :=
+endif
+
+
+#>>>>>>> [PATCH 2/5] Enable kernel.mk to utilize features like module and compat lkm builds.
 # The build system exposes several variables for where to find the kernel
 # headers:
 #   TARGET_DEVICE_KERNEL_HEADERS is automatically created for the current
