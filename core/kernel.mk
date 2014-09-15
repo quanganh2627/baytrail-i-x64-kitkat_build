@@ -275,6 +275,9 @@ $(INSTALLED_KERNEL_ARCHIVE):  \
 			$(INSTALLED_KERNEL_SOURCE_TARBALL)
 	$(hide) zip -qj $@ $^
 
+kernel-archive: $(INSTALLED_KERNEL_ARCHIVE)
+	$(hide) echo Building $(INSTALLED_KERNEL_ARCHIVE)
+
 else # use_prebuilt_kernel = true
 
 define extract-from-zip
