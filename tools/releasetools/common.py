@@ -29,6 +29,8 @@ import threading
 import time
 import zipfile
 
+import blockimgdiff
+
 try:
   from hashlib import sha1 as sha1
 except ImportError:
@@ -355,22 +357,28 @@ def GetBootableImage(name, prebuilt_name, unpack_dir, tree_subdir,
                      info_dict=None):
   """Return a File object (with name 'name') with the desired bootable
   image.  Look for it in 'unpack_dir'/BOOTABLE_IMAGES under the name
-  'prebuilt_name', otherwise construct it from the source files in
+  'prebuilt_name', otherwise look for it under 'unpack_dir'/IMAGES,
+  otherwise construct it from the source files in
   'unpack_dir'/'tree_subdir'."""
 
   prebuilt_path = os.path.join(unpack_dir, "BOOTABLE_IMAGES", prebuilt_name)
   if os.path.exists(prebuilt_path):
-    print "using prebuilt %s..." % (prebuilt_name,)
+    print "using prebuilt %s from BOOTABLE_IMAGES..." % (prebuilt_name,)
     return File.FromLocalFile(name, prebuilt_path)
-  else:
-    print "building image from target_files %s..." % (tree_subdir,)
-    fs_config = "META/" + tree_subdir.lower() + "_filesystem_config.txt"
-    data = BuildBootableImage(os.path.join(unpack_dir, tree_subdir),
-                              os.path.join(unpack_dir, fs_config),
-                              info_dict)
-    if data:
-      return File(name, data)
-    return None
+
+  prebuilt_path = os.path.join(unpack_dir, "IMAGES", prebuilt_name)
+  if os.path.exists(prebuilt_path):
+    print "using prebuilt %s from IMAGES..." % (prebuilt_name,)
+    return File.FromLocalFile(name, prebuilt_path)
+
+  print "building image from target_files %s..." % (tree_subdir,)
+  fs_config = "META/" + tree_subdir.lower() + "_filesystem_config.txt"
+  data = BuildBootableImage(os.path.join(unpack_dir, tree_subdir),
+                            os.path.join(unpack_dir, fs_config),
+                            info_dict)
+  if data:
+    return File(name, data)
+  return None
 
 
 def UnzipTemp(filename, pattern=None):
@@ -644,6 +652,15 @@ def ParseOptions(argv,
                         os.pathsep + os.environ["PATH"])
 
   return args
+
+
+def MakeTempFile(prefix=None, suffix=None):
+  """Make a temp file and add it to the list of things to be deleted
+  when Cleanup() is called.  Return the filename."""
+  fd, fn = tempfile.mkstemp(prefix=prefix, suffix=suffix)
+  os.close(fd)
+  OPTIONS.tempfiles.append(fn)
+  return fn
 
 
 def Cleanup():
@@ -995,6 +1012,60 @@ def ComputeDifferences(diffs):
     threads.pop().join()
 
 
+class BlockDifference:
+  def __init__(self, partition, tgt, src=None):
+    self.tgt = tgt
+    self.src = src
+    self.partition = partition
+
+    b = blockimgdiff.BlockImageDiff(tgt, src, threads=OPTIONS.worker_threads)
+    tmpdir = tempfile.mkdtemp()
+    OPTIONS.tempfiles.append(tmpdir)
+    self.path = os.path.join(tmpdir, partition)
+    b.Compute(self.path)
+
+    _, self.device = GetTypeAndDevice("/" + partition, OPTIONS.info_dict)
+
+  def WriteScript(self, script, output_zip, progress=None):
+    if not self.src:
+      # write the output unconditionally
+      if progress: script.ShowProgress(progress, 0)
+      self._WriteUpdate(script, output_zip)
+
+    else:
+      script.AppendExtra('if range_sha1("%s", "%s") == "%s" then' %
+                         (self.device, self.src.care_map.to_string_raw(),
+                          self.src.TotalSha1()))
+      script.Print("Patching %s image..." % (self.partition,))
+      if progress: script.ShowProgress(progress, 0)
+      self._WriteUpdate(script, output_zip)
+      script.AppendExtra(('else\n'
+                          '  (range_sha1("%s", "%s") == "%s") ||\n'
+                          '  abort("%s partition has unexpected contents");\n'
+                          'endif;') %
+                         (self.device, self.tgt.care_map.to_string_raw(),
+                          self.tgt.TotalSha1(), self.partition))
+
+  def _WriteUpdate(self, script, output_zip):
+    partition = self.partition
+    with open(self.path + ".transfer.list", "rb") as f:
+      ZipWriteStr(output_zip, partition + ".transfer.list", f.read())
+    with open(self.path + ".new.dat", "rb") as f:
+      ZipWriteStr(output_zip, partition + ".new.dat", f.read())
+    with open(self.path + ".patch.dat", "rb") as f:
+      ZipWriteStr(output_zip, partition + ".patch.dat", f.read(),
+                         compression=zipfile.ZIP_STORED)
+
+    call = (('block_image_update("%s", '
+             'package_extract_file("%s.transfer.list"), '
+             '"%s.new.dat", "%s.patch.dat");\n') %
+            (self.device, partition, partition, partition))
+    script.AppendExtra(script._WordWrap(call))
+
+
+DataImage = blockimgdiff.DataImage
+
+
 # map recovery.fstab's fs_types to mount/format "partition types"
 PARTITION_TYPES = { "yaffs2": "MTD", "mtd": "MTD",
                     "ext4": "EMMC", "emmc": "EMMC",
@@ -1021,31 +1092,6 @@ def ParseCertificate(data):
       save = True
   cert = "".join(cert).decode('base64')
   return cert
-
-def XDelta3(source_path, target_path, output_path):
-  diff_program = ["xdelta3", "-0", "-B", str(64<<20), "-e", "-f", "-s"]
-  diff_program.append(source_path)
-  diff_program.append(target_path)
-  diff_program.append(output_path)
-  p = Run(diff_program, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-  p.communicate()
-  assert p.returncode == 0, "Couldn't produce patch"
-
-def XZ(path):
-  compress_program = ["xz", "-zk", "-9", "--check=crc32"]
-  compress_program.append(path)
-  p = Run(compress_program, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-  p.communicate()
-  assert p.returncode == 0, "Couldn't compress patch"
-
-def MakePartitionPatch(source_file, target_file, partition):
-  with tempfile.NamedTemporaryFile() as output_file:
-    XDelta3(source_file.name, target_file.name, output_file.name)
-    XZ(output_file.name)
-    with open(output_file.name + ".xz") as patch_file:
-      patch_data = patch_file.read()
-      os.unlink(patch_file.name)
-      return File(partition + ".muimg.p", patch_data)
 
 def MakeRecoveryPatch(input_dir, output_sink, recovery_img, boot_img,
                       info_dict=None):
