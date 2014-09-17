@@ -96,15 +96,12 @@ KERNEL_HEADERS := $(KERNEL_HEADERS_COMMON) $(KERNEL_HEADERS_ARCH)
 android_config_h := $(call select-android-config-h,target_linux-x86)
 
 TARGET_GLOBAL_CFLAGS += \
-			-O2 \
 			-Wa,--noexecstack \
 			-Werror=format-security \
 			-D_FORTIFY_SOURCE=2 \
 			-Wstrict-aliasing=2 \
 			-fPIC -fPIE \
 			-ffunction-sections \
-			-finline-functions \
-			-finline-limit=300 \
 			-fno-inline-functions-called-once \
 			-fno-short-enums \
 			-fstrict-aliasing \
@@ -114,6 +111,16 @@ TARGET_GLOBAL_CFLAGS += \
 			-include $(android_config_h) \
 			-I $(dir $(android_config_h)) \
 			-m32
+
+ifeq ($(SMALL_CODE_SIZE),true)
+TARGET_GLOBAL_CFLAGS += \
+       -Os
+else
+TARGET_GLOBAL_CFLAGS += \
+       -O2 \
+       -finline-functions \
+       -finline-limit=300
+endif
 
 # XXX: Not sure this is still needed. Must check with our toolchains.
 TARGET_GLOBAL_CPPFLAGS += \
