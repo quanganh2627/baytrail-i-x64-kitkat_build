@@ -1445,7 +1445,7 @@ ifeq ($(TARGET_STAGE_USERFASTBOOT),true)
 	$(hide) zipinfo -1 $@ | awk 'BEGIN { FS="FASTBOOT/RAMDISK/" } /^FASTBOOT\/RAMDISK\// {print $$2}' | $(HOST_OUT_EXECUTABLES)/fs_config -C -S $(SELINUX_FC) > $(zip_root)/META/fastboot_filesystem_config.txt
 endif
 	$(hide) (cd $(zip_root) && zip -q ../$(notdir $@) META/*filesystem_config.txt)
-	$(hide) ./build/tools/releasetools/add_img_to_target_files $@
+	$(hide) ./build/tools/releasetools/add_img_to_target_files -p $(HOST_OUT) $@
 
 .PHONY: target-files-package
 target-files-package: $(BUILT_TARGET_FILES_PACKAGE)
@@ -1773,6 +1773,9 @@ ifneq ($(dont_bother),true)
 include $(sort $(wildcard $(BUILD_SYSTEM)/tasks/*.mk))
 -include $(sort $(wildcard vendor/*/build/tasks/*.mk))
 -include $(sort $(wildcard device/*/build/tasks/*.mk))
+# Also the project-specific tasks
+-include $(sort $(wildcard vendor/*/*/build/tasks/*.mk))
+-include $(sort $(wildcard device/*/*/build/tasks/*.mk))
 endif
 
 # -----------------------------------------------------------------
