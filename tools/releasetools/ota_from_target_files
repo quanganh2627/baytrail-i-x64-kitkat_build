@@ -492,17 +492,24 @@ else if get_stage("%(bcb_dev)s", "stage") == "3/3" then
 
   symlinks = CopySystemFiles(input_zip, output_zip)
   script.MakeSymlinks(symlinks)
+  try:
+	sofia_ota=GetBuildProp("ro.sofia_ota", OPTIONS.info_dict)
+  except common.ExternalError:
+	sofia_ota='false'
 
-  boot_img = common.GetBootableImage("boot.img", "boot.img",
+  if not sofia_ota == 'true':
+	boot_img = common.GetBootableImage("boot.img", "boot.img",
                                      OPTIONS.input_tmp, "BOOT")
-  MakeRecoveryPatch(OPTIONS.input_tmp, output_zip, recovery_img, boot_img)
-
+	MakeRecoveryPatch(OPTIONS.input_tmp, output_zip, recovery_img, boot_img)
+  else:
+    print "Excluding boot-image from OTA package"
   Item.GetMetadata(input_zip)
   Item.Get("system").SetPermissions(script)
 
-  common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
-  common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
-  script.ShowProgress(0.2, 0)
+  if not sofia_ota == 'true':
+	common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
+	common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
+	script.ShowProgress(0.2, 0)
 
   script.ShowProgress(0.2, 10)
   script.WriteRawImage("/boot", "boot.img")
@@ -597,7 +604,10 @@ def WriteIncrementalOTAPackage(target_zip, source_zip, output_zip):
       script=script,
       metadata=metadata,
       info_dict=OPTIONS.info_dict)
-
+  try:
+	sofia_ota=GetBuildProp("ro.sofia_ota", OPTIONS.info_dict)
+  except common.ExternalError:
+	sofia_ota='false'
   print "Loading target..."
   target_data = LoadSystemFiles(target_zip)
   print "Loading source..."
@@ -654,7 +664,7 @@ def WriteIncrementalOTAPackage(target_zip, source_zip, output_zip):
     if d is None or len(d) > tf.size * OPTIONS.patch_threshold or \
         path not in known_paths:
       # patch is almost as big as the file; don't bother patching
-      # or a patch + rename cannot take place due to the target 
+      # or a patch + rename cannot take place due to the target
       # directory not existing
       tf.AddToZip(output_zip)
       verbatim_targets.append((tf.name, tf.size))
@@ -673,21 +683,24 @@ def WriteIncrementalOTAPackage(target_zip, source_zip, output_zip):
 
   script.Mount("/system")
   script.AssertSomeFingerprint(source_fp, target_fp)
+  if not sofia_ota =='true':
+	source_boot = common.GetBootableImage(
+		"/tmp/boot.img", "boot.img", OPTIONS.source_tmp, "BOOT",
+		OPTIONS.source_info_dict)
+	target_boot = common.GetBootableImage(
+		"/tmp/boot.img", "boot.img", OPTIONS.target_tmp, "BOOT")
+	updating_boot = (not OPTIONS.two_step and
+					(source_boot.data != target_boot.data))
 
-  source_boot = common.GetBootableImage(
-      "/tmp/boot.img", "boot.img", OPTIONS.source_tmp, "BOOT",
-      OPTIONS.source_info_dict)
-  target_boot = common.GetBootableImage(
-      "/tmp/boot.img", "boot.img", OPTIONS.target_tmp, "BOOT")
-  updating_boot = (not OPTIONS.two_step and
-                   (source_boot.data != target_boot.data))
-
-  source_recovery = common.GetBootableImage(
-      "/tmp/recovery.img", "recovery.img", OPTIONS.source_tmp, "RECOVERY",
-      OPTIONS.source_info_dict)
-  target_recovery = common.GetBootableImage(
-      "/tmp/recovery.img", "recovery.img", OPTIONS.target_tmp, "RECOVERY")
-  updating_recovery = (source_recovery.data != target_recovery.data)
+	source_recovery = common.GetBootableImage(
+		"/tmp/recovery.img", "recovery.img", OPTIONS.source_tmp, "RECOVERY",
+		OPTIONS.source_info_dict)
+	target_recovery = common.GetBootableImage(
+		"/tmp/recovery.img", "recovery.img", OPTIONS.target_tmp, "RECOVERY")
+	updating_recovery = (source_recovery.data != target_recovery.data)
+  else:
+	updating_boot=0
+	updating_recovery=0
 
   # Here's how we divide up the progress bar:
   #  0.1 for verifying the start state (PatchCheck calls)
