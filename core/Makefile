@@ -536,6 +536,7 @@ $(INSTALLED_BOOTIMAGE_TARGET): $(MAKE_NO_DEFAULT_BOOTIMAGE_ITEMS)
 bootimage-nodeps:
 	@echo "make $@: ignoring dependencies"
 	$(hide) $(MAKE_NO_DEFAULT_BOOTIMAGE)
+
 endif # TARGET_MAKE_NO_DEFAULT_BOOTIMAGE
 
 else	# TARGET_NO_KERNEL
@@ -1385,26 +1386,6 @@ endif
 ifdef BOARD_KERNEL_PAGESIZE
 	$(hide) echo "$(BOARD_KERNEL_PAGESIZE)" > $(zip_root)/BOOT/pagesize
 endif
-ifeq ($(TARGET_STAGE_USERFASTBOOT),true)
-	@# Components of the fastboot image
-	$(hide) mkdir -p $(zip_root)/FASTBOOT
-	$(hide) $(call package_files-copy-root, \
-		$(USERFASTBOOT_ROOT_OUT),$(zip_root)/FASTBOOT/RAMDISK)
-ifdef INSTALLED_KERNEL_TARGET
-	$(hide) $(ACP) $(INSTALLED_KERNEL_TARGET) $(zip_root)/FASTBOOT/kernel
-endif
-ifdef INSTALLED_2NDBOOTLOADER_TARGET
-	$(hide) $(ACP) \
-		$(INSTALLED_2NDBOOTLOADER_TARGET) $(zip_root)/FASTBOOT/second
-endif
-	$(hide) echo "$(USERFASTBOOT_CMDLINE)" > $(zip_root)/FASTBOOT/cmdline
-ifdef BOARD_KERNEL_BASE
-	$(hide) echo "$(BOARD_KERNEL_BASE)" > $(zip_root)/FASTBOOT/base
-endif
-ifdef BOARD_KERNEL_PAGESIZE
-	$(hide) echo "$(BOARD_KERNEL_PAGESIZE)" > $(zip_root)/FASTBOOT/pagesize
-endif
-endif # TARGET_STAGE_USERFASTBOOT
 	$(hide) $(foreach t,$(INSTALLED_RADIOIMAGE_TARGET),\
 	            mkdir -p $(zip_root)/RADIO; \
 	            $(ACP) $(t) $(zip_root)/RADIO/$(notdir $(t));)
@@ -1463,11 +1444,8 @@ endif
 	$(hide) zipinfo -1 $@ | awk 'BEGIN { FS="VENDOR/" } /^VENDOR\// {print "vendor/" $$2}' | $(HOST_OUT_EXECUTABLES)/fs_config -C -S $(SELINUX_FC) > $(zip_root)/META/vendor_filesystem_config.txt
 	$(hide) zipinfo -1 $@ | awk 'BEGIN { FS="BOOT/RAMDISK/" } /^BOOT\/RAMDISK\// {print $$2}' | $(HOST_OUT_EXECUTABLES)/fs_config -C -S $(SELINUX_FC) > $(zip_root)/META/boot_filesystem_config.txt
 	$(hide) zipinfo -1 $@ | awk 'BEGIN { FS="RECOVERY/RAMDISK/" } /^RECOVERY\/RAMDISK\// {print $$2}' | $(HOST_OUT_EXECUTABLES)/fs_config -C -S $(SELINUX_FC) > $(zip_root)/META/recovery_filesystem_config.txt
-ifeq ($(TARGET_STAGE_USERFASTBOOT),true)
-	$(hide) zipinfo -1 $@ | awk 'BEGIN { FS="FASTBOOT/RAMDISK/" } /^FASTBOOT\/RAMDISK\// {print $$2}' | $(HOST_OUT_EXECUTABLES)/fs_config -C -S $(SELINUX_FC) > $(zip_root)/META/fastboot_filesystem_config.txt
-endif
 	$(hide) (cd $(zip_root) && zip -q ../$(notdir $@) META/*filesystem_config.txt)
-	$(hide) ./build/tools/releasetools/add_img_to_target_files $@
+	$(hide) ./build/tools/releasetools/add_img_to_target_files -p $(HOST_OUT) $@
 
 .PHONY: target-files-package
 target-files-package: $(BUILT_TARGET_FILES_PACKAGE)
@@ -1796,6 +1774,9 @@ ifneq ($(dont_bother),true)
 include $(sort $(wildcard $(BUILD_SYSTEM)/tasks/*.mk))
 -include $(sort $(wildcard vendor/*/build/tasks/*.mk))
 -include $(sort $(wildcard device/*/build/tasks/*.mk))
+# Also the project-specific tasks
+-include $(sort $(wildcard vendor/*/*/build/tasks/*.mk))
+-include $(sort $(wildcard device/*/*/build/tasks/*.mk))
 endif
 
 # -----------------------------------------------------------------
