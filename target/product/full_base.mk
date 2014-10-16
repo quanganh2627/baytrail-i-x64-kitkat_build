@@ -29,16 +29,18 @@ PRODUCT_PACKAGES := \
     VideoEditor \
     WAPPushManager
 
-PRODUCT_PACKAGES += \
-    Galaxy4 \
-    HoloSpiralWallpaper \
-    LiveWallpapers \
-    LiveWallpapersPicker \
-    MagicSmokeWallpapers \
-    NoiseField \
-    PhaseBeam \
-    VisualizationWallpapers \
-    PhotoTable
+ifneq ($(NO_LIVEWALLPAPER),true)
+	PRODUCT_PACKAGES += \
+	    Galaxy4 \
+	    HoloSpiralWallpaper \
+	    LiveWallpapers \
+	    LiveWallpapersPicker \
+	    MagicSmokeWallpapers \
+	    NoiseField \
+	    PhaseBeam \
+	    VisualizationWallpapers \
+	    PhotoTable
+endif
 
 # Additional settings used in all AOSP builds
 PRODUCT_PROPERTY_OVERRIDES := \
