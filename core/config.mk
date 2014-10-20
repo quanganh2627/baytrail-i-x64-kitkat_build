@@ -18,6 +18,14 @@ endif
 empty :=
 space := $(empty) $(empty)
 comma := ,
+# Note that make will eat the newline just before endef.
+define newline
+
+
+endef
+# Unfortunately you can't simply define backslash as \ or \\.
+backslash := \a
+backslash := $(patsubst %a,%,$(backslash))
 
 # Tell python not to spam the source tree with .pyc files.  This
 # only has an effect on python 2.6 and above.
@@ -604,7 +612,7 @@ endif
 
 # Set up RS prebuilt variables for compatibility library
 
-RS_PREBUILT_CLCORE := prebuilts/sdk/renderscript/lib/$(TARGET_ARCH)/libclcore.bc
+RS_PREBUILT_CLCORE := prebuilts/sdk/renderscript/lib/$(TARGET_ARCH)/librsrt_$(TARGET_ARCH).bc
 RS_PREBUILT_LIBPATH := -L prebuilts/ndk/8/platforms/android-9/arch-$(TARGET_ARCH)/usr/lib
 RS_PREBUILT_COMPILER_RT := prebuilts/sdk/renderscript/lib/$(TARGET_ARCH)/libcompiler_rt.a
 
