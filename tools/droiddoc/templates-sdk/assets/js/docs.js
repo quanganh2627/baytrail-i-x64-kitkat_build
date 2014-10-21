@@ -1642,8 +1642,8 @@ var gDocsListLength = 0;
 
 function onSuggestionClick(link) {
   // When user clicks a suggested document, track it
-  _gaq.push(['_trackEvent', 'Suggestion Click', 'clicked: ' + $(link).text(),
-            'from: ' + $("#search_autocomplete").val()]);
+  ga('send', 'event', 'Suggestion Click', 'clicked: ' + $(link).text(),
+            'from: ' + $("#search_autocomplete").val());
 }
 
 function set_item_selected($li, selected)
@@ -2538,10 +2538,13 @@ google.setOnLoadCallback(function(){
 /* Adjust the scroll position to account for sticky header, only if the hash matches an id.
    This does not handle <a name=""> tags. Some CSS fixes those, but only for reference docs. */
 function offsetScrollForSticky() {
+  // Ignore if there's no search bar (some special pages have no header)
+  if ($("#search-container").length < 1) return;
+
   var hash = escape(location.hash.substr(1));
   var $matchingElement = $("#"+hash);
-  // Sanity check that hash is a real hash and that there's an element with that ID on the page
-  if ((hash.indexOf("#") == 0) && $matchingElement.length) {
+  // Sanity check that there's an element with that ID on the page
+  if ($matchingElement.length) {
     // If the position of the target element is near the top of the page (<20px, where we expect it
     // to be because we need to move it down 60px to become in view), then move it down 60px
     if (Math.abs($matchingElement.offset().top - $(window).scrollTop()) < 20) {
@@ -2552,6 +2555,9 @@ function offsetScrollForSticky() {
 
 // when an event on the browser history occurs (back, forward, load) requery hash and do search
 $(window).hashchange( function(){
+  // Ignore if there's no search bar (some special pages have no header)
+  if ($("#search-container").length < 1) return;
+
   // If the hash isn't a search query or there's an error in the query,
   // then adjust the scroll position to account for sticky header, then exit.
   if ((location.hash.indexOf("q=") == -1) || (query == "undefined")) {
@@ -2610,8 +2616,8 @@ function addResultClickListeners() {
   $("#searchResults a.gs-title").each(function(index, link) {
     // When user clicks enter for Google search results, track it
     $(link).click(function() {
-      _gaq.push(['_trackEvent', 'Google Click', 'clicked: ' + $(this).text(),
-                'from: ' + $("#search_autocomplete").val()]);
+      ga('send', 'event', 'Google Click', 'clicked: ' + $(this).text(),
+                'from: ' + $("#search_autocomplete").val());
     });
   });
 }

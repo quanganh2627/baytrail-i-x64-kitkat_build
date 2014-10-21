@@ -6,7 +6,7 @@
 <?cs if:!devsite ?><?cs # leave out the global header for devsite; it is in devsite template ?>
   <!-- Header -->
   <div id="header-wrapper">
-    <div id="header">
+    <div id="header"><?cs call:butter_bar() ?>
       <div class="wrap" id="header-wrap">
         <div class="col-3 logo">
           <a href="<?cs var:toroot ?>index.html">
@@ -157,7 +157,36 @@
   <?cs elif:training || guide || reference || tools || develop || google || samples ?>
     <!-- Secondary x-nav -->
     <div id="nav-x">
-        <div class="wrap">
+        <div class="wrap" style="position:relative;z-index:1">
+
+        <?cs if:reference ?>
+            <a id="helpoutsLink" class="resource resource-card resource-card-6x2x3 resource-card-6x2 helpouts-card" 
+              href="http://helpouts.google.com/partner/landing/provider/googledevelopers" target="_blank">
+              <div class="card-bg helpouts-card-bg"></div>
+              <div class="card-info">
+                <div class="helpouts-description">
+                  <div class="text">Help developers solve problems<br/>
+                    <span id="helpoutsLinkText" class="link-color" style="display:block;padding-top:5px;text-align:right">Learn more</span>
+                  </div>
+                </div>
+              </div>
+            </a>
+            <script>
+              var textA = "LEARN MORE";
+              var linkA = "http://helpouts.google.com/partner/landing/provider/googledevelopers?utm_source=android_banner1&utm_medium=banner&utm_campaign=android_provider_banner1";
+              var textB = "SIGN UP NOW";
+              var linkB = "http://helpouts.google.com/partner/landing/provider/googledevelopers?utm_source=android_banner2&utm_medium=banner&utm_campaign=android_provider_banner2";
+
+              if (Math.floor(1/Math.random()) > 1) {
+                $("a#helpoutsLink").attr('href', linkA);
+                $("span#helpoutsLinkText").text(textA);
+              } else {
+                $("a#helpoutsLink").attr('href', linkB);
+                $("span#helpoutsLinkText").text(textB);
+              }
+            </script>
+        <?cs /if ?>
+
             <ul class="nav-x col-9 develop" style="width:100%">
                 <li class="training"><a href="<?cs var:toroot ?>training/index.html"
                   zh-tw-lang="訓練課程"
@@ -261,7 +290,7 @@
 
 <!-- Header -->
 <div id="header-wrapper">
-  <div id="header">
+  <div id="header"><?cs call:butter_bar() ?>
     <div class="wrap" id="header-wrap">
       <div class="col_3 logo landing-logo" style="width:240px">
         <a href="<?cs var:toroot ?>preview/index.html">
@@ -299,3 +328,22 @@ color:#666;font-weight:100;font-size:27px;">L Developer Preview</h1></div>
 
   <?cs
 /def ?>
+
+
+<?cs # (UN)COMMENT THE INSIDE OF THIS METHOD TO TOGGLE VISIBILITY ?>
+<?cs def:butter_bar() ?>
+
+<?cs # HIDE THE BUTTER BAR
+
+    <div style="height:20px"><!-- spacer to bump header down --></div>
+    <div id="butterbar-wrapper">
+      <div id="butterbar">
+        <a href="http://googleblog.blogspot.com/" id="butterbar-message">
+          The Android 5.0 SDK will be available on October 17th!
+        </a>
+      </div>
+    </div>
+
+?>    
+
+<?cs /def ?>
