@@ -30,9 +30,4 @@ PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
     dalvik.vm.dex2oat-Xmx=512m \
     ro.dalvik.vm.native.bridge=0 \
 
-# This is needed to enable silver art optimizer.
-# This will build the plugins/libart-extension.so library,  which is dynamically loaded by
-# AOSP and contains Intel optimizations to the compiler.
-PRODUCT_PACKAGES += libart-extension
-
 include $(SRC_TARGET_DIR)/product/runtime_common.mk
