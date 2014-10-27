@@ -1246,7 +1246,7 @@ code {
 legend {
     display: none;
 }
-a:link, a:visited {
+a:link, a:visited, .link-color {
   color: #258aaf;
   text-decoration: none;
 }
@@ -2774,19 +2774,22 @@ Butterbar
   width:100%;
 }
 #butterbar {
-  width:940px;
+  width:100%;
   margin:0 auto;
 }
 #butterbar-message {
-  background-color:#f80;
-  float:right;
-  font-size:12px;
-  font-weight:bold;
-  padding:0 10px;
-  border-radius: 0 0 5px 5px;
+  background-color:rgba(255, 187, 51, .4);
+  font-size:13px;
+  padding: 5px 0;
+  text-align:center;
 }
-#butterbar-message a {color:#fff !important}
-#butterbar-message a:hover {text-decoration:underline;}
+a#butterbar-message {
+  cursor:pointer;
+  display:block;
+}
+a#butterbar-message:hover {
+  text-decoration:underline;
+}
 
 /* --------------------------------------------------------------------------
 Misc
@@ -4203,7 +4206,7 @@ EndColorStr='#ececec');
   z-index: 52;
 }
 
-/* offset the <a name=""> tags in reference to account for sticky nav */
+/* offset the <a name=""> tags to account for sticky nav */
 body.reference a[name] {
   visibility: hidden;
   display: block;
@@ -7343,4 +7346,47 @@ a.home-new-cta-btn:hover,
     display: block;
     font-style: italic;
     color: #F80;
+}
+
+
+
+/* Helpouts widget */
+.resource-card-6x2.helpouts-card {
+  width: 220px;
+  height: 40px;
+  position:absolute;
+  z-index:999;
+  top:-8px;
+  right:1px;
+}
+
+.resource-card-6x2.helpouts-card > .card-info {
+  left:35px;
+  height:35px;
+  padding:4px 8px 4px 0;
+}
+
+.resource-card-6x2.helpouts-card > .card-info .helpouts-description {
+  display:block;
+  overflow:visible;
+  font-size:12px;
+  line-height:12px;
+  text-align:right;
+  color:#666;
+}
+
+.helpouts-description .link-color {
+  text-transform: uppercase;
+}
+
+.resource-card-6x2 > .card-bg.helpouts-card-bg {
+  width:35px;
+  height:35px;
+  margin:2px 0 0 0;
+  background-image: url(../images/styles/helpouts-logo-35_2x.png);
+  background-image: -webkit-image-set(url(../images/styles/helpouts-logo-35.png) 1x, url(../images/styles/helpouts-logo-35_2x.png) 2x);
+}
+
+.resource-card-6x2 > .card-bg.helpouts-card-bg:after {
+  display:none;
 }
