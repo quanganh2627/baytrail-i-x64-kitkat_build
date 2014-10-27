@@ -114,12 +114,12 @@ TARGET_GLOBAL_CFLAGS += \
 
 ifeq ($(SMALL_CODE_SIZE),true)
 TARGET_GLOBAL_CFLAGS += \
-	-Os
+       -Os
 else
 TARGET_GLOBAL_CFLAGS += \
-	-O2 \
-	-finline-functions \
-	-finline-limit=300
+       -O2 \
+       -finline-functions \
+       -finline-limit=300
 endif
 
 # XXX: Not sure this is still needed. Must check with our toolchains.
