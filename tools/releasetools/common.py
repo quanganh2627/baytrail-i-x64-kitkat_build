@@ -420,7 +420,7 @@ def UnzipTemp(filename, pattern=None):
   else:
     unzip_to_dir(filename, tmp)
 
-  return tmp, zipfile.ZipFile(filename, "r")
+  return tmp, zipfile.ZipFile(filename, "r", allowZip64=True)
 
 
 def GetKeyPasswords(keylist):
