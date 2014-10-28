@@ -77,7 +77,8 @@ def main(argv):
     sys.exit(1)
 
   OPTIONS.input_tmp, input_zip = common.UnzipTemp(args[0])
-  output_zip = zipfile.ZipFile(args[1], "w", compression=zipfile.ZIP_DEFLATED)
+  output_zip = zipfile.ZipFile(args[1], "w", compression=zipfile.ZIP_DEFLATED,
+			       allowZip64=True)
   CopyInfo(output_zip)
 
   try:
