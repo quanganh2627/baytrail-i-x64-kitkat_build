@@ -690,6 +690,13 @@ endif
 endif
 endif
 
+# These options tell the recovery updater/installer how to mount the partitions writebale.
+# <fstype>=<fstype_opts>[|<fstype_opts>]...
+# fstype_opts := <opt>[,<opt>]...
+#         opt := <name>[=<value>]
+# The following worked on Nexus devices with Kernel 3.1, 3.4, 3.10
+DEFAULT_TARGET_RECOVERY_FSTYPE_MOUNT_OPTIONS := ext4=max_batch_time=0,commit=1,data=ordered,barrier=1,errors=panic,nodelalloc
+
 ifneq (true,$(TARGET_USERIMAGES_SPARSE_EXT_DISABLED))
   INTERNAL_USERIMAGES_SPARSE_EXT_FLAG := -s
 endif
@@ -1427,6 +1434,12 @@ ifdef BOARD_BOOTIMAGE_PARTITION_SIZE
 endif
 ifdef BOARD_RECOVERYIMAGE_PARTITION_SIZE
 	$(hide) echo "recovery_size=$(BOARD_RECOVERYIMAGE_PARTITION_SIZE)" >> $(zip_root)/META/misc_info.txt
+endif
+ifdef TARGET_RECOVERY_FSTYPE_MOUNT_OPTIONS
+	@# TARGET_RECOVERY_FSTYPE_MOUNT_OPTIONS can be empty to indicate that nothing but defaults should be used.
+	$(hide) echo "recovery_mount_options=$(TARGET_RECOVERY_FSTYPE_MOUNT_OPTIONS)" >> $(zip_root)/META/misc_info.txt
+else
+	$(hide) echo "recovery_mount_options=$(DEFAULT_TARGET_RECOVERY_FSTYPE_MOUNT_OPTIONS)" >> $(zip_root)/META/misc_info.txt
 endif
 	$(hide) echo "tool_extensions=$(tool_extensions)" >> $(zip_root)/META/misc_info.txt
 	$(hide) echo "default_system_dev_certificate=$(DEFAULT_SYSTEM_DEV_CERTIFICATE)" >> $(zip_root)/META/misc_info.txt
