@@ -420,36 +420,6 @@ ALL_DEFAULT_INSTALLED_MODULES += $(event_log_tags_file)
 # #################################################################
 # Targets for boot/OS images
 # #################################################################
-ifneq ($(strip $(TARGET_NO_BOOTLOADER)),true)
-  INSTALLED_BOOTLOADER_MODULE := $(PRODUCT_OUT)/bootloader
-  ifeq ($(strip $(TARGET_BOOTLOADER_IS_2ND)),true)
-    INSTALLED_2NDBOOTLOADER_TARGET := $(PRODUCT_OUT)/2ndbootloader
-  else
-    INSTALLED_2NDBOOTLOADER_TARGET :=
-  endif
-else
-  INSTALLED_BOOTLOADER_MODULE :=
-  INSTALLED_2NDBOOTLOADER_TARGET :=
-endif # TARGET_NO_BOOTLOADER
-ifneq ($(strip $(TARGET_NO_KERNEL)),true)
-  INSTALLED_KERNEL_TARGET := $(PRODUCT_OUT)/kernel
-else
-  INSTALLED_KERNEL_TARGET :=
-endif
-
-ifneq ($(strip $(TARGET_NO_KERNEL)),true)
-  INSTALLED_KERNEL_TARGET := $(PRODUCT_OUT)/kernel
-  INSTALLED_MODULES_TARGET := $(PRODUCT_OUT)/kernelmod.tar.gz
-  #INSTALLED_KERNELFW_TARGET := $(PRODUCT_OUT)/kernelfw.tar.gz
-  #INSTALLED_SYSTEM_MAP := $(PRODUCT_OUT)/System.map
-  #INSTALLED_KERNEL_SCRIPTS := $(PRODUCT_OUT)/kernelscr.tar.gz
-else
-  INSTALLED_KERNEL_TARGET :=
-  INSTALLED_MODULES_TARGET :=
-  INSTALLED_KERNELFW_TARGET :=
-  INSTALLED_SYSTEM_MAP :=
-  INSTALLED_KERNEL_SCRIPTS :=
-endif
 
 # -----------------------------------------------------------------
 # the ramdisk
@@ -987,18 +957,20 @@ define build-systemimage-target
            exit 1 )
 endef
 
-$(BUILT_SYSTEMIMAGE): $(INSTALLED_MODULES_TARGET) \
-		      $(INSTALLED_KERNELFW_TARGET) \
-		      $(INTERNAL_SYSTEMIMAGE_FILES) \
-		      $(INTERNAL_USERIMAGES_DEPS) \
-
+#Move Kernel Module and FW Folder Cleanup as Intermediate Step.
+kernel_mod_fw_cleanup: $(INSTALLED_MODULES_TARGET) $(INSTALLED_KERNELFW_TARGET) $(INTERNAL_SYSTEMIMAGE_FILES) $(INTERNAL_USERIMAGES_DEPS)
 	$(hide) rm -rf $(TARGET_OUT)/lib/modules
 	$(hide) rm -rf $(TARGET_OUT)/lib/firmware
 	$(hide) mkdir -p $(TARGET_OUT)/lib/
+
+#Move Kernel Module and FW Unzip as Intermediate Step.
+kernel_mod_fw_unzip: kernel_mod_fw_cleanup
 	$(if $(INSTALLED_MODULES_TARGET),$(hide) tar -xz -C $(TARGET_OUT)/lib/ -f $(INSTALLED_MODULES_TARGET))
 	$(if $(INSTALLED_MODULES_TARGET),$(hide) chmod -fR g-w $(TARGET_OUT)/lib/modules)
 	$(if $(INSTALLED_KERNELFW_TARGET),$(hide) tar -xz -C $(TARGET_OUT)/lib/ -f $(INSTALLED_KERNELFW_TARGET))
 	$(if $(INSTALLED_KERNELFW_TARGET),$(hide) chmod -fR g-w $(TARGET_OUT)/lib/firmware)
+
+$(BUILT_SYSTEMIMAGE): kernel_mod_fw_unzip
 	$(call build-systemimage-target,$@)
 
 INSTALLED_SYSTEMIMAGE := $(PRODUCT_OUT)/system.img
