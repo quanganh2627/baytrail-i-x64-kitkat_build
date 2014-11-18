@@ -338,6 +338,8 @@ ifeq (true,$(strip $(enable_target_debugging)))
 else # !enable_target_debugging
   # Target is less debuggable and adbd is off by default
   ADDITIONAL_DEFAULT_PROPERTIES += ro.debuggable=0
+  # Enable secure usb debugging by default
+  ADDITIONAL_DEFAULT_PROPERTIES += ro.adb.secure=1
 endif # !enable_target_debugging
 
 ## eng ##
