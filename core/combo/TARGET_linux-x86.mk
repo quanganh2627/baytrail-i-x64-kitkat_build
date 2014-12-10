@@ -122,6 +122,10 @@ TARGET_GLOBAL_CFLAGS += \
        -finline-limit=300
 endif
 
+ifeq ($(TARGET_DISABLE_TRIPLE_BUFFERING),true)
+    TARGET_GLOBAL_CFLAGS += -DTARGET_DISABLE_TRIPLE_BUFFERING
+endif
+
 # XXX: Not sure this is still needed. Must check with our toolchains.
 TARGET_GLOBAL_CPPFLAGS += \
 			-fno-use-cxa-atexit
