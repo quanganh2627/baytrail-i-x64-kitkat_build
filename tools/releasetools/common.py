@@ -930,6 +930,9 @@ def ComputeDifferences(diffs):
           name = "%s (%s)" % (tf.name, sf.name)
         if patch is None:
           print "patching failed!                                  %s" % (name,)
+        elif tf.size == 0:
+          print "%8.2f sec %8d / %8d bytes %s" % (
+              dur, len(patch), tf.size, name)
         else:
           print "%8.2f sec %8d / %8d bytes (%6.2f%%) %s" % (
               dur, len(patch), tf.size, 100.0 * len(patch) / tf.size, name)
