@@ -577,6 +577,11 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
     symlinks = CopyPartitionFiles(system_items, input_zip, output_zip)
     script.MakeSymlinks(symlinks)
 
+  try:
+    sofia_ota=GetBuildProp("ro.sofia_ota", OPTIONS.info_dict)
+  except common.ExternalError:
+    sofia_ota='false'
+
   boot_img = common.GetBootableImage("boot.img", "boot.img",
                                      OPTIONS.input_tmp, "BOOT")
 
@@ -585,7 +590,8 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
       common.ZipWriteStr(output_zip, "recovery/" + fn, data)
       system_items.Get("system/" + fn, dir=False)
 
-    common.MakeRecoveryPatch(OPTIONS.input_tmp, output_sink,
+    if not sofia_ota == 'true':
+      common.MakeRecoveryPatch(OPTIONS.input_tmp, output_sink,
                              recovery_img, boot_img)
 
     system_items.GetMetadata(input_zip)
@@ -611,8 +617,9 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
       vendor_items.GetMetadata(input_zip)
       vendor_items.Get("vendor").SetPermissions(script)
 
-  common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
-  common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
+  if not sofia_ota == 'true':
+    common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
+    common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
 
   script.ShowProgress(0.05, 5)
   script.WriteRawImage("/boot", "boot.img")
@@ -717,25 +724,34 @@ def WriteBlockIncrementalOTAPackage(target_zip, source_zip, output_zip):
       metadata=metadata,
       info_dict=OPTIONS.info_dict)
 
+  try:
+    sofia_ota=GetBuildProp("ro.sofia_ota", OPTIONS.info_dict)
+  except common.ExternalError:
+    sofia_ota='false'
+
   source_fp = GetBuildProp("ro.build.fingerprint", OPTIONS.source_info_dict)
   target_fp = GetBuildProp("ro.build.fingerprint", OPTIONS.target_info_dict)
   metadata["pre-build"] = source_fp
   metadata["post-build"] = target_fp
 
-  source_boot = common.GetBootableImage(
+  if not sofia_ota =='true':
+    source_boot = common.GetBootableImage(
       "/tmp/boot.img", "boot.img", OPTIONS.source_tmp, "BOOT",
       OPTIONS.source_info_dict)
-  target_boot = common.GetBootableImage(
+    target_boot = common.GetBootableImage(
       "/tmp/boot.img", "boot.img", OPTIONS.target_tmp, "BOOT")
-  updating_boot = (not OPTIONS.two_step and
+    updating_boot = (not OPTIONS.two_step and
                    (source_boot.data != target_boot.data))
 
-  source_recovery = common.GetBootableImage(
+    source_recovery = common.GetBootableImage(
       "/tmp/recovery.img", "recovery.img", OPTIONS.source_tmp, "RECOVERY",
       OPTIONS.source_info_dict)
-  target_recovery = common.GetBootableImage(
+    target_recovery = common.GetBootableImage(
       "/tmp/recovery.img", "recovery.img", OPTIONS.target_tmp, "RECOVERY")
-  updating_recovery = (source_recovery.data != target_recovery.data)
+    updating_recovery = (source_recovery.data != target_recovery.data)
+  else:
+    updating_boot=False
+    updating_recovery=False
 
   system_src = GetImage("system", OPTIONS.source_tmp, OPTIONS.source_info_dict)
   system_tgt = GetImage("system", OPTIONS.target_tmp, OPTIONS.target_info_dict)
@@ -1075,6 +1091,11 @@ def WriteIncrementalOTAPackage(target_zip, source_zip, output_zip):
       metadata=metadata,
       info_dict=OPTIONS.info_dict)
 
+  try:
+    sofia_ota=GetBuildProp("ro.sofia_ota", OPTIONS.info_dict)
+  except common.ExternalError:
+    sofia_ota='false'
+
   system_diff = FileDifference("system", source_zip, target_zip, output_zip)
   script.Mount("/system", recovery_mount_options)
   if HasVendorPartition(target_zip):
@@ -1095,22 +1116,24 @@ def WriteIncrementalOTAPackage(target_zip, source_zip, output_zip):
 
   metadata["pre-build"] = source_fp
   metadata["post-build"] = target_fp
-
-  source_boot = common.GetBootableImage(
+  if not sofia_ota =='true':
+    source_boot = common.GetBootableImage(
       "/tmp/boot.img", "boot.img", OPTIONS.source_tmp, "BOOT",
       OPTIONS.source_info_dict)
-  target_boot = common.GetBootableImage(
+    target_boot = common.GetBootableImage(
       "/tmp/boot.img", "boot.img", OPTIONS.target_tmp, "BOOT")
-  updating_boot = (not OPTIONS.two_step and
+    updating_boot = (not OPTIONS.two_step and
                    (source_boot.data != target_boot.data))
 
-  source_recovery = common.GetBootableImage(
+    source_recovery = common.GetBootableImage(
       "/tmp/recovery.img", "recovery.img", OPTIONS.source_tmp, "RECOVERY",
       OPTIONS.source_info_dict)
-  target_recovery = common.GetBootableImage(
+    target_recovery = common.GetBootableImage(
       "/tmp/recovery.img", "recovery.img", OPTIONS.target_tmp, "RECOVERY")
-  updating_recovery = (source_recovery.data != target_recovery.data)
-
+    updating_recovery = (source_recovery.data != target_recovery.data)
+  else:
+    updating_boot = False
+    updating_recovery = False
   # Here's how we divide up the progress bar:
   #  0.1 for verifying the start state (PatchCheck calls)
   #  0.8 for applying patches (ApplyPatch calls)
