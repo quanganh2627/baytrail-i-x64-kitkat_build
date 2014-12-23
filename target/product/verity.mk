@@ -19,5 +19,7 @@
 PRODUCT_SUPPORTS_VERITY := true
 PRODUCT_VERITY_SIGNING_KEY := build/target/product/security/verity_private_dev_key
 
+PRODUCT_BOOT_SIGNER := boot_signer
+
 PRODUCT_PACKAGES += \
         verity_key
