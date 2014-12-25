@@ -20,25 +20,11 @@
 # entirely appropriate to inherit from for on-device configurations.
 
 #Pekall added for DSDS.
-#Note the default build is DSDS.
+#no dsds.
 ADDITIONAL_DEFAULT_PROPERTIES += \
-    persist.dual_sim=dsds \
-    persist.tel.hot_swap.support=true \
-	persist.ril-daemon.disable=dsds
-PRODUCT_PACKAGES += \
-    Stk \
-    Stk2 \
-    SimWidget
-    
-PRODUCT_PACKAGES := \
-    VoiceDialer
-
+    persist.dual_sim=no
+	
 PRODUCT_PROPERTY_OVERRIDES := \
-    keyguard.no_require_sim=true \
-    ro.com.android.dataroaming=true
+    persist.wifionly=true
 
-PRODUCT_COPY_FILES := \
-    device/generic/goldfish/data/etc/apns-conf.xml:system/etc/apns-conf.xml
-
-$(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base.mk)
-$(call inherit-product, $(SRC_TARGET_DIR)/product/telephony.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
