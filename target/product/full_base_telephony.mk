@@ -24,14 +24,15 @@
 ADDITIONAL_DEFAULT_PROPERTIES += \
     persist.dual_sim=dsds \
     persist.tel.hot_swap.support=true \
-	persist.ril-daemon.disable=dsds
+    persist.ril-daemon.disable=dsds
+    
+PRODUCT_PACKAGES := \
+    VoiceDialer
+
 PRODUCT_PACKAGES += \
     Stk \
     Stk2 \
     SimWidget
-    
-PRODUCT_PACKAGES := \
-    VoiceDialer
 
 PRODUCT_PROPERTY_OVERRIDES := \
     keyguard.no_require_sim=true \
