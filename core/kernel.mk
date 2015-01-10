@@ -82,7 +82,7 @@ ifeq ($(TARGET_ARCH),arm)
   endif
 endif
 
-TARGET_KERNEL_SOURCE ?= ../linux-3.10
+TARGET_KERNEL_SOURCE ?= ./linux-3.10
 
 kernel_script_deps := $(foreach s,$(TARGET_KERNEL_SCRIPTS),$(TARGET_KERNEL_SOURCE)/scripts/$(s))
 script_output := $(CURDIR)/$(TARGET_OUT_INTERMEDIATES)/kscripts
