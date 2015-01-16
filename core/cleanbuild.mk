@@ -228,7 +228,9 @@ installclean_files := \
 	$(PRODUCT_OUT)/obj/ETC/init.environ.rc_intermediates \
 	$(PRODUCT_OUT)/obj/kernel \
 	$(PRODUCT_OUT)/obj/kernelmods \
-	$(PRODUCT_OUT)/System.map
+	$(PRODUCT_OUT)/System.map \
+	$(PRODUCT_OUT)/lib* \
+	$(PRODUCT_OUT)/vmm_build
 
 # The files/dirs to delete during a dataclean, which removes any files
 # in the staging and emulator data partitions.
