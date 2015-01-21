@@ -227,6 +227,16 @@ def AddCache(output_zip, prefix="IMAGES/"):
   os.rmdir(user_dir)
   os.rmdir(temp_dir)
 
+def AddRecoveryPatch(output_zip, prefix="SYSTEM/"):
+  file_name = "recovery-from-boot.p"
+  input_path = os.path.join(OPTIONS.input_tmp, prefix, file_name)
+  with open(input_path, "rb") as f:
+    common.ZipWriteStr(output_zip, prefix + file_name, f.read())
+
+  file_name = "bin/install-recovery.sh"
+  input_path = os.path.join(OPTIONS.input_tmp, prefix, file_name)
+  with open(input_path, "rb") as f:
+    common.ZipWriteStr(output_zip, prefix + file_name, f.read())
 
 def AddImagesToTargetFiles(filename):
   OPTIONS.input_tmp, input_zip = common.UnzipTemp(filename)
@@ -285,6 +295,8 @@ def AddImagesToTargetFiles(filename):
 
   banner("system")
   AddSystem(output_zip, recovery_img=recovery_image, boot_img=boot_image)
+  banner("recovery patches")
+  AddRecoveryPatch(output_zip)
   if has_vendor:
     banner("vendor")
     AddVendor(output_zip)
