@@ -52,17 +52,11 @@ def BuildImage(in_dir, prop_dict, out_file):
   build_command = []
   fs_type = prop_dict.get("fs_type", "")
   run_fsck = False
-  f2fs = False
   if fs_type.startswith("ext"):
     build_command = ["mkuserimg.sh"]
-    if fs_type.startswith("ext4_f2fs"):
-      # sparse supported in make_f2fs.sh
-      fs_type = "ext4"
-      f2fs = True
-    else:
-      if "extfs_sparse_flag" in prop_dict:
-        build_command.append(prop_dict["extfs_sparse_flag"])
-        run_fsck = True
+    if "extfs_sparse_flag" in prop_dict:
+      build_command.append(prop_dict["extfs_sparse_flag"])
+      run_fsck = True
     build_command.extend([in_dir, out_file, fs_type,
                           prop_dict["mount_point"]])
     if "partition_size" in prop_dict:
@@ -83,14 +77,6 @@ def BuildImage(in_dir, prop_dict, out_file):
   if exit_code != 0:
     return False
 
-  if f2fs:
-     # sparse supported in make_f2fs.sh
-     f2fs_command = ["make_f2fs.sh"]
-     f2fs_command.append(out_file)
-     f2fs_command.append(prop_dict["selinux_fc"])
-     exit_code = RunCommand(f2fs_command)
-     if exit_code != 0:
-       return False
   if run_fsck and prop_dict.get("skip_fsck") != "true":
     # Inflate the sparse image
     unsparse_image = os.path.join(
