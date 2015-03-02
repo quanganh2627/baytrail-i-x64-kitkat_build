@@ -28,6 +28,8 @@ import tempfile
 import threading
 import time
 import zipfile
+import zlib
+import binascii
 
 import blockimgdiff
 from rangelib import *
@@ -781,6 +783,23 @@ class PasswordManager(object):
     return result
 
 
+oldcompressobj = zlib.compressobj
+
+class compressobj(object):
+    def __init__(self, *args, **kw):
+        self.proxy = oldcompressobj(*args, **kw)
+
+    def compress(self, data):
+        ret = ""
+        while len(data):
+            data1 = data[:2**30]
+            ret += self.proxy.compress(data1)
+            data = data[2**30:]
+        return ret
+
+    def flush(self):
+        return self.proxy.flush()
+
 def ZipWriteStr(zip, filename, data, perms=0644, compression=None):
   # use a fixed timestamp so the output is repeatable.
   zinfo = zipfile.ZipInfo(filename=filename,
@@ -790,6 +809,8 @@ def ZipWriteStr(zip, filename, data, perms=0644, compression=None):
   else:
     zinfo.compress_type = compression
   zinfo.external_attr = perms << 16
+  zipfile.crc32 = binascii.crc32
+  zlib.compressobj = compressobj
   zip.writestr(zinfo, data)
 
 
