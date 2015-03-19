@@ -220,7 +220,8 @@ installclean_files := \
 	$(PRODUCT_OUT)/obj/kernelmods \
 	$(PRODUCT_OUT)/System.map \
 	$(PRODUCT_OUT)/lib* \
-	$(PRODUCT_OUT)/vmm_build
+	$(PRODUCT_OUT)/vmm_build \
+	$(PRODUCT_OUT)/obj/SHARED_LIBRARIES/libstagefright*
 
 # The files/dirs to delete during a dataclean, which removes any files
 # in the staging and emulator data partitions.
