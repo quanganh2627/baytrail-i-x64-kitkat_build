@@ -194,6 +194,7 @@ installclean_files := \
 	$(PRODUCT_OUT)/*.xlb \
 	$(PRODUCT_OUT)/*.zip \
 	$(PRODUCT_OUT)/kernel \
+	$(PRODUCT_OUT)/*.tar.gz \
 	$(PRODUCT_OUT)/data \
 	$(PRODUCT_OUT)/skin \
 	$(PRODUCT_OUT)/obj/APPS \
@@ -213,7 +214,10 @@ installclean_files := \
 	$(PRODUCT_OUT)/obj/EXECUTABLES/init_intermediates \
 	$(PRODUCT_OUT)/obj/ETC/mac_permissions.xml_intermediates \
 	$(PRODUCT_OUT)/obj/ETC/sepolicy_intermediates \
-	$(PRODUCT_OUT)/obj/ETC/init.environ.rc_intermediates
+	$(PRODUCT_OUT)/obj/ETC/init.environ.rc_intermediates \
+	$(PRODUCT_OUT)/obj/kernel \
+	$(PRODUCT_OUT)/obj/kernelmods \
+	$(PRODUCT_OUT)/System.map
 
 # The files/dirs to delete during a dataclean, which removes any files
 # in the staging and emulator data partitions.

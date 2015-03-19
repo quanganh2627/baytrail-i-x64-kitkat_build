@@ -31,11 +31,6 @@ last_released_sdk_version := $(lastword $(call numerically_sort, \
              )\
         ))
 
-.PHONY: check-public-api
-checkapi : check-public-api
-
-.PHONY: update-api
-
 # INTERNAL_PLATFORM_API_FILE is the one build by droiddoc.
 # Note that since INTERNAL_PLATFORM_API_FILE is the byproduct of api-stubs module,
 # (See frameworks/base/Android.mk)
@@ -44,7 +39,7 @@ checkapi : check-public-api
 # Check that the API we're building hasn't broken the last-released
 # SDK version.
 $(eval $(call check-api, \
-    checkpublicapi-last, \
+    checkapi-last, \
     $(SRC_API_DIR)/$(last_released_sdk_version).txt, \
     $(INTERNAL_PLATFORM_API_FILE), \
     frameworks/base/api/removed.txt, \
@@ -53,14 +48,14 @@ $(eval $(call check-api, \
     -error 7 -error 8 -error 9 -error 10 -error 11 -error 12 -error 13 -error 14 -error 15 \
     -error 16 -error 17 -error 18 , \
     cat $(BUILD_SYSTEM)/apicheck_msg_last.txt, \
-    check-public-api, \
+    checkapi, \
     $(call doc-timestamp-for,api-stubs) \
     ))
 
 # Check that the API we're building hasn't changed from the not-yet-released
 # SDK version.
 $(eval $(call check-api, \
-    checkpublicapi-current, \
+    checkapi-current, \
     frameworks/base/api/current.txt, \
     $(INTERNAL_PLATFORM_API_FILE), \
     frameworks/base/api/removed.txt, \
@@ -69,23 +64,21 @@ $(eval $(call check-api, \
     -error 7 -error 8 -error 9 -error 10 -error 11 -error 12 -error 13 -error 14 -error 15 \
     -error 16 -error 17 -error 18 -error 19 -error 20 -error 21 -error 23 -error 24 \
     -error 25 -error 26 -error 27, \
-    cat $(BUILD_SYSTEM)/apicheck_msg_current.txt, \
-    check-public-api, \
+    sed -e 's/%UPDATE_API%/update-api/g' $(BUILD_SYSTEM)/apicheck_msg_current.txt, \
+    checkapi, \
     $(call doc-timestamp-for,api-stubs) \
     ))
 
-.PHONY: update-public-api
-update-public-api: $(INTERNAL_PLATFORM_API_FILE) | $(ACP)
+.PHONY: update-api
+update-api: $(INTERNAL_PLATFORM_API_FILE) | $(ACP)
 	@echo Copying current.txt
 	$(hide) $(ACP) $(INTERNAL_PLATFORM_API_FILE) frameworks/base/api/current.txt
 	@echo Copying removed.txt
 	$(hide) $(ACP) $(INTERNAL_PLATFORM_REMOVED_API_FILE) frameworks/base/api/removed.txt
 
-update-api : update-public-api
 
 #####################Check System API#####################
-.PHONY: check-system-api
-checkapi : check-system-api
+.PHONY: checksystemapi
 
 # Check that the System API we're building hasn't broken the last-released
 # SDK version.
@@ -99,7 +92,7 @@ $(eval $(call check-api, \
     -error 7 -error 8 -error 9 -error 10 -error 11 -error 12 -error 13 -error 14 -error 15 \
     -error 16 -error 17 -error 18 , \
     cat $(BUILD_SYSTEM)/apicheck_msg_last.txt, \
-    check-system-api, \
+    checksystemapi, \
     $(call doc-timestamp-for,system-api-stubs) \
     ))
 
@@ -115,14 +108,12 @@ $(eval $(call check-api, \
     -error 7 -error 8 -error 9 -error 10 -error 11 -error 12 -error 13 -error 14 -error 15 \
     -error 16 -error 17 -error 18 -error 19 -error 20 -error 21 -error 23 -error 24 \
     -error 25 -error 26 -error 27, \
-    cat $(BUILD_SYSTEM)/apicheck_msg_current.txt, \
-    check-system-api, \
+    sed -e 's/%UPDATE_API%/update-system-api/g' $(BUILD_SYSTEM)/apicheck_msg_current.txt, \
+    checksystemapi, \
     $(call doc-timestamp-for,system-api-stubs) \
     ))
 
 .PHONY: update-system-api
-update-api : update-system-api
-
 update-system-api: $(INTERNAL_PLATFORM_SYSTEM_API_FILE) | $(ACP)
 	@echo Copying system-current.txt
 	$(hide) $(ACP) $(INTERNAL_PLATFORM_SYSTEM_API_FILE) frameworks/base/api/system-current.txt

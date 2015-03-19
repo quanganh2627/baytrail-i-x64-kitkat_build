@@ -179,8 +179,13 @@ def ProcessTargetFiles(input_tf_zip, output_tf_zip, misc_info,
       ReplaceVerityPrivateKey(input_tf_zip, output_tf_zip, misc_info, OPTIONS.replace_verity_private_key[1])
     elif (info.filename == "BOOT/RAMDISK/verity_key" and
         OPTIONS.replace_verity_public_key):
+<<<<<<< HEAD
       data = ReplaceVerityPublicKey(output_tf_zip, OPTIONS.replace_verity_public_key[1])
       write_to_temp(info.filename, info.external_attr, data)
+=======
+      new_data = ReplaceVerityPublicKey(output_tf_zip, OPTIONS.replace_verity_public_key[1])
+      write_to_temp(info.filename, info.external_attr, new_data)
+>>>>>>> remotes/origin/platform/android/sofia3g_l_mr1_temp
     elif (info.filename.startswith("BOOT/") or
         info.filename.startswith("RECOVERY/") or
         info.filename.startswith("META/") or
@@ -394,7 +399,10 @@ def ReplaceVerityPublicKey(targetfile_zip, key_path):
   print "Replacing verity public key with %s" % key_path
   with open(key_path) as f:
     data = f.read()
+<<<<<<< HEAD
 
+=======
+>>>>>>> remotes/origin/platform/android/sofia3g_l_mr1_temp
   common.ZipWriteStr(targetfile_zip, "BOOT/RAMDISK/verity_key", data)
   return data
 

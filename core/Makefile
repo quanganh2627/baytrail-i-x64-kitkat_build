@@ -418,26 +418,9 @@ event-log-tags: $(event_log_tags_file)
 
 ALL_DEFAULT_INSTALLED_MODULES += $(event_log_tags_file)
 
-
 # #################################################################
 # Targets for boot/OS images
 # #################################################################
-ifneq ($(strip $(TARGET_NO_BOOTLOADER)),true)
-  INSTALLED_BOOTLOADER_MODULE := $(PRODUCT_OUT)/bootloader
-  ifeq ($(strip $(TARGET_BOOTLOADER_IS_2ND)),true)
-    INSTALLED_2NDBOOTLOADER_TARGET := $(PRODUCT_OUT)/2ndbootloader
-  else
-    INSTALLED_2NDBOOTLOADER_TARGET :=
-  endif
-else
-  INSTALLED_BOOTLOADER_MODULE :=
-  INSTALLED_2NDBOOTLOADER_TARGET :=
-endif # TARGET_NO_BOOTLOADER
-ifneq ($(strip $(TARGET_NO_KERNEL)),true)
-  INSTALLED_KERNEL_TARGET := $(PRODUCT_OUT)/kernel
-else
-  INSTALLED_KERNEL_TARGET :=
-endif
 
 # -----------------------------------------------------------------
 # the ramdisk
@@ -486,6 +469,7 @@ ifdef BOARD_KERNEL_PAGESIZE
   INTERNAL_BOOTIMAGE_ARGS += --pagesize $(BOARD_KERNEL_PAGESIZE)
 endif
 
+ifneq ($(TARGET_MAKE_NO_DEFAULT_BOOTIMAGE),true)
 INSTALLED_BOOTIMAGE_TARGET := $(PRODUCT_OUT)/boot.img
 
 ifeq ($(TARGET_BOOTIMAGE_USE_EXT2),true)
@@ -535,6 +519,14 @@ bootimage-nodeps: $(MKBOOTIMG)
 	$(hide) $(call assert-max-image-size,$(INSTALLED_BOOTIMAGE_TARGET),$(BOARD_BOOTIMAGE_PARTITION_SIZE))
 
 endif # TARGET_BOOTIMAGE_USE_EXT2
+
+else # TARGET_MAKE_NO_DEFAULT_BOOTIMAGE
+
+$(INSTALLED_BOOTIMAGE_TARGET): $(MAKE_NO_DEFAULT_BOOTIMAGE_ITEMS)
+	$(MAKE_NO_DEFAULT_BOOTIMAGE)
+endif # TARGET_MAKE_NO_DEFAULT_BOOTIMAGE
+
+include $(BUILD_SYSTEM)/kernel.mk
 
 else	# TARGET_NO_KERNEL
 # HACK: The top-level targets depend on the bootimage.  Not all targets
@@ -970,7 +962,20 @@ define build-systemimage-target
            exit 1 )
 endef
 
-$(BUILT_SYSTEMIMAGE): $(FULL_SYSTEMIMAGE_DEPS) $(INSTALLED_FILES_FILE)
+#Move Kernel Module and FW Folder Cleanup as Intermediate Step.
+kernel_mod_fw_cleanup: $(INSTALLED_MODULES_TARGET) $(INSTALLED_KERNELFW_TARGET) $(INTERNAL_SYSTEMIMAGE_FILES) $(INTERNAL_USERIMAGES_DEPS)
+	$(hide) rm -rf $(TARGET_OUT)/lib/modules
+	$(hide) rm -rf $(TARGET_OUT)/lib/firmware
+	$(hide) mkdir -p $(TARGET_OUT)/lib/
+
+#Move Kernel Module and FW Unzip as Intermediate Step.
+kernel_mod_fw_unzip: kernel_mod_fw_cleanup
+	$(if $(INSTALLED_MODULES_TARGET),$(hide) tar -xz -C $(TARGET_OUT)/lib/ -f $(INSTALLED_MODULES_TARGET))
+	$(if $(INSTALLED_MODULES_TARGET),$(hide) chmod -fR g-w $(TARGET_OUT)/lib/modules)
+	$(if $(INSTALLED_KERNELFW_TARGET),$(hide) tar -xz -C $(TARGET_OUT)/lib/ -f $(INSTALLED_KERNELFW_TARGET))
+	$(if $(INSTALLED_KERNELFW_TARGET),$(hide) chmod -fR g-w $(TARGET_OUT)/lib/firmware)
+
+$(BUILT_SYSTEMIMAGE): kernel_mod_fw_unzip
 	$(call build-systemimage-target,$@)
 
 INSTALLED_SYSTEMIMAGE := $(PRODUCT_OUT)/system.img
@@ -1031,7 +1036,16 @@ endif
 system_tar := $(PRODUCT_OUT)/system.tar
 INSTALLED_SYSTEMTARBALL_TARGET := $(system_tar).$(SYSTEM_TARBALL_FORMAT)
 $(INSTALLED_SYSTEMTARBALL_TARGET): PRIVATE_SYSTEM_TAR := $(system_tar)
-$(INSTALLED_SYSTEMTARBALL_TARGET): $(FS_GET_STATS) $(INTERNAL_SYSTEMIMAGE_FILES)
+$(INSTALLED_SYSTEMTARBALL_TARGET): $(FS_GET_STATS) \
+		$(INTERNAL_SYSTEMIMAGE_FILES) \
+		$(INSTALLED_MODULES_TARGET) \
+		$(INSTALLED_KERNELFW_TARGET) \
+
+	$(hide) rm -rf $(TARGET_OUT)/lib/modules
+	$(hide) rm -rf $(TARGET_OUT)/lib/firmware
+	$(hide) mkdir -p $(TARGET_OUT)/lib/
+	$(if $(INSTALLED_MODULES_TARGET),$(hide) tar -xz -C $(TARGET_OUT)/lib/ -f $(INSTALLED_MODULES_TARGET))
+	$(if $(INSTALLED_KERNELFW_TARGET),$(hide) tar -xz -C $(TARGET_OUT)/lib/ -f $(INSTALLED_KERNELFW_TARGET))
 	$(build-systemtarball-target)
 
 .PHONY: systemtarball-nodeps
@@ -1267,7 +1281,6 @@ DISTTOOLS :=  $(HOST_OUT_EXECUTABLES)/minigzip \
 	  $(HOST_OUT_EXECUTABLES)/mkuserimg.sh \
 	  $(HOST_OUT_EXECUTABLES)/make_ext4fs \
 	  $(HOST_OUT_EXECUTABLES)/simg2img \
-	  $(HOST_OUT_EXECUTABLES)/e2fsck \
 	  $(HOST_OUT_EXECUTABLES)/build_verity_tree \
 	  $(HOST_OUT_EXECUTABLES)/verity_signer \
 	  $(HOST_OUT_EXECUTABLES)/append2simg \
