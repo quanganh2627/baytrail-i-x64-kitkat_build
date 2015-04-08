@@ -742,6 +742,26 @@ recovery_ramdisk := $(PRODUCT_OUT)/ramdisk-recovery.img
 recovery_build_prop := $(INSTALLED_BUILD_PROP_TARGET)
 recovery_binary := $(call intermediates-dir-for,EXECUTABLES,recovery)/recovery
 recovery_resources_common := $(call include-path-for, recovery)/res
+ifeq ($(BUILD_WITH_SECURITY_FRAMEWORK),chaabi_token)
+recovery_modules := \
+        linker \
+        libc \
+        libcutils \
+        liblog \
+        libm \
+        libstdc++ \
+        libusbhost \
+        libdx_cc7
+
+recovery_system_files := $(call module-installed-files,$(recovery_modules))
+define recovery-copy-files
+$(hide) $(foreach srcfile,$(recovery_system_files), \
+        destfile=$(patsubst $(1)/%,$(2)/%,$(srcfile)); \
+        mkdir -p `dirname $$destfile`; \
+        cp -fR $(srcfile) $$destfile; \
+)
+endef
+endif
 
 # Set recovery_density to the density bucket of the device.
 recovery_density := unknown
@@ -835,6 +855,7 @@ $(INSTALLED_RECOVERYIMAGE_TARGET): $(MKBOOTFS) $(MKBOOTIMG) $(MINIGZIP) \
 		$(recovery_initrc) $(recovery_sepolicy) $(recovery_kernel) \
 		$(INSTALLED_2NDBOOTLOADER_TARGET) \
 		$(recovery_build_prop) $(recovery_resource_deps) \
+		$(recovery_system_files) \
 		$(recovery_fstab) \
 		$(RECOVERY_INSTALL_OTA_KEYS)
 	@echo ----- Making recovery image ------
@@ -850,6 +871,9 @@ $(INSTALLED_RECOVERYIMAGE_TARGET): $(MKBOOTFS) $(MKBOOTIMG) $(MINIGZIP) \
 	$(hide) cp -f $(recovery_sepolicy) $(TARGET_RECOVERY_ROOT_OUT)/sepolicy
 	$(hide) -cp $(TARGET_ROOT_OUT)/init.recovery.*.rc $(TARGET_RECOVERY_ROOT_OUT)/
 	$(hide) cp -f $(recovery_binary) $(TARGET_RECOVERY_ROOT_OUT)/sbin/
+ifeq ($(BUILD_WITH_SECURITY_FRAMEWORK),chaabi_token)
+	$(hide) $(call recovery-copy-files,$(TARGET_OUT),$(TARGET_RECOVERY_ROOT_OUT)/system/)
+endif
 	$(hide) mkdir -p $(TARGET_RECOVERY_ROOT_OUT)/res
 	$(hide) rm -rf $(TARGET_RECOVERY_ROOT_OUT)/res/*
 	$(hide) cp -rf $(recovery_resources_common)/* $(TARGET_RECOVERY_ROOT_OUT)/res
